@@ -12,6 +12,8 @@ export const METHODS = Object.freeze({
 });
 
 const latest = { transactionHashVariant: "latest-nonfinal" };
+const VALID_STATES = new Set(["SUBMITTED", "EVALUATING", "CLEARED", "QUARANTINED", "UNRESOLVED"]);
+const VALID_DECISIONS = new Set(["ALLOW", "REVIEW", "BLOCK", "NOT_EVALUATED", "UNRESOLVED"]);
 
 export function configurationError() {
   if (!CONTRACT_ADDRESS) return "No deployed SourceFirewall address is configured. This desk is showing the labeled EXAMPLE flow.";
@@ -43,16 +45,23 @@ function list(value) {
   return Array.isArray(value) ? value : [];
 }
 
+function nonNegativeInteger(value) {
+  const number = Number(value);
+  return Number.isSafeInteger(number) && number >= 0 ? number : 0;
+}
+
 export function normalizeRecord(raw) {
   const value = record(raw);
+  const state = VALID_STATES.has(value.state) ? value.state : "UNRESOLVED";
+  const decision = VALID_DECISIONS.has(value.decision) ? value.decision : "UNRESOLVED";
   return {
     record_id: String(value.record_id || ""),
     owner: String(value.owner || ""),
     source_url: String(value.source_url || ""),
     source_label: String(value.source_label || ""),
     agent_purpose: String(value.agent_purpose || ""),
-    state: String(value.state || "SUBMITTED"),
-    decision: String(value.decision || "NOT_EVALUATED"),
+    state,
+    decision,
     source_digest: String(value.source_digest || ""),
     findings: list(value.findings).map((finding) => {
       const item = record(finding);
@@ -67,10 +76,10 @@ export function normalizeRecord(raw) {
     }),
     summary: String(value.summary || ""),
     error_code: String(value.error_code || ""),
-    high_count: Number(value.high_count || 0),
-    medium_count: Number(value.medium_count || 0),
-    low_count: Number(value.low_count || 0),
-    evaluation_attempts: Number(value.evaluation_attempts || 0),
+    high_count: nonNegativeInteger(value.high_count),
+    medium_count: nonNegativeInteger(value.medium_count),
+    low_count: nonNegativeInteger(value.low_count),
+    evaluation_attempts: nonNegativeInteger(value.evaluation_attempts),
     result_fingerprint: String(value.result_fingerprint || ""),
   };
 }

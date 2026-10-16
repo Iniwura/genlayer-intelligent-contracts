@@ -5,9 +5,10 @@
 import hashlib
 import ipaddress
 import json
+import re
 from dataclasses import dataclass
 from typing import Any
-from urllib.parse import urlsplit, urlunsplit
+from urllib.parse import parse_qsl, urlsplit, urlunsplit
 
 import genlayer as gl
 from genlayer.types import Address, u256
@@ -70,6 +71,32 @@ RESULT_KEYS = {
     "medium_count",
     "low_count",
 }
+SENSITIVE_QUERY_KEYS = {
+    "api_key",
+    "apikey",
+    "access_token",
+    "auth_token",
+    "client_secret",
+    "password",
+    "passwd",
+    "private_key",
+    "secret",
+    "signature",
+    "sig",
+    "token",
+    "x_amz_credential",
+    "x_amz_signature",
+    "x_goog_signature",
+}
+SECRET_PATTERN = re.compile(
+    r"(?:"
+    r"sk-[^\s,;]+|ghp_[^\s,;]+|github_pat_[^\s,;]+|AKIA[0-9A-Z]+|"
+    r"Bearer\s+[^\s,;]+|authorization\s*:\s*[^\s,;]+|"
+    r"(?:api[_-]?key|access[_-]?token|auth[_-]?token|client[_-]?secret|"
+    r"password|passwd|private[_-]?key|secret|token)\s*[=:]\s*[^\s,;]+"
+    r")",
+    re.IGNORECASE,
+)
 
 
 @gl.storage.allow
@@ -182,6 +209,15 @@ def _https_source(value: Any) -> str:
         raise gl.vm.UserError("source URL must be HTTPS without credentials or a fragment.")
     if port is not None and not 1 <= port <= 65535:
         raise gl.vm.UserError("source URL port is invalid.")
+    try:
+        query_keys = {
+            key.strip().lower().replace("-", "_")
+            for key, _ in parse_qsl(parsed.query, keep_blank_values=True)
+        }
+    except ValueError:
+        raise gl.vm.UserError("source URL query is invalid.")
+    if query_keys & SENSITIVE_QUERY_KEYS:
+        raise gl.vm.UserError("source URL must not contain credential-bearing query parameters.")
     canonical_host = _canonical_hostname(hostname)
     netloc = canonical_host + (":" + str(port) if port is not None and port != 443 else "")
     canonical = urlunsplit(("https", netloc, parsed.path or "/", parsed.query, ""))
@@ -203,14 +239,7 @@ def _valid_digest(value: Any, field: str) -> str:
 
 
 def _redact_quote(value: str) -> str:
-    redacted = value
-    markers = ("sk-", "ghp_", "github_pat_", "AKIA", "Bearer ", "password=", "passwd=", "secret=")
-    for marker in markers:
-        index = redacted.lower().find(marker.lower())
-        if index >= 0:
-            end = redacted.find(" ", index)
-            redacted = redacted[:index] + "[REDACTED]" + (redacted[end:] if end >= 0 else "")
-    return redacted
+    return SECRET_PATTERN.sub("[REDACTED]", value)
 
 
 def _unresolved(error_code: str, source_digest: str = ZERO_DIGEST) -> dict[str, Any]:
@@ -272,7 +301,7 @@ def _normalize_model_result(raw: Any, source_digest: str) -> dict[str, Any]:
     if type(raw) is not dict or set(raw.keys()) != {"summary", "findings"}:
         return _unresolved("MALFORMED_EVALUATION", source_digest)
     try:
-        summary = _text(raw["summary"], "summary", MAX_SUMMARY)
+        summary = _redact_quote(_text(raw["summary"], "summary", MAX_SUMMARY))
         raw_findings = raw["findings"]
         if type(raw_findings) is not list or len(raw_findings) != len(CATEGORIES):
             return _unresolved("MALFORMED_EVALUATION", source_digest)
@@ -291,8 +320,8 @@ def _normalize_model_result(raw: Any, source_digest: str) -> dict[str, Any]:
             if type(confidence) is not str or confidence not in CONFIDENCES:
                 return _unresolved("MALFORMED_EVALUATION", source_digest)
             quote = _redact_quote(_text(raw_finding["evidence_quote"], "evidence_quote", MAX_QUOTE, required=False))
-            pointer = _text(raw_finding["source_pointer"], "source_pointer", MAX_POINTER)
-            explanation = _text(raw_finding["explanation"], "explanation", MAX_EXPLANATION)
+            pointer = _redact_quote(_text(raw_finding["source_pointer"], "source_pointer", MAX_POINTER))
+            explanation = _redact_quote(_text(raw_finding["explanation"], "explanation", MAX_EXPLANATION))
             if severity in ("HIGH", "MEDIUM") and not quote:
                 return _unresolved("MALFORMED_EVALUATION", source_digest)
             seen.add(category)
@@ -356,6 +385,8 @@ def _validate_result(value: Any) -> dict[str, Any]:
         error_code = _text(value["error_code"], "error_code", MAX_ERROR, required=False)
         findings = value["findings"]
         counts = (value["high_count"], value["medium_count"], value["low_count"])
+        if any(type(count) is not int or count < 0 for count in counts):
+            return _unresolved("INVALID_CONSENSUS_RESULT", source_digest)
         if status == UNRESOLVED:
             if decision != "UNRESOLVED" or findings != [] or counts != (0, 0, 0) or not error_code:
                 return _unresolved("INVALID_CONSENSUS_RESULT", source_digest)

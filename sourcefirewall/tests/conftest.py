@@ -1,4 +1,4 @@
-"""Studio Dev direct-mode harness for the pinned CanaryGate runtime."""
+"""Studio Dev direct-mode harness for the pinned SourceFirewall runtime."""
 
 from __future__ import annotations
 

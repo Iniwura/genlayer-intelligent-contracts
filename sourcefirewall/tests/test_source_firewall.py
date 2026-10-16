@@ -87,6 +87,8 @@ def test_create_persists_bounded_record_and_submission_state(direct_vm, direct_d
         ("record-1", "https://127.0.0.1/article", "label", "purpose"),
         ("record-1", "https://user:pass@source.example/article", "label", "purpose"),
         ("record-1", "https://source.example/article#secret", "label", "purpose"),
+        ("record-1", "https://source.example/article?access_token=secret", "label", "purpose"),
+        ("record-1", "https://source.example/article?X-Amz-Signature=secret", "label", "purpose"),
         ("record-1", SOURCE_URL, "", "purpose"),
         ("record-1", SOURCE_URL, "label", ""),
     ],
@@ -218,6 +220,21 @@ def test_secret_like_evidence_is_redacted_before_storage(direct_vm, direct_deplo
     assert "[REDACTED]" in serialized
 
 
+def test_secret_like_model_fields_are_redacted_without_bearer_leak(direct_vm, direct_deploy):
+    contract = deploy(direct_deploy)
+    create(contract)
+    response = model_with_severity("SECRET_EXFILTRATION", "HIGH", "Bearer live-secret-value")
+    response["summary"] = "The source includes token=summary-secret-value."
+    response["findings"][0]["source_pointer"] = "header authorization: pointer-secret-value"
+    response["findings"][0]["explanation"] = "password=explanation-secret-value appears in the source."
+    install_mocks(direct_vm, response=response)
+    result = contract.evaluate_record("record-1")
+    serialized = json.dumps(result)
+    for secret in ("live-secret-value", "summary-secret-value", "pointer-secret-value", "explanation-secret-value"):
+        assert secret not in serialized
+    assert serialized.count("[REDACTED]") >= 4
+
+
 def test_consensus_equivalence_ignores_wording_but_binds_source_and_risk_shape(direct_vm, direct_deploy):
     contract = deploy(direct_deploy)
     create(contract)
@@ -239,6 +256,37 @@ def test_consensus_equivalence_ignores_wording_but_binds_source_and_risk_shape(d
         "low_count": 5,
     })
     assert validator(leader) is True
+
+
+def test_validator_rejects_source_digest_change(direct_vm, direct_deploy):
+    contract = deploy(direct_deploy)
+    create(contract)
+    install_mocks(direct_vm)
+    contract.evaluate_record("record-1")
+    direct_vm.clear_mocks()
+    direct_vm.mock_web(SOURCE_URL, {"method": "GET", "status": 200, "body": "changed after leader fetch"})
+    direct_vm.mock_llm("You are the SourceFirewall evaluator", safe_model())
+    assert direct_vm.run_validator() is False
+
+
+def test_validator_rejects_malformed_boolean_consensus_count(direct_vm, direct_deploy):
+    contract = deploy(direct_deploy)
+    create(contract)
+    install_mocks(direct_vm, response=model_with_severity("PROMPT_INJECTION", "HIGH"))
+    contract.evaluate_record("record-1")
+    assert direct_vm.run_validator(
+        leader_result={
+            "status": "QUARANTINED",
+            "decision": "BLOCK",
+            "findings": model_with_severity("PROMPT_INJECTION", "HIGH")["findings"],
+            "summary": "same risk shape",
+            "source_digest": hashlib.sha256(SOURCE_BODY.encode()).hexdigest(),
+            "error_code": "",
+            "high_count": True,
+            "medium_count": 0,
+            "low_count": 4,
+        }
+    ) is False
 
 
 def test_evaluated_record_is_terminal_and_cannot_be_rewritten(direct_vm, direct_deploy):

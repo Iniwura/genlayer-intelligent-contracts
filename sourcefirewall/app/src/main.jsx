@@ -71,6 +71,7 @@ function App() {
   const [busy, setBusy] = useState(false);
   const [message, setMessage] = useState("");
   const [error, setError] = useState("");
+  const [lastTxHash, setLastTxHash] = useState("");
   const [form, setForm] = useState({ recordId: "source-001", label: "Weekly agent source", url: "https://example.org/", purpose: "Summarize this source for a research assistant without taking actions." });
   const configMessage = configurationError();
   const isDemo = Boolean(configMessage);
@@ -88,7 +89,7 @@ function App() {
   useEffect(() => { refresh(); }, []);
 
   async function handleConnect() {
-    setError("");
+    setError(""); setLastTxHash("");
     try {
       const connected = await connectWallet();
       setAccount(connected.account);
@@ -98,9 +99,10 @@ function App() {
   }
 
   async function handleCreate() {
-    setBusy(true); setError(""); setMessage("");
+    setBusy(true); setError(""); setMessage(""); setLastTxHash("");
     try {
-      const result = await writeSourceFirewall(client, "create_record", [form.recordId.trim(), form.url.trim(), form.label.trim(), form.purpose.trim()], (hash) => setMessage(`Record transaction submitted · ${hash.slice(0, 10)}…`));
+      const result = await writeSourceFirewall(client, "create_record", [form.recordId.trim(), form.url.trim(), form.label.trim(), form.purpose.trim()], (hash) => { setLastTxHash(hash); setMessage(`Record transaction submitted · ${hash.slice(0, 10)}…`); });
+      setLastTxHash(result.hash);
       setMessage(`Record accepted · ${result.hash.slice(0, 10)}…`);
       await refresh();
     } catch (cause) { setError(errorText(cause)); }
@@ -109,9 +111,10 @@ function App() {
 
   async function handleEvaluate() {
     if (!selectedLive?.record_id) return;
-    setBusy(true); setError(""); setMessage("");
+    setBusy(true); setError(""); setMessage(""); setLastTxHash("");
     try {
-      const result = await writeSourceFirewall(client, "evaluate_record", [selectedLive.record_id], (hash) => setMessage(`Consensus evaluation submitted · ${hash.slice(0, 10)}…`));
+      const result = await writeSourceFirewall(client, "evaluate_record", [selectedLive.record_id], (hash) => { setLastTxHash(hash); setMessage(`Consensus evaluation submitted · ${hash.slice(0, 10)}…`); });
+      setLastTxHash(result.hash);
       setMessage(`Evaluation accepted · ${result.hash.slice(0, 10)}…`);
       await refresh();
     } catch (cause) { setError(errorText(cause)); }
@@ -154,7 +157,7 @@ function App() {
 
         <section id="protocol" className="protocol-section"><div className="section-intro"><div className="eyebrow">03 / PROTOCOL</div><h2>Every path ends<br /><em>in a safe state.</em></h2></div><div className="protocol-grid"><div className="protocol-card"><span className="protocol-step">A</span><h3>Render the source</h3><p>Only bounded public HTTPS sources are accepted. The contract renders text and stores a SHA-256 digest, never the raw body.</p></div><div className="protocol-card"><span className="protocol-step">B</span><h3>Normalize five risks</h3><p>Prompt control, instruction hijacking, secret exfiltration, malicious tool redirection, and unsupported claims become structured findings.</p></div><div className="protocol-card"><span className="protocol-step">C</span><h3>Quarantine ambiguity</h3><p>Validator disagreement, fetch failures, malformed output, or any medium/high finding prevents CLEAR status.</p></div></div></section>
 
-        {(message || error) && <div className={`toast ${error ? "error" : ""}`}>{error || message}{message && !error && !isDemo && selectedLive?.result_fingerprint && <a href={transactionUrl(message.match(/0x[a-fA-F0-9]+/)?.[0])} target="_blank" rel="noreferrer">View transaction <Icon name="external" /></a>}</div>}
+        {(message || error) && <div className={`toast ${error ? "error" : ""}`}>{error || message}{message && !error && !isDemo && lastTxHash && <a href={transactionUrl(lastTxHash)} target="_blank" rel="noreferrer">View transaction <Icon name="external" /></a>}</div>}
       </main>
       <footer><span>SourceFirewall / source trust boundary for AI agents</span><span className="mono">GenLayer · Bradbury · sourcefirewall.v1</span></footer>
     </div>

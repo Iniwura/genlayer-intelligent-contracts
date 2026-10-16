@@ -12,12 +12,12 @@
 
 ## Live contract flow
 
-After an operator has deployed the contract and configured `VITE_SOURCEFIREWALL_CONTRACT_ADDRESS`:
+After an operator has performed a verified deployment on the configured network and set `VITE_SOURCEFIREWALL_CONTRACT_ADDRESS` with the matching network SDK:
 
-1. Connect a wallet on GenLayer Bradbury.
+1. Connect a wallet on the configured network. The current checked-in live adapter is Bradbury-specific; a Studio Next run requires the matching `genlayer-js` release-candidate adapter and `studioDevnet` chain preset.
 2. Create a record with an HTTPS public source URL, a short label, and the downstream agent purpose.
 3. Wait for the accepted transaction receipt. The record should appear as `SUBMITTED`.
-4. Evaluate the record. The contract moves through `EVALUATING`, then persists `CLEARED`, `QUARANTINED`, or `UNRESOLVED`.
+4. Evaluate the record. The contract moves through `EVALUATING`, then returns and persists `CLEARED`, `QUARANTINED`, or `UNRESOLVED` when consensus accepts the result. A validator disagreement is a failed protocol-level evaluation; it is not an accepted `ALLOW` result.
 5. Verify the on-chain read by refreshing the desk and opening the record again.
 6. For a failure-path demo, use a source that is empty, unavailable, oversized, or produces a malformed evaluator response. The expected result is `UNRESOLVED`, never `ALLOW`.
 
