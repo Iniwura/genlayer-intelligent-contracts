@@ -44,15 +44,26 @@ npm install --no-audit --no-fund
 npm run build
 ```
 
-Result: 278 packages installed; Vite production build passed with 469 modules transformed. Vite emitted only a bundle-size advisory for the GenLayer client chunk.
+Result: dependencies installed; the hardened Vite `8.3.4` production build passed with 469 modules transformed locally. Vite emitted only a bundle-size advisory for the GenLayer client chunk. The later Vercel build passed with 462 modules transformed.
+
+```text
+npm audit --json
+npm audit --omit=dev --json
+```
+
+Result after upgrading `vite` to `8.3.4` and `@vitejs/plugin-react` to `6.1.2`: both audits report zero vulnerabilities, including zero production vulnerabilities.
 
 ## Test coverage
 
 The direct Studio-runner tests cover creation and indexing, owner checks, URL and bounded-input rejection, duplicate IDs, clean allow, medium/high quarantine, empty/unavailable/oversized source, evaluator transport failure, malformed evaluator output, secret redaction, consensus shape checks, and terminal-state behavior.
 
-## Pending release evidence
+## Release evidence
 
-- Commit SHA: to be recorded after commit.
-- GitHub branch URL: to be recorded after push.
-- Vercel production URL: to be recorded after deployment and verification.
+- Implementation commit SHA: `793551f8255d6cd22ccf3c09c6247f1f19da86df`.
+- Build-hardening commit SHA: `f94b5848896a9cbec9b80ea1a9142a28f76866c1`.
+- GitHub branch: [feat/sourcefirewall](https://github.com/Iniwura/genlayer-intelligent-contracts/tree/feat/sourcefirewall).
+- Vercel project: `sourcefirewall` (`prj_V1DnO8jP63LB1hgU2YLFD15DBAMw`), team `team_N0Gp9Gr5qfzo5WfYxVHm9rgp`.
+- Production deployment: `dpl_4UBxtGpcpTxGEqjWawRXuSXYwFgH`, built from `feat/sourcefirewall` at `f94b5848896a9cbec9b80ea1a9142a28f76866c1`, state `READY`.
+- Public URL: [sourcefirewall.vercel.app](https://sourcefirewall.vercel.app/). Live verification returned HTTP `200`; the deployed bundle contained `EXAMPLE MODE`, the hero copy, and the missing-contract warning.
+- The evidence-log update is docs-only; the deployed application corresponds to the build-hardening commit above.
 - On-chain transaction hashes: none; any future GEN/on-chain action requires explicit user approval with exact transaction, purpose, estimated total cost, and maximum spend shown first.
