@@ -115,5 +115,14 @@ The direct Studio-runner tests cover creation and indexing, owner checks, URL an
   - Ambient Radial Lighting: Dynamic radial color washes behind status clearances (`ambient-crimson-wash` for quarantined states, `ambient-emerald-wash` for cleared records, `ambient-amber-wash` for pending evaluations) with glowing micro-pills.
   - Ingress Tester & Bento Layout: Interactive live Ingress Tester directly in the landing hero with preset chips for Malicious Injection, Secret Exfiltration, and Clean Docs. 12-column Bento Grid detailing 16KB bounded intake, LLM-powered non-deterministic consensus, fail-closed boundaries, and immutable audit logs.
   - Operational Threat Desk Workbench: 380px left panel with fluid filter selection pills animated via `framer-motion` (`layoutId="activeWorkbenchFilter"`), interactive ledger table / card stream toggling, 5-point adversarial threat vector cards featuring dual visual progress meters (Threat Severity % and Consensus Certainty %), sunken quote extracts, and preset target injection in the spring intake modal.
+- Ruthless Minimalist Overhaul (Dark X, Setrex, and Nexus benchmark):
+  - Palette & Lighting Restraint: Stripped out all loud meter bars, glowing rings, and hazard stripes. Enforced strict `#060709` monochrome canvas, specular hairline glass (`rgba(255, 255, 255, 0.02)` with `border-top: 1px solid rgba(255, 255, 255, 0.12)`), `#EDEDED` headings, `#A1A1AA` body copy, and `#71717A` captions. Status accents are strictly restricted to `#10B981` (Cleared) and `#EF4444` (Quarantined) on status dots and subtle text pills.
+  - Typography: Space Grotesk display headlines (`clamp(48px, 6.5vw, 80px)` with tight `-0.05em` tracking), JetBrains Mono telemetry (`11px; letter-spacing: 0.12em; text-transform: uppercase;`), and Inter body copy.
+  - Landing Page Strip-Down: Streamlined into 3 clean, airy sections:
+    1. Hero: Centered with kicker pill ("STUDIONET 61999 // ON-CHAIN INGRESS SECURITY"), giant display headline, subhead, primary white CTA button ("Open Threat Terminal"), and secondary contract link.
+    2. Hero Product Frame: 1180px centered desktop window mockup with top chrome dots (`red`, `amber`, `green`), address bar, and interactive preview toggling between Malicious Injection and Verified Clean targets.
+    3. 3-Column Editorial Features: Hairline-divided columns with large monospace numerals `01`, `02`, `03` for 16KB Bounded Intake, Consensus Quorum, and Fail-Closed Gate.
+  - Workbench Refinement: High-density calm instrument featuring 360px left ledger table, domain/ID rows, minimal status pills, framer-motion sliding filter pill, clean status header card with top specular line, hairline-separated 5-point threat vector list with verbatim extracts in sunken `#030405` code blocks, and 4-column cryptographic proof strip.
+
 
 
