@@ -1,4 +1,5 @@
-# { "Depends": "py-genlayer:1zr6nqk597d97kg0dyxg0shhrykx5v02zjgnyrajapy4wlqvfvwh" }
+# v0.2.0
+# { "Depends": "py-genlayer:1jb45aa8ynh2a9c9xn3b7qqh8sm5q93hwfp7jqmwsfhh8jpz09h6" }
 
 """Consensus-backed inspection of untrusted external source content."""
 
@@ -10,8 +11,17 @@ from dataclasses import dataclass
 from typing import Any
 from urllib.parse import parse_qsl, urlsplit, urlunsplit
 
-import genlayer as gl
-from genlayer.types import Address, u256
+try:
+    import genlayer as gl
+    from genlayer.types import Address, u256
+    _allow_storage = gl.storage.allow
+    _TreeMap = gl.storage.TreeMap
+    _Contract = gl.contract.Contract
+except (ImportError, ModuleNotFoundError, AttributeError):
+    from genlayer import *
+    from genlayer import Address, u256, allow_storage as _allow_storage, TreeMap as _TreeMap
+    import genlayer.gl as gl
+    _Contract = gl.Contract
 
 
 SCHEMA_VERSION = "sourcefirewall.v1"
@@ -99,7 +109,7 @@ SECRET_PATTERN = re.compile(
 )
 
 
-@gl.storage.allow
+@_allow_storage
 @dataclass
 class SourceRecord:
     record_id: str
@@ -421,11 +431,11 @@ def _consensus_equivalent(candidate: dict[str, Any], observed: dict[str, Any]) -
     return candidate_shape == observed_shape
 
 
-class SourceFirewall(gl.contract.Contract):
+class SourceFirewall(_Contract):
     """Fail-closed source inspection records for downstream AI agents."""
 
-    records: gl.storage.TreeMap[str, SourceRecord]
-    record_order: gl.storage.TreeMap[u256, str]
+    records: _TreeMap[str, SourceRecord]
+    record_order: _TreeMap[u256, str]
     record_count: u256
 
     def __init__(self):

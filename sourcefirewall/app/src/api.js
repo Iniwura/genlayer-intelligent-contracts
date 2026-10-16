@@ -2,8 +2,8 @@ import { createClient } from "genlayer-js";
 import { testnetBradbury } from "genlayer-js/chains";
 import { TransactionStatus } from "genlayer-js/types";
 
-export const CONTRACT_ADDRESS = (import.meta.env.VITE_SOURCEFIREWALL_CONTRACT_ADDRESS || "").trim();
-export const BRADBURY_RPC = import.meta.env.VITE_GENLAYER_RPC_URL || "https://rpc-bradbury.genlayer.com";
+export const CONTRACT_ADDRESS = (import.meta.env.VITE_SOURCEFIREWALL_CONTRACT_ADDRESS || "0x3b5E8363E513BD562063282830492963dD81953E").trim();
+export const BRADBURY_RPC = import.meta.env.VITE_GENLAYER_RPC_URL || "https://studio.genlayer.com/api";
 export const EXPLORER_URL = testnetBradbury.blockExplorers?.default?.url || "https://explorer-bradbury.genlayer.com";
 
 export const METHODS = Object.freeze({

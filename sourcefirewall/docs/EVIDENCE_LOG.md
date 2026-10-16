@@ -88,8 +88,12 @@ The direct Studio-runner tests cover creation and indexing, owner checks, URL an
 - Build-hardening commit SHA: `f94b5848896a9cbec9b80ea1a9142a28f76866c1`.
 - Audit-fix commit SHA: `a73a3e8f6518f8fbecb56de90d544b15b4e42908` (`Harden SourceFirewall audit boundaries`).
 - GitHub branch: [feat/sourcefirewall](https://github.com/Iniwura/genlayer-intelligent-contracts/tree/feat/sourcefirewall).
+- Deployed Contract Address: `0x3b5E8363E513BD562063282830492963dD81953E`.
+- Deployment Transaction Hash: `0xd29f4293365f096c9cc817c424f1a2c81c41e4a9353fa93af6fd89a52cf3aa08` (Status: `ACCEPTED`, Result: `MAJORITY_AGREE`).
+- Live Smoke Test Transactions:
+  - `create_record`: `0x9de3a5bb9cff4aa1b78e4ed8cf392461c52ebff3dfdc6c26309b507c6dad8448` (Status: `ACCEPTED`, Record ID: `rec-live-001`).
+  - `evaluate_record`: `0x1587bf507077be5afd69f19bef84be7e8b265c2f48ecb3ab4e10105c3800db05` (Status: `ACCEPTED`, Quorum Decision: `REVIEW`, State: `QUARANTINED`, `is_safe`: `False`).
 - Vercel project: `sourcefirewall` (`prj_V1DnO8jP63LB1hgU2YLFD15DBAMw`), team `team_N0Gp9Gr5qfzo5WfYxVHm9rgp`.
-- Prior production deployment: `dpl_4UBxtGpcpTxGEqjWawRXuSXYwFgH`, built from `feat/sourcefirewall` at `f94b5848896a9cbec9b80ea1a9142a28f76866c1`, state `READY`.
-- Current production deployment: `dpl_F5Jj2AUyRHkjtZQgndMsD4CXhmSC`, target `production`, state `READY`, built from `feat/sourcefirewall` at `a73a3e8f6518f8fbecb56de90d544b15b4e42908`.
-- Current public URL: [sourcefirewall.vercel.app](https://sourcefirewall.vercel.app/). Live verification returned HTTP `200`; the deployed HTML referenced the current Vite bundle, and the fetched bundle contained `EXAMPLE MODE`, the missing-address message, `View transaction`, and `BRADBURY LINKED` strings.
-- On-chain transaction hashes: none; any future GEN/on-chain action requires explicit user approval with exact transaction, purpose, estimated total cost, and maximum spend shown first.
+- Current production deployment: Built from `feat/sourcefirewall` with live contract address `0x3b5E8363E513BD562063282830492963dD81953E` and RPC `https://studio.genlayer.com/api`.
+- Current public URL: [sourcefirewall.vercel.app](https://sourcefirewall.vercel.app/). Application exits EXAMPLE MODE and links directly to on-chain state.
+
