@@ -98,6 +98,11 @@ The direct Studio-runner tests cover creation and indexing, owner checks, URL an
 - Frontend Blank Screen Resolution:
   - Root cause: In `main.jsx`, `React.createRoot` was called directly from the `react` namespace instead of `createRoot` imported from `react-dom/client`. In React 18, `React.createRoot` is `undefined`, causing an immediate uncaught `TypeError` that prevented component mounting.
   - Fix applied: Imported `createRoot` from `react-dom/client`, configured `define: { global: 'globalThis' }` in `vite.config.js` for Web3 polyfill compatibility, and wrapped the application root in a resilient `ErrorBoundary`.
-  - Verification: Build succeeds with 467 modules transformed into `dist/assets/index-RzF6sRMD.js`.
+- Production-Grade Two-Stage Frontend Architecture:
+  - Architecture: Rebuilt from single-screen prototype into a comprehensive two-stage application:
+    1. Editorial & Industrial Marketing Landing Page (`LANDING`): Micro-badge ingress security, high-impact typography, 4-step interactive security pipeline, live on-chain telemetry strip (contract address, quorum, strict equality principle), 5 threat family matrix, and runtime consensus vs local guardrails comparison.
+    2. Operational Threat Desk & Ingress Terminal (`WORKBENCH`): Searchable and filterable queue, active forensic canvas, hazard-striped quarantine framing (`is_safe: FALSE`) and emerald neon clearance (`is_safe: TRUE`), 5-point threat vector breakdown with source pointers and evidence quotes, cryptographic receipt drawer (SHA-256 digest, fingerprint), live transaction evaluation button (`evaluate_record`), and modal target intake (`create_record`).
+  - Visual Design System: Anchored to `monodrift.framer.website` and `riwadesign.framer.website` using deep tactical obsidian `#08090a`, card surface `#0d0f12`, technical corner crosshair accents, radar status pulses, and monospace telemetry.
+  - Dependencies: Integrated `lucide-react`, `clsx`, and `tailwind-merge`.
 - Current public URL: [sourcefirewall.vercel.app](https://sourcefirewall.vercel.app/). Application exits EXAMPLE MODE and links directly to on-chain state.
 
