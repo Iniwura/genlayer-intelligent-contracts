@@ -1,4 +1,5 @@
 import React, { useEffect, useMemo, useState } from "react";
+import { createRoot } from "react-dom/client";
 import { createReadClient, configurationError, connectWallet, errorText, loadRecords, transactionUrl, writeSourceFirewall } from "./api";
 import { EXAMPLE_RECORDS } from "./demoData";
 import "./style.css";
@@ -164,4 +165,37 @@ function App() {
   );
 }
 
-React.createRoot(document.getElementById("root")).render(<App />);
+class ErrorBoundary extends React.Component {
+  constructor(props) {
+    super(props);
+    this.state = { hasError: false, error: null };
+  }
+  static getDerivedStateFromError(error) {
+    return { hasError: true, error };
+  }
+  componentDidCatch(error, errorInfo) {
+    console.error("SourceFirewall interface error:", error, errorInfo);
+  }
+  render() {
+    if (this.state.hasError) {
+      return (
+        <div style={{ minHeight: "100vh", display: "flex", alignItems: "center", justifyContent: "center", background: "#0b0d0c", color: "#f0f2f0", padding: "2rem", fontFamily: "sans-serif" }}>
+          <div style={{ maxWidth: "600px", background: "#131615", border: "1px solid #232a26", borderRadius: "12px", padding: "2rem" }}>
+            <h2 style={{ margin: "0 0 1rem", color: "#ff6b6b" }}>Boundary Display Error</h2>
+            <p style={{ margin: "0 0 1.5rem", color: "#9aa49e" }}>{this.state.error?.message || "An unexpected error occurred while rendering the interface."}</p>
+            <button onClick={() => window.location.reload()} style={{ background: "#2e7d32", color: "#fff", border: "none", padding: "0.75rem 1.5rem", borderRadius: "6px", cursor: "pointer", fontWeight: "600" }}>
+              Reload Desk
+            </button>
+          </div>
+        </div>
+      );
+    }
+    return this.props.children;
+  }
+}
+
+createRoot(document.getElementById("root")).render(
+  <ErrorBoundary>
+    <App />
+  </ErrorBoundary>
+);

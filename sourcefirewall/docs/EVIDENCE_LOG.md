@@ -95,5 +95,9 @@ The direct Studio-runner tests cover creation and indexing, owner checks, URL an
   - `evaluate_record`: `0x1587bf507077be5afd69f19bef84be7e8b265c2f48ecb3ab4e10105c3800db05` (Status: `ACCEPTED`, Quorum Decision: `REVIEW`, State: `QUARANTINED`, `is_safe`: `False`).
 - Vercel project: `sourcefirewall` (`prj_V1DnO8jP63LB1hgU2YLFD15DBAMw`), team `team_N0Gp9Gr5qfzo5WfYxVHm9rgp`.
 - Current production deployment: Built from `feat/sourcefirewall` with live contract address `0x3b5E8363E513BD562063282830492963dD81953E` and RPC `https://studio.genlayer.com/api`.
+- Frontend Blank Screen Resolution:
+  - Root cause: In `main.jsx`, `React.createRoot` was called directly from the `react` namespace instead of `createRoot` imported from `react-dom/client`. In React 18, `React.createRoot` is `undefined`, causing an immediate uncaught `TypeError` that prevented component mounting.
+  - Fix applied: Imported `createRoot` from `react-dom/client`, configured `define: { global: 'globalThis' }` in `vite.config.js` for Web3 polyfill compatibility, and wrapped the application root in a resilient `ErrorBoundary`.
+  - Verification: Build succeeds with 467 modules transformed into `dist/assets/index-RzF6sRMD.js`.
 - Current public URL: [sourcefirewall.vercel.app](https://sourcefirewall.vercel.app/). Application exits EXAMPLE MODE and links directly to on-chain state.
 
