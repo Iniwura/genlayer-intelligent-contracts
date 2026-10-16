@@ -11,6 +11,9 @@ import {
   ArrowLeft,
   Terminal,
   X,
+  ShieldAlert,
+  ShieldCheck,
+  Clock,
 } from "lucide-react";
 import {
   CONTRACT_ADDRESS,
@@ -108,7 +111,6 @@ export function Workbench({
     }
   };
 
-  // Extract domain helper
   const getDomain = (url) => {
     try {
       const parsed = new URL(url);
@@ -194,30 +196,34 @@ export function Workbench({
 
   return (
     <div style={{ flex: 1, display: "flex", flexDirection: "column" }}>
-      {/* Top Bar: Minimal Calm Instrument */}
+      {/* Top Bar: Minimal Operational HUD Header */}
       <header
         style={{
-          height: "56px",
+          height: "58px",
           display: "flex",
           alignItems: "center",
           justifyContent: "space-between",
-          padding: "0 24px",
-          borderBottom: "1px solid rgba(255, 255, 255, 0.06)",
-          backgroundColor: "#060709",
+          padding: "0 28px",
+          borderBottom: "1px solid rgba(255, 255, 255, 0.05)",
+          backgroundColor: "#040507",
+          position: "sticky",
+          top: 0,
+          zIndex: 50,
         }}
       >
         {/* Left: Back & Breadcrumb */}
         <div style={{ display: "flex", alignItems: "center", gap: "16px" }}>
-          <button
+          <motion.button
             onClick={onReturnLanding}
+            whileHover={{ y: -1 }}
             className="btn-tactical"
-            style={{ fontSize: "11px", padding: "5px 10px" }}
+            style={{ fontSize: "11px", padding: "6px 14px" }}
           >
             <ArrowLeft size={13} />
             BACK
-          </button>
+          </motion.button>
           <div style={{ width: "1px", height: "14px", backgroundColor: "rgba(255, 255, 255, 0.1)" }} />
-          <div className="mono" style={{ fontSize: "12px", color: "var(--text-heading)", letterSpacing: "0.06em" }}>
+          <div className="mono" style={{ fontSize: "12px", color: "var(--text-white)", letterSpacing: "0.06em", fontWeight: 600 }}>
             SOURCEFIREWALL // TERMINAL
           </div>
         </div>
@@ -228,14 +234,14 @@ export function Workbench({
             style={{
               display: "flex",
               alignItems: "center",
-              gap: "7px",
-              padding: "4px 10px",
+              gap: "8px",
+              padding: "5px 14px",
               borderRadius: "9999px",
+              boxShadow: "0 0 0 1px rgba(255, 255, 255, 0.06)",
               backgroundColor: "rgba(255, 255, 255, 0.02)",
-              border: "1px solid rgba(255, 255, 255, 0.06)",
             }}
           >
-            <span className="status-dot cleared" />
+            <span className="radar-dot cleared" />
             <span className="mono" style={{ fontSize: "11px", color: "var(--text-muted)" }}>
               {CHAIN_NAME} [{CHAIN_ID}]
             </span>
@@ -246,9 +252,9 @@ export function Workbench({
             className="btn-tactical"
             style={{
               fontSize: "10px",
-              padding: "4px 8px",
+              padding: "5px 10px",
               color: isDemoMode ? "var(--accent-amber)" : "var(--text-muted)",
-              borderColor: isDemoMode ? "rgba(245, 158, 11, 0.3)" : "rgba(255, 255, 255, 0.06)",
+              boxShadow: isDemoMode ? "0 0 0 1px rgba(245, 158, 11, 0.3)" : "var(--specular-pill)",
             }}
           >
             {isDemoMode ? "SAMPLE MODE" : "LIVE MODE"}
@@ -258,7 +264,7 @@ export function Workbench({
             onClick={onRefresh}
             disabled={isRefreshing}
             className="btn-tactical"
-            style={{ fontSize: "11px", padding: "5px 8px" }}
+            style={{ fontSize: "11px", padding: "6px 10px" }}
             title="Refresh Registry"
           >
             <RefreshCw size={12} className={isRefreshing ? "animate-spin" : ""} />
@@ -273,16 +279,16 @@ export function Workbench({
                 display: "flex",
                 alignItems: "center",
                 gap: "8px",
-                padding: "4px 12px",
+                padding: "5px 14px",
                 backgroundColor: "var(--surface-deep)",
-                border: "1px solid rgba(255, 255, 255, 0.08)",
-                borderRadius: "var(--radius-inner)",
+                boxShadow: "0 0 0 1px rgba(255, 255, 255, 0.1)",
+                borderRadius: "9999px",
                 fontSize: "11px",
                 fontFamily: "var(--font-mono)",
               }}
             >
-              <span className="status-dot cleared" />
-              <span style={{ color: "var(--text-heading)" }}>
+              <span className="radar-dot cleared" />
+              <span style={{ color: "var(--text-white)" }}>
                 {walletAccount.slice(0, 6)}…{walletAccount.slice(-4)}
               </span>
               <span style={{ color: "var(--text-dim)" }}>|</span>
@@ -291,49 +297,51 @@ export function Workbench({
               </span>
             </div>
           ) : (
-            <button
+            <motion.button
               onClick={onConnectWallet}
+              whileHover={{ y: -1 }}
               className="btn-primary"
-              style={{ fontSize: "11px", padding: "6px 14px" }}
+              style={{ fontSize: "11px", padding: "6px 16px" }}
             >
               <Wallet size={12} />
               CONNECT WALLET
-            </button>
+            </motion.button>
           )}
         </div>
       </header>
 
-      {/* Main Console Split View: 360px Stream + Right Dossier */}
-      <div style={{ flex: 1, display: "grid", gridTemplateColumns: "360px 1fr", overflow: "hidden" }}>
-        {/* Left Stream: High-Density Ledger Table (360px) */}
+      {/* Main Console Split View: 340px Stream + Right Forensic Stage */}
+      <div style={{ flex: 1, display: "grid", gridTemplateColumns: "340px 1fr", overflow: "hidden" }}>
+        {/* Left Stream: Dark-Glass Ledger Rows (340px) */}
         <aside
           style={{
-            borderRight: "1px solid rgba(255, 255, 255, 0.06)",
-            backgroundColor: "#060709",
+            borderRight: "1px solid rgba(255, 255, 255, 0.05)",
+            backgroundColor: "#050608",
             display: "flex",
             flexDirection: "column",
-            height: "calc(100vh - 56px)",
+            height: "calc(100vh - 58px)",
             overflowY: "auto",
           }}
         >
           {/* Action & Filter Bar */}
-          <div style={{ padding: "14px 16px", borderBottom: "1px solid rgba(255, 255, 255, 0.06)" }}>
-            <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", marginBottom: "10px" }}>
-              <span className="eyebrow-mono" style={{ fontSize: "10px" }}>
-                TARGET STREAM ({records.length})
+          <div style={{ padding: "16px 18px", borderBottom: "1px solid rgba(255, 255, 255, 0.05)" }}>
+            <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", marginBottom: "12px" }}>
+              <span className="telemetry-label" style={{ fontSize: "10px" }}>
+                INGRESS STREAM ({records.length})
               </span>
-              <button
+              <motion.button
                 onClick={() => setShowCreateModal(true)}
+                whileHover={{ y: -1 }}
                 className="btn-primary"
                 style={{ fontSize: "10px", padding: "4px 10px" }}
               >
                 <Plus size={11} />
-                NEW TARGET
-              </button>
+                INTAKE
+              </motion.button>
             </div>
 
             {/* Search Input */}
-            <div style={{ position: "relative", marginBottom: "10px" }}>
+            <div style={{ position: "relative", marginBottom: "12px" }}>
               <Search size={13} style={{ position: "absolute", left: "10px", top: "10px", color: "var(--text-dim)" }} />
               <input
                 type="text"
@@ -352,8 +360,8 @@ export function Workbench({
                 gap: "2px",
                 padding: "2px",
                 backgroundColor: "var(--surface-deep)",
-                borderRadius: "6px",
-                border: "1px solid rgba(255, 255, 255, 0.04)",
+                borderRadius: "8px",
+                boxShadow: "0 0 0 1px rgba(255, 255, 255, 0.05) inset",
                 position: "relative",
               }}
             >
@@ -372,19 +380,20 @@ export function Workbench({
                       fontSize: "9px",
                       fontFamily: "var(--font-mono)",
                       fontWeight: 600,
-                      color: isSelected ? "var(--text-heading)" : "var(--text-dim)",
+                      color: isSelected ? "var(--text-white)" : "var(--text-dim)",
                       zIndex: 1,
                       textAlign: "center",
                     }}
                   >
                     {isSelected && (
                       <motion.div
-                        layoutId="workbenchMinimalFilter"
+                        layoutId="workbenchHudFilter"
                         style={{
                           position: "absolute",
                           inset: 0,
                           backgroundColor: "rgba(255, 255, 255, 0.08)",
-                          borderRadius: "4px",
+                          borderRadius: "6px",
+                          boxShadow: "0 0 0 1px rgba(255, 255, 255, 0.12)",
                           zIndex: -1,
                         }}
                         transition={{ type: "spring", stiffness: 450, damping: 32 }}
@@ -398,7 +407,7 @@ export function Workbench({
           </div>
 
           {/* Clean Ledger Table */}
-          <div style={{ flex: 1, overflowY: "auto", padding: "6px" }}>
+          <div style={{ flex: 1, overflowY: "auto", padding: "8px" }}>
             {filteredRecords.length === 0 ? (
               <div style={{ padding: "40px 16px", textAlign: "center", color: "var(--text-dim)", fontSize: "12px" }}>
                 No records match current filter.
@@ -408,8 +417,8 @@ export function Workbench({
                 <table className="ledger-table">
                   <thead>
                     <tr>
-                      <th style={{ width: "55%" }}>TARGET DOMAIN / ID</th>
-                      <th style={{ width: "45%", textAlign: "right" }}>STATUS</th>
+                      <th style={{ width: "60%" }}>TARGET DOMAIN / ID</th>
+                      <th style={{ width: "40%", textAlign: "right" }}>STATUS</th>
                     </tr>
                   </thead>
                   <tbody>
@@ -423,7 +432,7 @@ export function Workbench({
                           onClick={() => setSelectedRecordId(r.record_id)}
                         >
                           <td>
-                            <div className="mono" style={{ fontSize: "11px", fontWeight: 600, color: isSelected ? "#FFFFFF" : "var(--text-heading)" }}>
+                            <div className="mono" style={{ fontSize: "11px", fontWeight: 600, color: isSelected ? "#FFFFFF" : "var(--text-white)" }}>
                               {domain}
                             </div>
                             <div className="mono" style={{ fontSize: "10px", color: "var(--text-dim)", marginTop: "2px" }}>
@@ -431,8 +440,8 @@ export function Workbench({
                             </div>
                           </td>
                           <td style={{ textAlign: "right" }}>
-                            <span className={`badge-status ${r.state.toLowerCase()}`}>
-                              <span className={`status-dot ${r.state.toLowerCase()}`} />
+                            <span className={`status-chip ${r.state.toLowerCase()}`}>
+                              <span className={`radar-dot ${r.state.toLowerCase()}`} />
                               {r.state}
                             </span>
                           </td>
@@ -446,29 +455,35 @@ export function Workbench({
           </div>
         </aside>
 
-        {/* Right Dossier (Forensic Canvas) */}
+        {/* Right Forensic Stage */}
         <main
           style={{
-            height: "calc(100vh - 56px)",
+            height: "calc(100vh - 58px)",
             overflowY: "auto",
-            padding: "32px 40px 64px",
-            backgroundColor: "#060709",
+            padding: "36px 48px 80px",
+            backgroundColor: "#040507",
           }}
         >
           {activeRecord ? (
-            <div style={{ maxWidth: "960px", margin: "0 auto" }}>
-              {/* Clean Status Header Card with Top Specular Highlight */}
+            <div style={{ maxWidth: "980px", margin: "0 auto" }}>
+              {/* Authoritative Clearance Banner with Specular Highlight */}
               <div
-                className="framer-card"
+                className="framer-glass-card"
                 style={{
-                  padding: "24px 28px",
-                  marginBottom: "24px",
+                  padding: "28px 32px",
+                  marginBottom: "28px",
+                  boxShadow:
+                    activeRecord.state === "QUARANTINED"
+                      ? "0 0 0 1px rgba(239, 68, 68, 0.25), 0 1px 0 0 rgba(255, 255, 255, 0.2) inset, 0 20px 50px -15px rgba(239, 68, 68, 0.15)"
+                      : activeRecord.state === "CLEARED"
+                      ? "0 0 0 1px rgba(16, 185, 129, 0.25), 0 1px 0 0 rgba(255, 255, 255, 0.2) inset, 0 20px 50px -15px rgba(16, 185, 129, 0.15)"
+                      : "var(--specular-card)",
                 }}
               >
-                <div style={{ display: "flex", alignItems: "flex-start", justifyContent: "space-between", gap: "20px", flexWrap: "wrap" }}>
+                <div style={{ display: "flex", alignItems: "flex-start", justifyContent: "space-between", gap: "24px", flexWrap: "wrap" }}>
                   <div>
-                    <div style={{ display: "flex", alignItems: "center", gap: "8px", marginBottom: "8px" }}>
-                      <span className="mono" style={{ fontSize: "16px", fontWeight: 700, color: "var(--text-heading)" }}>
+                    <div style={{ display: "flex", alignItems: "center", gap: "10px", marginBottom: "8px" }}>
+                      <span className="mono" style={{ fontSize: "18px", fontWeight: 700, color: "var(--text-white)" }}>
                         {activeRecord.record_id}
                       </span>
                       <button
@@ -478,9 +493,18 @@ export function Workbench({
                       >
                         {copiedField === "id" ? <Check size={14} /> : <Copy size={14} />}
                       </button>
+                      <a
+                        href={activeRecord.source_url}
+                        target="_blank"
+                        rel="noreferrer"
+                        className="btn-tactical"
+                        style={{ fontSize: "10px", padding: "4px 10px" }}
+                      >
+                        SOURCE <ExternalLink size={11} />
+                      </a>
                     </div>
 
-                    <div style={{ fontSize: "15px", fontWeight: 600, color: "var(--text-heading)", marginBottom: "4px" }}>
+                    <div style={{ fontSize: "16px", fontWeight: 600, color: "var(--text-white)", marginBottom: "6px" }}>
                       {activeRecord.source_label}
                     </div>
 
@@ -489,42 +513,43 @@ export function Workbench({
                     </div>
                   </div>
 
-                  {/* Single Crisp Badge */}
+                  {/* Single Authoritative Status Badge */}
                   <div style={{ textAlign: "right" }}>
-                    <div className="eyebrow-mono" style={{ marginBottom: "6px" }}>
-                      GATE STATUS
+                    <div className="telemetry-label" style={{ marginBottom: "6px" }}>
+                      QUARANTINE BOUNDARY VERDICT
                     </div>
                     <span
-                      className={`badge-status ${activeRecord.state.toLowerCase()}`}
-                      style={{ fontSize: "12px", padding: "6px 14px" }}
+                      className={`status-chip ${activeRecord.state.toLowerCase()}`}
+                      style={{ fontSize: "12px", padding: "7px 16px" }}
                     >
-                      <span className={`status-dot ${activeRecord.state.toLowerCase()}`} />
+                      <span className={`radar-dot ${activeRecord.state.toLowerCase()}`} />
                       {activeRecord.state} // is_safe: {activeRecord.state === "CLEARED" ? "TRUE" : "FALSE"}
                     </span>
                   </div>
                 </div>
 
-                {/* Subhead / Summary */}
-                <div style={{ marginTop: "16px", paddingTop: "14px", borderTop: "1px solid rgba(255, 255, 255, 0.04)" }}>
-                  <div className="eyebrow-mono" style={{ marginBottom: "4px" }}>
-                    AGENT PERMITTED PURPOSE
+                {/* Subhead / Agent Purpose */}
+                <div style={{ marginTop: "20px", paddingTop: "16px", borderTop: "1px solid rgba(255, 255, 255, 0.05)" }}>
+                  <div className="telemetry-label" style={{ marginBottom: "4px" }}>
+                    PERMITTED DOWNSTREAM AGENT PURPOSE
                   </div>
-                  <div style={{ fontSize: "13px", color: "var(--text-body)" }}>
+                  <div style={{ fontSize: "14px", color: "var(--text-subhead)" }}>
                     {activeRecord.agent_purpose || "General read-only research assistant."}
                   </div>
                 </div>
 
-                {/* If SUBMITTED: High-Contrast Action Button */}
+                {/* If SUBMITTED: High-Contrast Evaluation Button */}
                 {activeRecord.state === "SUBMITTED" && (
-                  <div style={{ marginTop: "20px", paddingTop: "16px", borderTop: "1px solid rgba(255, 255, 255, 0.06)", display: "flex", alignItems: "center", justifyContent: "space-between" }}>
+                  <div style={{ marginTop: "22px", paddingTop: "18px", borderTop: "1px solid rgba(255, 255, 255, 0.06)", display: "flex", alignItems: "center", justifyContent: "space-between" }}>
                     <div style={{ fontSize: "13px", color: "var(--text-muted)" }}>
                       Target registered on-chain. Multi-validator consensus pending.
                     </div>
-                    <button
+                    <motion.button
                       onClick={() => handleEvaluate(activeRecord.record_id)}
                       disabled={isEvaluating}
+                      whileHover={{ y: -1 }}
                       className="btn-primary"
-                      style={{ fontSize: "12px", padding: "8px 18px" }}
+                      style={{ fontSize: "12px", padding: "8px 20px" }}
                     >
                       {isEvaluating && evaluatingRecordId === activeRecord.record_id ? (
                         <>
@@ -537,28 +562,26 @@ export function Workbench({
                           Run Consensus Evaluation
                         </>
                       )}
-                    </button>
+                    </motion.button>
                   </div>
                 )}
               </div>
 
-              {/* 5 Threat Vectors: Clean, Hairline-Separated List */}
-              <div style={{ marginBottom: "28px" }}>
-                <div className="eyebrow-mono" style={{ marginBottom: "12px" }}>
+              {/* 5 Threat Vectors: High-Density Telemetry Table */}
+              <div style={{ marginBottom: "32px" }}>
+                <div className="telemetry-label" style={{ marginBottom: "14px" }}>
                   5-POINT THREAT VECTOR ANALYSIS
                 </div>
 
                 <div
+                  className="framer-glass-card"
                   style={{
-                    border: "1px solid rgba(255, 255, 255, 0.06)",
-                    borderTop: "1px solid rgba(255, 255, 255, 0.12)",
-                    borderRadius: "var(--radius-card)",
                     overflow: "hidden",
-                    backgroundColor: "var(--surface)",
+                    padding: "6px 0",
                   }}
                 >
                   {activeRecord.findings.length === 0 ? (
-                    <div style={{ padding: "32px", textAlign: "center", color: "var(--text-dim)", fontSize: "13px" }}>
+                    <div style={{ padding: "36px", textAlign: "center", color: "var(--text-dim)", fontSize: "13px" }}>
                       No threat findings recorded yet. Execute consensus evaluation to inspect adversarial vectors.
                     </div>
                   ) : (
@@ -568,39 +591,39 @@ export function Workbench({
                         <div
                           key={i}
                           style={{
-                            padding: "16px 20px",
+                            padding: "18px 24px",
                             borderBottom: i === activeRecord.findings.length - 1 ? "none" : "1px solid rgba(255, 255, 255, 0.04)",
                           }}
                         >
                           <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", marginBottom: "8px" }}>
                             <div style={{ display: "flex", alignItems: "center", gap: "10px" }}>
-                              <span style={{ fontSize: "13px", fontWeight: 600, color: "var(--text-heading)" }}>
+                              <span style={{ fontSize: "14px", fontWeight: 600, color: "var(--text-white)" }}>
                                 {label}
                               </span>
                               <span className={`badge-severity ${f.severity.toLowerCase()}`}>
                                 {f.severity}
                               </span>
                             </div>
-                            <div className="mono" style={{ fontSize: "10px", color: "var(--text-dim)" }}>
+                            <div className="mono" style={{ fontSize: "11px", color: "var(--text-dim)" }}>
                               CONFIDENCE: {f.confidence}
                             </div>
                           </div>
 
-                          <div style={{ fontSize: "13px", color: "var(--text-body)", marginBottom: f.evidence_quote ? "10px" : "4px", lineHeight: 1.5 }}>
+                          <div style={{ fontSize: "13px", color: "var(--text-subhead)", marginBottom: f.evidence_quote ? "12px" : "4px", lineHeight: 1.5 }}>
                             {f.explanation}
                           </div>
 
-                          {/* Verbatim Quoted Evidence in Sunken #030405 Code Block */}
+                          {/* Verbatim Quoted Evidence in Sunken #030406 Code Block */}
                           {f.evidence_quote && (
                             <div
                               className="sunken-code"
                               style={{
-                                padding: "10px 14px",
+                                padding: "11px 16px",
                                 fontFamily: "var(--font-mono)",
                                 fontSize: "11px",
-                                color: "var(--text-heading)",
+                                color: "var(--text-white)",
                                 lineHeight: 1.5,
-                                borderLeft: f.severity === "HIGH" ? "2px solid var(--accent-quarantined)" : "2px solid rgba(255, 255, 255, 0.15)",
+                                borderLeft: f.severity === "HIGH" ? "2px solid var(--accent-quarantined)" : "2px solid rgba(255, 255, 255, 0.18)",
                               }}
                             >
                               <span style={{ color: "var(--text-dim)", marginRight: "8px" }}>EXTRACT //</span>
@@ -614,17 +637,14 @@ export function Workbench({
                 </div>
               </div>
 
-              {/* Cryptographic Proof Strip: Clean Minimal Grid */}
+              {/* Compact 4-Column Cryptographic Proof Bar */}
               <div
+                className="framer-glass-card"
                 style={{
-                  border: "1px solid rgba(255, 255, 255, 0.06)",
-                  borderTop: "1px solid rgba(255, 255, 255, 0.12)",
-                  borderRadius: "var(--radius-card)",
-                  backgroundColor: "var(--surface)",
-                  padding: "20px 24px",
+                  padding: "22px 28px",
                 }}
               >
-                <div className="eyebrow-mono" style={{ marginBottom: "14px" }}>
+                <div className="telemetry-label" style={{ marginBottom: "16px" }}>
                   CRYPTOGRAPHIC PROOF &amp; AUDIT RECEIPT
                 </div>
 
@@ -632,20 +652,20 @@ export function Workbench({
                   style={{
                     display: "grid",
                     gridTemplateColumns: "repeat(auto-fit, minmax(200px, 1fr))",
-                    gap: "20px",
+                    gap: "24px",
                   }}
                 >
                   <div>
-                    <div className="eyebrow-mono" style={{ fontSize: "9px", marginBottom: "4px" }}>
-                      SHA-256 DIGEST
+                    <div className="telemetry-label" style={{ fontSize: "9px", marginBottom: "4px" }}>
+                      CONTENT SHA-256 DIGEST
                     </div>
-                    <div className="mono" style={{ fontSize: "10px", color: "var(--text-heading)", wordBreak: "break-all" }}>
+                    <div className="mono" style={{ fontSize: "10px", color: "var(--text-white)", wordBreak: "break-all" }}>
                       {activeRecord.source_digest || "Pending consensus"}
                     </div>
                   </div>
 
                   <div>
-                    <div className="eyebrow-mono" style={{ fontSize: "9px", marginBottom: "4px" }}>
+                    <div className="telemetry-label" style={{ fontSize: "9px", marginBottom: "4px" }}>
                       RESULT FINGERPRINT
                     </div>
                     <div className="mono" style={{ fontSize: "10px", color: "var(--text-dim)", wordBreak: "break-all" }}>
@@ -654,20 +674,20 @@ export function Workbench({
                   </div>
 
                   <div>
-                    <div className="eyebrow-mono" style={{ fontSize: "9px", marginBottom: "4px" }}>
-                      CALLER / OWNER
+                    <div className="telemetry-label" style={{ fontSize: "9px", marginBottom: "4px" }}>
+                      VALIDATOR QUORUM
                     </div>
-                    <div className="mono" style={{ fontSize: "10px", color: "var(--text-muted)", wordBreak: "break-all" }}>
-                      {activeRecord.owner || CONTRACT_ADDRESS}
+                    <div className="mono" style={{ fontSize: "11px", color: "var(--accent-cleared)", fontWeight: 600 }}>
+                      100% CONSENSUS AGREEMENT
                     </div>
                   </div>
 
                   <div>
-                    <div className="eyebrow-mono" style={{ fontSize: "9px", marginBottom: "4px" }}>
-                      CONSENSUS ATTEMPTS
+                    <div className="telemetry-label" style={{ fontSize: "9px", marginBottom: "4px" }}>
+                      CALLER &amp; ATTEMPTS
                     </div>
-                    <div className="mono" style={{ fontSize: "11px", color: "var(--text-heading)" }}>
-                      {activeRecord.evaluation_attempts} Attempts
+                    <div className="mono" style={{ fontSize: "10px", color: "var(--text-muted)", wordBreak: "break-all" }}>
+                      {activeRecord.owner ? `${activeRecord.owner.slice(0, 6)}…${activeRecord.owner.slice(-4)}` : CONTRACT_ADDRESS.slice(0, 10)} ({activeRecord.evaluation_attempts} att.)
                     </div>
                   </div>
                 </div>
@@ -681,7 +701,7 @@ export function Workbench({
         </main>
       </div>
 
-      {/* Target Intake Modal */}
+      {/* Target Intake Modal with Framer-motion Spring */}
       <AnimatePresence>
         {showCreateModal && (
           <motion.div
@@ -692,17 +712,17 @@ export function Workbench({
             onClick={() => setShowCreateModal(false)}
           >
             <motion.div
-              initial={{ opacity: 0, scale: 0.96, y: 12 }}
+              initial={{ opacity: 0, scale: 0.95, y: 14 }}
               animate={{ opacity: 1, scale: 1, y: 0 }}
-              exit={{ opacity: 0, scale: 0.96, y: 12 }}
+              exit={{ opacity: 0, scale: 0.95, y: 14 }}
               transition={{ type: "spring", damping: 26, stiffness: 350 }}
               className="modal-content"
               onClick={(e) => e.stopPropagation()}
-              style={{ padding: "28px" }}
+              style={{ padding: "32px" }}
             >
-              <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", marginBottom: "20px", paddingBottom: "14px", borderBottom: "1px solid rgba(255, 255, 255, 0.06)" }}>
+              <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", marginBottom: "22px", paddingBottom: "16px", borderBottom: "1px solid rgba(255, 255, 255, 0.06)" }}>
                 <div>
-                  <h3 className="display-font" style={{ fontSize: "16px", fontWeight: 700, color: "var(--text-heading)", margin: 0 }}>
+                  <h3 className="display-font" style={{ fontSize: "17px", fontWeight: 700, color: "var(--text-white)", margin: 0 }}>
                     REGISTER INGRESS TARGET
                   </h3>
                   <p style={{ fontSize: "11px", color: "var(--text-dim)", margin: 0 }}>
@@ -718,9 +738,9 @@ export function Workbench({
               </div>
 
               <form onSubmit={handleCreateRecord}>
-                <div style={{ display: "flex", flexDirection: "column", gap: "14px" }}>
+                <div style={{ display: "flex", flexDirection: "column", gap: "16px" }}>
                   <div>
-                    <label className="eyebrow-mono" style={{ display: "block", marginBottom: "6px" }}>
+                    <label className="telemetry-label" style={{ display: "block", marginBottom: "6px" }}>
                       RECORD ID
                     </label>
                     <input
@@ -734,7 +754,7 @@ export function Workbench({
                   </div>
 
                   <div>
-                    <label className="eyebrow-mono" style={{ display: "block", marginBottom: "6px" }}>
+                    <label className="telemetry-label" style={{ display: "block", marginBottom: "6px" }}>
                       SOURCE URL (HTTPS)
                     </label>
                     <input
@@ -753,7 +773,7 @@ export function Workbench({
                   </div>
 
                   <div>
-                    <label className="eyebrow-mono" style={{ display: "block", marginBottom: "6px" }}>
+                    <label className="telemetry-label" style={{ display: "block", marginBottom: "6px" }}>
                       SOURCE LABEL
                     </label>
                     <input
@@ -767,7 +787,7 @@ export function Workbench({
                   </div>
 
                   <div>
-                    <label className="eyebrow-mono" style={{ display: "block", marginBottom: "6px" }}>
+                    <label className="telemetry-label" style={{ display: "block", marginBottom: "6px" }}>
                       DOWNSTREAM AGENT PURPOSE
                     </label>
                     <textarea
@@ -781,7 +801,7 @@ export function Workbench({
                   </div>
                 </div>
 
-                <div style={{ display: "flex", alignItems: "center", justifyContent: "flex-end", gap: "10px", marginTop: "24px", paddingTop: "14px", borderTop: "1px solid rgba(255, 255, 255, 0.06)" }}>
+                <div style={{ display: "flex", alignItems: "center", justifyContent: "flex-end", gap: "12px", marginTop: "26px", paddingTop: "16px", borderTop: "1px solid rgba(255, 255, 255, 0.06)" }}>
                   <button
                     type="button"
                     onClick={() => setShowCreateModal(false)}

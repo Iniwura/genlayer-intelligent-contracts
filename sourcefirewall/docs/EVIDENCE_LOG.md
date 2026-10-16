@@ -122,7 +122,12 @@ The direct Studio-runner tests cover creation and indexing, owner checks, URL an
     1. Hero: Centered with kicker pill ("STUDIONET 61999 // ON-CHAIN INGRESS SECURITY"), giant display headline, subhead, primary white CTA button ("Open Threat Terminal"), and secondary contract link.
     2. Hero Product Frame: 1180px centered desktop window mockup with top chrome dots (`red`, `amber`, `green`), address bar, and interactive preview toggling between Malicious Injection and Verified Clean targets.
     3. 3-Column Editorial Features: Hairline-divided columns with large monospace numerals `01`, `02`, `03` for 16KB Bounded Intake, Consensus Quorum, and Fail-Closed Gate.
-  - Workbench Refinement: High-density calm instrument featuring 360px left ledger table, domain/ID rows, minimal status pills, framer-motion sliding filter pill, clean status header card with top specular line, hairline-separated 5-point threat vector list with verbatim extracts in sunken `#030405` code blocks, and 4-column cryptographic proof strip.
+- Authentic Framer Marketplace Visual Architecture (Dark X, Monodrift, and Linear benchmark):
+  - Framer Lighting & Specular Border Engine: Deep void `#040507` canvas with dual radial hero spotlights (`rgba(120, 119, 198, 0.13)` at top, cyan mesh at bottom). Eliminated flat border outlines entirely in favor of `.framer-glass-card` specular hairline physics (`box-shadow: 0 0 0 1px rgba(255, 255, 255, 0.07), 0 1px 0 0 rgba(255, 255, 255, 0.18) inset, 0 20px 40px -15px rgba(0, 0, 0, 0.9)`), 16px border radius, and shimmer pill eyebrows with pulsing radar dots (`@keyframes ping-halo`).
+  - Typographic Drama & Scale: Space Grotesk display headers at `clamp(56px, 8vw, 92px)` with `-0.06em` tracking and `0.9` line-height; Slate-400 `#94A3B8` subheads at 18px; strict JetBrains Mono telemetry (`10px; letter-spacing: 0.18em; text-transform: uppercase; font-weight: 600;`).
+  - Hero Composition: Generous 120px top padding, `STUDIONET 61999 // INGRESS FIREWALL` shimmer pill, solid white pill CTA with spring lift, top-lit gradient border container (`bg-gradient-to-b from-white/18 via-white/4 to-transparent p-1 rounded-2xl`), live interactive dark-room terminal window, and 3-column value strip with large monospace numerals `01`, `02`, `03`.
+  - Workbench Operational HUD: Asymmetrical 340px left stream with dark-glass ledger rows, fluid `framer-motion` sliding pill filters, authoritative clearance banner with specular top highlight, 5-point adversarial threat vector telemetry table with verbatim quotes in sunken `#030406` code blocks, and 4-column cryptographic proof bar.
+
 
 
 
