@@ -1,4 +1,5 @@
 import React, { useState } from "react";
+import { motion, AnimatePresence } from "framer-motion";
 import {
   Shield,
   ShieldAlert,
@@ -11,16 +12,60 @@ import {
   Layers,
   ArrowRight,
   Lock,
-  FileCode,
-  AlertTriangle,
   Workflow,
-  Radio,
+  Sparkles,
+  Zap,
+  Flame,
+  Search,
+  Code2,
 } from "lucide-react";
-import { CONTRACT_ADDRESS, CHAIN_ID, CHAIN_NAME, contractUrl } from "../api";
+import { CONTRACT_ADDRESS, CHAIN_ID, contractUrl } from "../api";
 
-export function LandingPage({ onLaunchWorkbench, liveRecordCount, isDemoMode }) {
+export function LandingPage({ onLaunchWorkbench, liveRecordCount }) {
   const [copiedContract, setCopiedContract] = useState(false);
   const [activeTab, setActiveTab] = useState("PROMPT_INJECTION");
+
+  // Ingress Tester State
+  const PRESET_TARGETS = [
+    {
+      id: "injection",
+      label: "Malicious Prompt Injection",
+      url: "https://adversarial-corpus.internal/corpus/injection-payload-09.txt",
+      status: "QUARANTINED",
+      decision: "BLOCK",
+      threats: { injection: "HIGH", hijack: "HIGH", exfil: "MEDIUM", tool: "LOW", claim: "LOW" },
+      summary: "CRITICAL: Multiple prompt override directives detected. Attempts to nullify system context and usurp execution privilege.",
+    },
+    {
+      id: "exfiltration",
+      label: "Secret Exfiltration Vector",
+      url: "https://adversarial-corpus.internal/extract/env-probe.html",
+      status: "QUARANTINED",
+      decision: "BLOCK",
+      threats: { injection: "LOW", hijack: "LOW", exfil: "HIGH", tool: "HIGH", claim: "LOW" },
+      summary: "HIGH RISK: Probe directives attempting to dump runtime authorization tokens and environment keystores.",
+    },
+    {
+      id: "clean",
+      label: "Clean Developer Docs",
+      url: "https://docs.genlayer.com/intelligent-contracts/overview",
+      status: "CLEARED",
+      decision: "ALLOW",
+      threats: { injection: "LOW", hijack: "LOW", exfil: "LOW", tool: "LOW", claim: "LOW" },
+      summary: "APPROVED: Descriptive documentation containing zero adversarial vectors or imperative task redirects.",
+    },
+  ];
+
+  const [testerUrl, setTesterUrl] = useState(PRESET_TARGETS[0].url);
+  const [activePreset, setActivePreset] = useState(PRESET_TARGETS[0]);
+  const [isScanning, setIsScanning] = useState(false);
+
+  const selectPreset = (preset) => {
+    setActivePreset(preset);
+    setTesterUrl(preset.url);
+    setIsScanning(true);
+    setTimeout(() => setIsScanning(false), 450);
+  };
 
   const copyContract = () => {
     navigator.clipboard.writeText(CONTRACT_ADDRESS);
@@ -83,13 +128,14 @@ export function LandingPage({ onLaunchWorkbench, liveRecordCount, isDemoMode }) 
 
   return (
     <div style={{ flex: 1, display: "flex", flexDirection: "column" }}>
-      {/* Top Tactical Navigation Bar */}
+      {/* Top Navigation */}
       <header
         style={{
-          borderBottom: "var(--line)",
-          backgroundColor: "var(--surface)",
-          height: "64px",
-          padding: "0 28px",
+          borderBottom: "var(--border-specular)",
+          backgroundColor: "rgba(9, 11, 14, 0.8)",
+          backdropFilter: "blur(16px)",
+          height: "68px",
+          padding: "0 32px",
           display: "flex",
           alignItems: "center",
           justifyContent: "space-between",
@@ -98,21 +144,23 @@ export function LandingPage({ onLaunchWorkbench, liveRecordCount, isDemoMode }) 
           zIndex: 50,
         }}
       >
-        {/* Brand Identity */}
+        {/* Brand */}
         <div style={{ display: "flex", alignItems: "center", gap: "12px" }}>
           <div
             style={{
-              width: "32px",
-              height: "32px",
-              backgroundColor: "var(--surface-deep)",
-              border: "var(--line)",
+              width: "34px",
+              height: "34px",
+              backgroundColor: "var(--surface)",
+              border: "var(--border-specular)",
+              borderRadius: "8px",
               display: "flex",
               alignItems: "center",
               justifyContent: "center",
               color: "var(--accent-cleared)",
+              boxShadow: "0 2px 8px rgba(0,0,0,0.4), inset 0 1px 0 rgba(255,255,255,0.1)",
             }}
           >
-            <Shield size={17} />
+            <Shield size={18} />
           </div>
           <div style={{ display: "flex", alignItems: "center", gap: "8px" }}>
             <span
@@ -125,14 +173,14 @@ export function LandingPage({ onLaunchWorkbench, liveRecordCount, isDemoMode }) 
               className="mono"
               style={{
                 fontSize: "9px",
-                padding: "1px 5px",
+                padding: "2px 6px",
                 backgroundColor: "var(--surface-deep)",
-                border: "var(--line)",
+                border: "var(--border-specular)",
                 color: "var(--muted)",
-                borderRadius: "2px",
+                borderRadius: "4px",
               }}
             >
-              v1.0.4-LIVE
+              v1.0.4
             </span>
           </div>
         </div>
@@ -143,33 +191,33 @@ export function LandingPage({ onLaunchWorkbench, liveRecordCount, isDemoMode }) 
             display: "flex",
             alignItems: "center",
             gap: "28px",
-            fontSize: "11px",
+            fontSize: "12px",
             fontFamily: "var(--font-mono)",
             color: "var(--muted)",
           }}
         >
-          <a href="#pipeline" style={{ transition: "color var(--motion-fast) var(--ease-surgical)" }}>
-            // PIPELINE
+          <a href="#tester" style={{ transition: "color var(--motion-fast)" }}>
+            // TESTER
           </a>
-          <a href="#telemetry" style={{ transition: "color var(--motion-fast) var(--ease-surgical)" }}>
-            // TELEMETRY
+          <a href="#bento" style={{ transition: "color var(--motion-fast)" }}>
+            // ARCHITECTURE
           </a>
-          <a href="#threats" style={{ transition: "color var(--motion-fast) var(--ease-surgical)" }}>
+          <a href="#threats" style={{ transition: "color var(--motion-fast)" }}>
             // THREAT_MATRIX
           </a>
-          <a href="#consensus" style={{ transition: "color var(--motion-fast) var(--ease-surgical)" }}>
-            // CONSENSUS
+          <a href={contractUrl(CONTRACT_ADDRESS)} target="_blank" rel="noreferrer" style={{ transition: "color var(--motion-fast)" }}>
+            // CONTRACT
           </a>
         </nav>
 
-        {/* Actions */}
+        {/* CTA */}
         <div style={{ display: "flex", alignItems: "center", gap: "12px" }}>
           <a
             href={contractUrl(CONTRACT_ADDRESS)}
             target="_blank"
             rel="noreferrer"
             className="btn-tactical"
-            style={{ fontSize: "10px", padding: "6px 12px" }}
+            style={{ fontSize: "11px", padding: "7px 12px" }}
           >
             <ExternalLink size={12} />
             EXPLORER
@@ -177,732 +225,407 @@ export function LandingPage({ onLaunchWorkbench, liveRecordCount, isDemoMode }) 
           <button
             onClick={onLaunchWorkbench}
             className="btn-primary"
-            style={{ fontSize: "11px", padding: "7px 16px" }}
+            style={{ fontSize: "12px", padding: "8px 18px" }}
           >
-            <Terminal size={13} />
-            LAUNCH THREAT DESK
+            <Terminal size={14} />
+            LAUNCH APP
           </button>
         </div>
       </header>
 
       {/* Hero Section */}
-      <section style={{ padding: "64px 36px 72px", position: "relative" }}>
-        <div style={{ display: "grid", gridTemplateColumns: "1.15fr 0.85fr", gap: "48px", alignItems: "center" }}>
-          {/* Left Column: Display Copy */}
-          <div>
-            <div
-              style={{
-                display: "inline-flex",
-                alignItems: "center",
-                gap: "8px",
-                padding: "5px 11px",
-                backgroundColor: "var(--surface-deep)",
-                border: "var(--line)",
-                marginBottom: "24px",
-              }}
+      <section style={{ padding: "80px 32px 64px", position: "relative", overflow: "hidden" }}>
+        <motion.div
+          initial={{ opacity: 0, y: 18 }}
+          animate={{ opacity: 1, y: 0 }}
+          transition={{ duration: 0.5, ease: [0.16, 1, 0.3, 1] }}
+          style={{ maxWidth: "1280px", margin: "0 auto", textAlign: "center" }}
+        >
+          {/* Animated Glowing Border Micro-Pill */}
+          <div style={{ display: "inline-block", marginBottom: "28px" }}>
+            <div className="pill-glow-border">
+              <span className="health-dot cyan" />
+              <span className="eyebrow-tactical" style={{ color: "var(--paper)" }}>
+                GENLAYER RUNTIME CONSENSUS // STUDIONET {CHAIN_ID}
+              </span>
+            </div>
+          </div>
+
+          {/* Confident Headline with High Visual Hierarchy */}
+          <h1
+            className="display-font"
+            style={{
+              fontSize: "clamp(44px, 6.5vw, 92px)",
+              fontWeight: 800,
+              lineHeight: 0.95,
+              letterSpacing: "-0.045em",
+              maxWidth: "1050px",
+              margin: "0 auto 24px",
+              textTransform: "uppercase",
+            }}
+          >
+            Ingress Quarantine for <span style={{ color: "var(--accent-cleared)" }}>Autonomous AI Agents</span>
+          </h1>
+
+          <p
+            style={{
+              fontSize: "16px",
+              lineHeight: 1.6,
+              color: "var(--muted)",
+              maxWidth: "680px",
+              margin: "0 auto 40px",
+            }}
+          >
+            Stop prompt injection, instruction hijacking, and secret exfiltration before LLMs ingest untrusted URLs.
+            Independent GenLayer validators evaluate bounded sources and issue on-chain <code className="mono" style={{ color: "var(--accent-cyan)" }}>is_safe</code> certificates.
+          </p>
+
+          {/* Action CTAs */}
+          <div style={{ display: "flex", justifyContent: "center", alignItems: "center", gap: "16px", marginBottom: "64px" }}>
+            <button
+              onClick={onLaunchWorkbench}
+              className="btn-primary"
+              style={{ padding: "13px 28px", fontSize: "14px" }}
             >
-              <span className="health-dot" />
-              <span className="eyebrow-tactical" style={{ color: "var(--accent-cleared)" }}>
-                INGRESS PERIMETER // RUNTIME CONSENSUS
+              <Terminal size={16} />
+              LAUNCH THREAT TERMINAL
+              <ArrowRight size={15} />
+            </button>
+
+            <a
+              href={contractUrl(CONTRACT_ADDRESS)}
+              target="_blank"
+              rel="noreferrer"
+              className="btn-tactical"
+              style={{ padding: "13px 22px", fontSize: "13px" }}
+            >
+              <Code2 size={15} />
+              INSPECT SMART CONTRACT
+              <ExternalLink size={13} style={{ color: "var(--dim)" }} />
+            </a>
+          </div>
+
+          {/* LIVE INTERACTIVE INGRESS TESTER */}
+          <div id="tester" style={{ maxWidth: "960px", margin: "0 auto", textAlign: "left" }}>
+            <div className="framer-card" style={{ padding: "28px" }}>
+              <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", marginBottom: "16px" }}>
+                <div style={{ display: "flex", alignItems: "center", gap: "10px" }}>
+                  <Sparkles size={16} style={{ color: "var(--accent-cyan)" }} />
+                  <span className="eyebrow-tactical" style={{ color: "var(--paper)" }}>
+                    LIVE INGRESS PARSER // INTERACTIVE SIMULATION
+                  </span>
+                </div>
+                <div style={{ display: "flex", gap: "8px" }}>
+                  <span className="mono" style={{ fontSize: "10px", color: "var(--dim)" }}>
+                    CONSENSUS: STRICT_EQ
+                  </span>
+                </div>
+              </div>
+
+              {/* Preset Chips */}
+              <div style={{ display: "flex", flexWrap: "wrap", gap: "8px", marginBottom: "16px" }}>
+                {PRESET_TARGETS.map((preset) => {
+                  const isSelected = activePreset.id === preset.id;
+                  return (
+                    <button
+                      key={preset.id}
+                      onClick={() => selectPreset(preset)}
+                      className="btn-tactical"
+                      style={{
+                        fontSize: "11px",
+                        padding: "6px 12px",
+                        backgroundColor: isSelected ? "var(--surface-hover)" : "var(--surface-deep)",
+                        borderColor: isSelected ? "var(--accent-cyan-border)" : "var(--border-specular-soft)",
+                        color: isSelected ? "var(--accent-cyan)" : "var(--muted)",
+                      }}
+                    >
+                      {preset.id === "injection" && <Flame size={12} style={{ color: "var(--accent-quarantined)" }} />}
+                      {preset.id === "exfiltration" && <Lock size={12} style={{ color: "var(--accent-amber)" }} />}
+                      {preset.id === "clean" && <ShieldCheck size={12} style={{ color: "var(--accent-cleared)" }} />}
+                      {preset.label}
+                    </button>
+                  );
+                })}
+              </div>
+
+              {/* URL Input Box */}
+              <div style={{ position: "relative", marginBottom: "20px" }}>
+                <input
+                  type="text"
+                  value={testerUrl}
+                  onChange={(e) => setTesterUrl(e.target.value)}
+                  className="tactical-input"
+                  style={{ padding: "12px 16px", fontSize: "13px" }}
+                />
+              </div>
+
+              {/* Scanning Results Canvas */}
+              <AnimatePresence mode="wait">
+                <motion.div
+                  key={activePreset.id + (isScanning ? "-scanning" : "-done")}
+                  initial={{ opacity: 0, y: 8 }}
+                  animate={{ opacity: 1, y: 0 }}
+                  exit={{ opacity: 0, y: -8 }}
+                  transition={{ duration: 0.25 }}
+                  className={activePreset.status === "QUARANTINED" ? "ambient-crimson-wash" : "ambient-emerald-wash"}
+                  style={{ padding: "20px", borderRadius: "10px" }}
+                >
+                  <div style={{ display: "flex", alignItems: "flex-start", justifyContent: "space-between", marginBottom: "12px" }}>
+                    <div>
+                      <div style={{ display: "flex", alignItems: "center", gap: "8px", marginBottom: "4px" }}>
+                        {activePreset.status === "QUARANTINED" ? (
+                          <ShieldAlert size={18} style={{ color: "var(--accent-quarantined)" }} />
+                        ) : (
+                          <ShieldCheck size={18} style={{ color: "var(--accent-cleared)" }} />
+                        )}
+                        <span className="mono" style={{ fontSize: "12px", fontWeight: 800 }}>
+                          VERDICT: {activePreset.status} ({activePreset.decision})
+                        </span>
+                      </div>
+                      <p style={{ fontSize: "13px", color: "var(--muted)", margin: 0, maxWidth: "680px" }}>
+                        {activePreset.summary}
+                      </p>
+                    </div>
+
+                    <div style={{ textAlign: "right", fontFamily: "var(--font-mono)" }}>
+                      <div style={{ fontSize: "9px", color: "var(--dim)" }}>is_safe() CERTIFICATE</div>
+                      <div
+                        style={{
+                          fontSize: "18px",
+                          fontWeight: 800,
+                          color: activePreset.status === "QUARANTINED" ? "var(--accent-quarantined)" : "var(--accent-cleared)",
+                        }}
+                      >
+                        {activePreset.status === "CLEARED" ? "TRUE" : "FALSE"}
+                      </div>
+                    </div>
+                  </div>
+
+                  {/* 5 Threat Meters */}
+                  <div
+                    style={{
+                      display: "grid",
+                      gridTemplateColumns: "repeat(5, 1fr)",
+                      gap: "10px",
+                      borderTop: "1px solid rgba(255, 255, 255, 0.08)",
+                      paddingTop: "14px",
+                      marginTop: "14px",
+                    }}
+                  >
+                    {[
+                      { key: "injection", label: "Injection", val: activePreset.threats.injection },
+                      { key: "hijack", label: "Hijacking", val: activePreset.threats.hijack },
+                      { key: "exfil", label: "Exfiltration", val: activePreset.threats.exfil },
+                      { key: "tool", label: "Tool Redirect", val: activePreset.threats.tool },
+                      { key: "claim", label: "Unsupported", val: activePreset.threats.claim },
+                    ].map((meter) => (
+                      <div key={meter.key} className="sunken-pit" style={{ padding: "8px 10px" }}>
+                        <div className="mono" style={{ fontSize: "9px", color: "var(--dim)", marginBottom: "4px" }}>
+                          {meter.label}
+                        </div>
+                        <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between" }}>
+                          <span
+                            className={`badge-severity ${meter.val.toLowerCase()}`}
+                            style={{ fontSize: "9px", padding: "1px 5px" }}
+                          >
+                            {meter.val}
+                          </span>
+                          <span className="mono" style={{ fontSize: "9px", color: "var(--muted)" }}>
+                            {meter.val === "HIGH" ? "100%" : meter.val === "MEDIUM" ? "50%" : "0%"}
+                          </span>
+                        </div>
+                      </div>
+                    ))}
+                  </div>
+                </motion.div>
+              </AnimatePresence>
+            </div>
+          </div>
+        </motion.div>
+      </section>
+
+      {/* BENTO ARCHITECTURE FOR FEATURES */}
+      <section id="bento" style={{ padding: "40px 32px 80px", maxWidth: "1280px", margin: "0 auto", width: "100%" }}>
+        <div style={{ textAlign: "center", marginBottom: "48px" }}>
+          <div className="eyebrow-tactical" style={{ color: "var(--accent-cyan)", marginBottom: "8px" }}>
+            // BENTO ARCHITECTURE
+          </div>
+          <h2
+            className="display-font"
+            style={{ fontSize: "38px", fontWeight: 800, letterSpacing: "-0.04em", textTransform: "uppercase" }}
+          >
+            Cryptographic Boundary Stack
+          </h2>
+        </div>
+
+        <div style={{ display: "grid", gridTemplateColumns: "repeat(12, 1fr)", gap: "20px" }}>
+          {/* Card 1: Span 7 - Interactive 4-step security lifecycle rail */}
+          <div className="framer-card" style={{ gridColumn: "span 7", padding: "32px" }}>
+            <div style={{ display: "flex", alignItems: "center", gap: "8px", marginBottom: "16px" }}>
+              <Layers size={18} style={{ color: "var(--accent-cyan)" }} />
+              <span className="eyebrow-tactical" style={{ color: "var(--paper)" }}>
+                STAGE // 01-04 · DETERMINISTIC PIPELINE
               </span>
             </div>
 
-            <h1
-              className="display-font"
-              style={{
-                fontSize: "clamp(46px, 6.2vw, 86px)",
-                lineHeight: 0.92,
-                fontWeight: 800,
-                letterSpacing: "-0.05em",
-                textTransform: "uppercase",
-                marginBottom: "24px",
-              }}
-            >
-              Untrusted source in.
-              <br />
-              <span style={{ color: "var(--accent-cleared)" }}>Bounded evidence out.</span>
-            </h1>
-
-            <p
-              style={{
-                fontSize: "15px",
-                lineHeight: 1.6,
-                color: "var(--muted)",
-                maxWidth: "560px",
-                marginBottom: "32px",
-              }}
-            >
-              SourceFirewall establishes an immutable inspection boundary before downstream LLMs ingest untrusted URLs.
-              Independent GenLayer validators execute bounded text rendering, quarantine prompt hijacking, and issue
-              on-chain cryptographic certificates.
+            <h3 className="display-font" style={{ fontSize: "24px", fontWeight: 700, marginBottom: "8px" }}>
+              Multi-Validator Ingress Verification
+            </h3>
+            <p style={{ fontSize: "14px", color: "var(--muted)", lineHeight: 1.55, marginBottom: "28px" }}>
+              Incoming sources are registered with immutable downstream purpose, rendered within a strict 16KB text ceiling,
+              and evaluated across independent GenLayer nodes using <code className="mono">gl.eq_principle.strict_eq</code>.
             </p>
 
-            <div style={{ display: "flex", flexWrap: "wrap", alignItems: "center", gap: "16px", marginBottom: "40px" }}>
-              <button
-                onClick={onLaunchWorkbench}
-                className="btn-primary"
-                style={{ padding: "12px 26px", fontSize: "13px" }}
-              >
-                <Terminal size={15} />
-                LAUNCH THREAT TERMINAL
-                <ArrowRight size={14} />
-              </button>
+            {/* Stepper with connecting beam */}
+            <div style={{ display: "grid", gridTemplateColumns: "repeat(4, 1fr)", gap: "12px", position: "relative" }}>
+              {[
+                { num: "01", title: "Target Intake", detail: "Purpose Bound" },
+                { num: "02", title: "16KB Fetch", detail: "SHA-256 Digest" },
+                { num: "03", title: "Quorum", detail: "Strict Equality" },
+                { num: "04", title: "Certificate", detail: "is_safe Gate" },
+              ].map((step, idx) => (
+                <div key={step.num} className="sunken-pit" style={{ padding: "14px 12px" }}>
+                  <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", marginBottom: "6px" }}>
+                    <span className="mono" style={{ fontSize: "10px", color: "var(--accent-cyan)", fontWeight: 700 }}>
+                      {step.num}
+                    </span>
+                    <span className="health-dot" />
+                  </div>
+                  <div style={{ fontSize: "12px", fontWeight: 700, color: "var(--paper)", marginBottom: "2px" }}>
+                    {step.title}
+                  </div>
+                  <div className="mono" style={{ fontSize: "10px", color: "var(--dim)" }}>
+                    {step.detail}
+                  </div>
+                </div>
+              ))}
+            </div>
+          </div>
 
-              <a
-                href={contractUrl(CONTRACT_ADDRESS)}
-                target="_blank"
-                rel="noreferrer"
-                className="btn-tactical"
-                style={{ padding: "12px 20px", fontSize: "12px" }}
-              >
-                <FileCode size={14} />
-                VIEW CONTRACT ON-CHAIN
-                <ExternalLink size={12} style={{ color: "var(--dim)" }} />
-              </a>
+          {/* Card 2: Span 5 - Real-time on-chain telemetry block */}
+          <div className="framer-card" style={{ gridColumn: "span 5", padding: "32px", display: "flex", flexDirection: "column", justifyContent: "space-between" }}>
+            <div>
+              <div style={{ display: "flex", alignItems: "center", gap: "8px", marginBottom: "16px" }}>
+                <Zap size={18} style={{ color: "var(--accent-amber)" }} />
+                <span className="eyebrow-tactical" style={{ color: "var(--paper)" }}>
+                  TELEMETRY // LIVE REGISTRY
+                </span>
+              </div>
+
+              <h3 className="display-font" style={{ fontSize: "24px", fontWeight: 700, marginBottom: "8px" }}>
+                {liveRecordCount > 0 ? String(liveRecordCount).padStart(2, "0") : "01"} Targets Indexed
+              </h3>
+              <p style={{ fontSize: "13px", color: "var(--muted)", lineHeight: 1.5, marginBottom: "24px" }}>
+                Immutable records indexed directly on the GenLayer Studionet execution environment.
+              </p>
             </div>
 
-            {/* Core Architectural Guarantees */}
-            <div
-              style={{
-                display: "grid",
-                gridTemplateColumns: "repeat(3, 1fr)",
-                gap: "16px",
-                borderTop: "var(--line)",
-                paddingTop: "24px",
-              }}
-            >
-              <div>
-                <div className="eyebrow-tactical" style={{ marginBottom: "4px" }}>
-                  BOUNDED INTAKE
-                </div>
-                <div className="display-font" style={{ fontSize: "15px", fontWeight: 700 }}>
-                  16 KB Ceiling
-                </div>
-                <div style={{ fontSize: "11px", color: "var(--muted)", marginTop: "2px" }}>
-                  Prevents buffer flood
-                </div>
+            <div className="sunken-pit" style={{ padding: "16px" }}>
+              <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: "8px" }}>
+                <span className="eyebrow-tactical" style={{ color: "var(--dim)" }}>CONTRACT ADDRESS:</span>
+                <button onClick={copyContract} style={{ color: copiedContract ? "var(--accent-cleared)" : "var(--dim)" }}>
+                  {copiedContract ? <Check size={13} /> : <Copy size={13} />}
+                </button>
               </div>
-              <div>
-                <div className="eyebrow-tactical" style={{ marginBottom: "4px" }}>
-                  CONSENSUS QUORUM
-                </div>
-                <div className="display-font" style={{ fontSize: "15px", fontWeight: 700 }}>
-                  gl.eq_principle
-                </div>
-                <div style={{ fontSize: "11px", color: "var(--muted)", marginTop: "2px" }}>
-                  Strict equality quorum
-                </div>
+              <div className="mono" style={{ fontSize: "12px", color: "var(--accent-cyan)", wordBreak: "break-all" }}>
+                {CONTRACT_ADDRESS}
               </div>
-              <div>
-                <div className="eyebrow-tactical" style={{ marginBottom: "4px" }}>
-                  SECURITY POSTURE
-                </div>
-                <div
-                  className="display-font"
-                  style={{ fontSize: "15px", fontWeight: 700, color: "var(--accent-quarantined)" }}
-                >
-                  FAIL-CLOSED
-                </div>
-                <div style={{ fontSize: "11px", color: "var(--muted)", marginTop: "2px" }}>
-                  Unresolved never clears
-                </div>
+              <div style={{ borderTop: "1px solid rgba(255,255,255,0.06)", marginTop: "12px", paddingTop: "10px", display: "flex", justifyContent: "space-between", fontSize: "11px", color: "var(--muted)" }}>
+                <span>NETWORK: Studionet {CHAIN_ID}</span>
+                <span style={{ color: "var(--accent-cleared)" }}>CONSENSUS: strict_eq</span>
               </div>
             </div>
           </div>
 
-          {/* Right Column: Live Tactical Terminal Simulation */}
-          <div className="tactical-box" style={{ padding: "24px", background: "var(--surface)" }}>
-            <div
-              style={{
-                display: "flex",
-                alignItems: "center",
-                justifyContent: "space-between",
-                borderBottom: "var(--line)",
-                paddingBottom: "14px",
-                marginBottom: "16px",
-              }}
-            >
-              <div style={{ display: "flex", alignItems: "center", gap: "8px" }}>
-                <span className="health-dot" />
-                <span className="mono" style={{ fontSize: "11px", fontWeight: 700, letterSpacing: "0.06em" }}>
-                  INGRESS INSPECTION ENGINE // LIVE TELEMETRY
+          {/* Card 3: Span 12 - 5-Point Threat Family Matrix */}
+          <div id="threats" className="framer-card" style={{ gridColumn: "span 12", padding: "32px" }}>
+            <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", marginBottom: "24px" }}>
+              <div>
+                <span className="eyebrow-tactical" style={{ color: "var(--accent-cleared)" }}>
+                  CANONICAL THREAT CLASSIFICATION
                 </span>
+                <h3 className="display-font" style={{ fontSize: "26px", fontWeight: 800, marginTop: "4px" }}>
+                  5-Vector Threat Prevention Matrix
+                </h3>
               </div>
-              <span className="mono" style={{ fontSize: "10px", color: "var(--dim)" }}>
-                ID: REC-LIVE-001
+              <span className="mono" style={{ fontSize: "11px", color: "var(--dim)" }}>
+                EVALUATION PROTOCOL: V1.0
               </span>
             </div>
 
-            {/* Target URL Display */}
-            <div
-              style={{
-                backgroundColor: "var(--surface-deep)",
-                border: "var(--line)",
-                padding: "10px 14px",
-                marginBottom: "16px",
-              }}
-            >
-              <div className="eyebrow-tactical" style={{ color: "var(--dim)", marginBottom: "4px" }}>
-                UNTRUSTED INGRESS TARGET:
-              </div>
-              <div
-                className="mono"
-                style={{
-                  fontSize: "11px",
-                  color: "var(--accent-cyan)",
-                  whiteSpace: "nowrap",
-                  overflow: "hidden",
-                  textOverflow: "ellipsis",
-                }}
-              >
-                https://raw.githubusercontent.com/Iniwura/semantic-breach-registry/main/README.md
-              </div>
-            </div>
-
-            {/* Stepper Rows */}
-            <div style={{ display: "flex", flexDirection: "column", gap: "8px", marginBottom: "16px" }}>
-              <div
-                style={{
-                  display: "grid",
-                  gridTemplateColumns: "65px 1fr auto",
-                  alignItems: "center",
-                  padding: "8px 12px",
-                  backgroundColor: "var(--surface-raised)",
-                  border: "var(--line)",
-                  fontSize: "11px",
-                }}
-              >
-                <span className="mono" style={{ color: "var(--dim)" }}>
-                  01_FETCH
-                </span>
-                <span>Web Render (Text Mode)</span>
-                <span className="mono" style={{ color: "var(--accent-cleared)", fontWeight: 700 }}>
-                  BOUNDED [16KB]
-                </span>
-              </div>
-
-              <div
-                style={{
-                  display: "grid",
-                  gridTemplateColumns: "65px 1fr auto",
-                  alignItems: "center",
-                  padding: "8px 12px",
-                  backgroundColor: "var(--surface-raised)",
-                  border: "var(--line)",
-                  fontSize: "11px",
-                }}
-              >
-                <span className="mono" style={{ color: "var(--dim)" }}>
-                  02_HASH
-                </span>
-                <span>SHA-256 Digest Immutability</span>
-                <span className="mono" style={{ color: "var(--accent-cleared)", fontWeight: 700 }}>
-                  5b8b95da…
-                </span>
-              </div>
-
-              <div
-                style={{
-                  display: "grid",
-                  gridTemplateColumns: "65px 1fr auto",
-                  alignItems: "center",
-                  padding: "8px 12px",
-                  backgroundColor: "var(--surface-raised)",
-                  border: "var(--line)",
-                  fontSize: "11px",
-                }}
-              >
-                <span className="mono" style={{ color: "var(--dim)" }}>
-                  03_VOTE
-                </span>
-                <span>Validator Consensus Quorum</span>
-                <span className="mono" style={{ color: "var(--accent-cyan)", fontWeight: 700 }}>
-                  MAJORITY_AGREE
-                </span>
-              </div>
-            </div>
-
-            {/* Clearance Result Box */}
-            <div className="hazard-stripe-quarantine" style={{ padding: "16px", borderRadius: "2px" }}>
-              <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", marginBottom: "6px" }}>
-                <span
-                  style={{
-                    display: "flex",
-                    alignItems: "center",
-                    gap: "6px",
-                    color: "var(--accent-quarantined)",
-                    fontWeight: 700,
-                    fontSize: "12px",
-                  }}
-                >
-                  <ShieldAlert size={16} />
-                  STATUS: QUARANTINED (REVIEW)
-                </span>
-                <span className="badge-severity medium">1 MEDIUM FINDING</span>
-              </div>
-              <p style={{ fontSize: "11px", color: "var(--muted)", margin: 0, lineHeight: 1.45 }}>
-                Material claim "All 9 tests pass" lacks attached run output. Downstream agents are barred from executing instructions.
-              </p>
-              <div
-                style={{
-                  marginTop: "12px",
-                  paddingTop: "8px",
-                  borderTop: "1px solid rgba(239, 68, 68, 0.2)",
-                  display: "flex",
-                  justifyContent: "space-between",
-                  fontSize: "10px",
-                  fontFamily: "var(--font-mono)",
-                }}
-              >
-                <span style={{ color: "var(--dim)" }}>is_safe() CERTIFICATE:</span>
-                <span style={{ color: "var(--accent-quarantined)", fontWeight: 800 }}>FALSE (FAIL-CLOSED)</span>
-              </div>
+            <div style={{ display: "grid", gridTemplateColumns: "repeat(5, 1fr)", gap: "12px" }}>
+              {threatFamilies.map((family) => {
+                const isSelected = activeTab === family.id;
+                return (
+                  <div
+                    key={family.id}
+                    onClick={() => setActiveTab(family.id)}
+                    className="sunken-pit framer-card-interactive"
+                    style={{
+                      padding: "18px 16px",
+                      cursor: "pointer",
+                      border: isSelected ? "1px solid var(--accent-cyan-border)" : "1px solid rgba(255, 255, 255, 0.05)",
+                      backgroundColor: isSelected ? "var(--surface-raised)" : "var(--surface-deep)",
+                    }}
+                  >
+                    <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", marginBottom: "8px" }}>
+                      <span className={`badge-severity ${family.severity === "CRITICAL" ? "high" : family.severity === "HIGH" ? "high" : "medium"}`}>
+                        {family.severity}
+                      </span>
+                    </div>
+                    <div style={{ fontSize: "13px", fontWeight: 700, color: "var(--paper)", marginBottom: "4px" }}>
+                      {family.name}
+                    </div>
+                    <p style={{ fontSize: "11px", color: "var(--muted)", lineHeight: 1.45, margin: 0 }}>
+                      {family.description.slice(0, 75)}…
+                    </p>
+                  </div>
+                );
+              })}
             </div>
           </div>
         </div>
       </section>
 
-      {/* Live On-Chain Telemetry Strip */}
-      <section
-        id="telemetry"
-        style={{
-          borderTop: "var(--line)",
-          borderBottom: "var(--line)",
-          backgroundColor: "var(--surface)",
-        }}
-      >
+      {/* Floating Command Bar / CTA */}
+      <section style={{ padding: "40px 32px 80px", maxWidth: "1280px", margin: "0 auto", width: "100%" }}>
         <div
+          className="framer-card ambient-emerald-wash"
           style={{
-            padding: "24px 36px",
-            display: "grid",
-            gridTemplateColumns: "repeat(4, 1fr)",
-            gap: "24px",
+            padding: "48px 40px",
+            textAlign: "center",
+            display: "flex",
+            flexDirection: "column",
+            alignItems: "center",
           }}
         >
-          <div>
-            <div className="eyebrow-tactical" style={{ marginBottom: "6px" }}>
-              TOTAL INSPECTED TARGETS
-            </div>
-            <div className="display-font" style={{ fontSize: "32px", fontWeight: 800, letterSpacing: "-0.04em" }}>
-              {liveRecordCount > 0 ? String(liveRecordCount).padStart(2, "0") : "01"}
-              <span style={{ fontSize: "12px", color: "var(--dim)", fontWeight: 400, marginLeft: "6px" }}>
-                ON-CHAIN
-              </span>
-            </div>
-            <div style={{ fontSize: "11px", color: "var(--muted)", marginTop: "4px" }}>
-              Indexed in smart contract registry
-            </div>
-          </div>
-
-          <div>
-            <div className="eyebrow-tactical" style={{ marginBottom: "6px" }}>
-              DEPLOYED CONTRACT
-            </div>
-            <div style={{ display: "flex", alignItems: "center", gap: "8px" }}>
-              <span className="mono" style={{ fontSize: "13px", fontWeight: 700 }}>
-                {CONTRACT_ADDRESS.slice(0, 8)}…{CONTRACT_ADDRESS.slice(-6)}
-              </span>
-              <button
-                onClick={copyContract}
-                style={{ color: copiedContract ? "var(--accent-cleared)" : "var(--dim)" }}
-                title="Copy Address"
-              >
-                {copiedContract ? <Check size={14} /> : <Copy size={14} />}
-              </button>
-            </div>
-            <div style={{ fontSize: "11px", color: "var(--muted)", marginTop: "4px" }}>
-              GenLayer Studionet (Chain {CHAIN_ID})
-            </div>
-          </div>
-
-          <div>
-            <div className="eyebrow-tactical" style={{ marginBottom: "6px" }}>
-              CONSENSUS PRINCIPLE
-            </div>
-            <div style={{ display: "flex", alignItems: "center", gap: "8px" }}>
-              <span className="health-dot amber" />
-              <span className="mono" style={{ fontSize: "13px", fontWeight: 700, color: "var(--accent-amber)" }}>
-                gl.eq_principle.strict_eq
-              </span>
-            </div>
-            <div style={{ fontSize: "11px", color: "var(--muted)", marginTop: "4px" }}>
-              Unanimous equivalence on findings
-            </div>
-          </div>
-
-          <div>
-            <div className="eyebrow-tactical" style={{ marginBottom: "6px" }}>
-              DEFAULT POSTURE
-            </div>
-            <div style={{ display: "flex", alignItems: "center", gap: "8px" }}>
-              <Lock size={15} style={{ color: "var(--accent-cleared)" }} />
-              <span
-                className="display-font"
-                style={{ fontSize: "14px", fontWeight: 800, color: "var(--accent-cleared)" }}
-              >
-                FAIL-CLOSED PERIMETER
-              </span>
-            </div>
-            <div style={{ fontSize: "11px", color: "var(--muted)", marginTop: "4px" }}>
-              Quarantines ambiguity & errors
-            </div>
-          </div>
-        </div>
-      </section>
-
-      {/* Interactive 4-Step Security Architecture Flow */}
-      <section id="pipeline" style={{ padding: "88px 36px" }}>
-        <div style={{ textAlign: "center", marginBottom: "56px" }}>
-          <div className="eyebrow-tactical" style={{ color: "var(--accent-cyan)", marginBottom: "8px" }}>
-            // VERIFIABLE INGRESS PIPELINE
-          </div>
           <h2
             className="display-font"
-            style={{ fontSize: "38px", fontWeight: 800, letterSpacing: "-0.04em", textTransform: "uppercase", marginBottom: "12px" }}
+            style={{ fontSize: "36px", fontWeight: 800, letterSpacing: "-0.04em", textTransform: "uppercase", marginBottom: "12px" }}
           >
-            Four-Stage Deterministic Perimeter
+            Deploy your trust boundary on-chain
           </h2>
-          <p style={{ color: "var(--muted)", fontSize: "14px", maxWidth: "600px", margin: "0 auto" }}>
-            Every external document undergoes rigorous multi-validator parsing and consensus before an AI agent is
-            permitted to read it.
+          <p style={{ color: "var(--muted)", fontSize: "15px", maxWidth: "560px", marginBottom: "28px" }}>
+            Inspect active targets, execute consensus evaluations, or register custom sources in the Operational Threat Desk.
           </p>
-        </div>
-
-        <div style={{ display: "grid", gridTemplateColumns: "repeat(4, 1fr)", gap: "16px" }}>
-          {/* Step 1 */}
-          <div className="tactical-box" style={{ padding: "24px" }}>
-            <div className="eyebrow-tactical" style={{ color: "var(--dim)", marginBottom: "16px" }}>
-              STAGE // 01
-            </div>
-            <div
-              style={{
-                width: "40px",
-                height: "40px",
-                backgroundColor: "var(--surface-deep)",
-                border: "var(--line)",
-                display: "flex",
-                alignItems: "center",
-                justifyContent: "center",
-                color: "var(--accent-cyan)",
-                marginBottom: "20px",
-              }}
-            >
-              <Layers size={18} />
-            </div>
-            <h3 className="display-font" style={{ fontSize: "16px", fontWeight: 700, marginBottom: "8px" }}>
-              Ingress Intake
-            </h3>
-            <p style={{ fontSize: "12px", color: "var(--muted)", lineHeight: 1.6 }}>
-              Caller registers a unique record ID, public HTTPS source URL, human-readable label, and explicit downstream
-              agent purpose. Ownership is locked to caller address.
-            </p>
-          </div>
-
-          {/* Step 2 */}
-          <div className="tactical-box" style={{ padding: "24px" }}>
-            <div className="eyebrow-tactical" style={{ color: "var(--dim)", marginBottom: "16px" }}>
-              STAGE // 02
-            </div>
-            <div
-              style={{
-                width: "40px",
-                height: "40px",
-                backgroundColor: "var(--surface-deep)",
-                border: "var(--line)",
-                display: "flex",
-                alignItems: "center",
-                justifyContent: "center",
-                color: "var(--accent-amber)",
-                marginBottom: "20px",
-              }}
-            >
-              <Cpu size={18} />
-            </div>
-            <h3 className="display-font" style={{ fontSize: "16px", fontWeight: 700, marginBottom: "8px" }}>
-              Bounded Fetch
-            </h3>
-            <p style={{ fontSize: "12px", color: "var(--muted)", lineHeight: 1.6 }}>
-              Validators render text via <code className="mono" style={{ color: "var(--paper)" }}>gl.nondet.web.render</code> with a strict 16,384-byte ceiling. Compute and store SHA-256 digest; raw text is discarded.
-            </p>
-          </div>
-
-          {/* Step 3 */}
-          <div className="tactical-box" style={{ padding: "24px" }}>
-            <div className="eyebrow-tactical" style={{ color: "var(--dim)", marginBottom: "16px" }}>
-              STAGE // 03
-            </div>
-            <div
-              style={{
-                width: "40px",
-                height: "40px",
-                backgroundColor: "var(--surface-deep)",
-                border: "var(--line)",
-                display: "flex",
-                alignItems: "center",
-                justifyContent: "center",
-                color: "var(--accent-cleared)",
-                marginBottom: "20px",
-              }}
-            >
-              <Workflow size={18} />
-            </div>
-            <h3 className="display-font" style={{ fontSize: "16px", fontWeight: 700, marginBottom: "8px" }}>
-              Quorum Consensus
-            </h3>
-            <p style={{ fontSize: "12px", color: "var(--muted)", lineHeight: 1.6 }}>
-              Independent validators evaluate the source text against 5 canonical threat families using an adversarial prompt
-              harness and reach strict equality agreement.
-            </p>
-          </div>
-
-          {/* Step 4 */}
-          <div className="tactical-box" style={{ padding: "24px" }}>
-            <div className="eyebrow-tactical" style={{ color: "var(--dim)", marginBottom: "16px" }}>
-              STAGE // 04
-            </div>
-            <div
-              style={{
-                width: "40px",
-                height: "40px",
-                backgroundColor: "var(--surface-deep)",
-                border: "var(--line)",
-                display: "flex",
-                alignItems: "center",
-                justifyContent: "center",
-                color: "var(--accent-quarantined)",
-                marginBottom: "20px",
-              }}
-            >
-              <Lock size={18} />
-            </div>
-            <h3 className="display-font" style={{ fontSize: "16px", fontWeight: 700, marginBottom: "8px" }}>
-              Quarantine Gate
-            </h3>
-            <p style={{ fontSize: "12px", color: "var(--muted)", lineHeight: 1.6 }}>
-              Any Medium or High finding, validator disagreement, or render error locks the target into QUARANTINED. Downstream
-              agents querying <code className="mono">is_safe()</code> receive <code className="mono">false</code>.
-            </p>
-          </div>
-        </div>
-      </section>
-
-      {/* 5 Threat Family Matrix */}
-      <section
-        id="threats"
-        style={{
-          borderTop: "var(--line)",
-          backgroundColor: "var(--surface)",
-          padding: "88px 36px",
-        }}
-      >
-        <div style={{ marginBottom: "48px" }}>
-          <div className="eyebrow-tactical" style={{ color: "var(--accent-cleared)", marginBottom: "8px" }}>
-            // CANONICAL RISK CLASSIFICATION
-          </div>
-          <h2
-            className="display-font"
-            style={{ fontSize: "38px", fontWeight: 800, letterSpacing: "-0.04em", textTransform: "uppercase", marginBottom: "12px" }}
+          <button
+            onClick={onLaunchWorkbench}
+            className="btn-primary"
+            style={{ padding: "14px 32px", fontSize: "14px" }}
           >
-            The 5 Ingress Threat Families
-          </h2>
-          <p style={{ color: "var(--muted)", fontSize: "14px", maxWidth: "600px" }}>
-            Every evaluation normalizes external content against five distinct adversarial vectors.
-          </p>
-        </div>
-
-        {/* Tab Selector & Card Display */}
-        <div style={{ display: "grid", gridTemplateColumns: "310px 1fr", gap: "24px" }}>
-          {/* List of 5 families */}
-          <div style={{ display: "flex", flexDirection: "column", gap: "6px" }}>
-            {threatFamilies.map((family) => {
-              const isSelected = activeTab === family.id;
-              return (
-                <button
-                  key={family.id}
-                  onClick={() => setActiveTab(family.id)}
-                  style={{
-                    textAlign: "left",
-                    padding: "16px 18px",
-                    backgroundColor: isSelected ? "var(--surface-raised)" : "var(--surface-deep)",
-                    border: isSelected ? "var(--line-focus)" : "var(--line)",
-                    borderLeft: isSelected ? "3px solid var(--accent-cyan)" : "var(--line)",
-                    color: isSelected ? "var(--paper)" : "var(--muted)",
-                    display: "flex",
-                    alignItems: "center",
-                    justifyContent: "space-between",
-                    transition: "all var(--motion-fast) var(--ease-surgical)",
-                  }}
-                >
-                  <div>
-                    <div className="mono" style={{ fontSize: "9px", color: "var(--dim)", marginBottom: "3px" }}>
-                      {family.code}
-                    </div>
-                    <div style={{ fontWeight: 700, fontSize: "13px" }}>{family.name}</div>
-                  </div>
-                  <span
-                    className={`badge-severity ${
-                      family.severity === "CRITICAL" || family.severity === "HIGH" ? "high" : "medium"
-                    }`}
-                  >
-                    {family.severity}
-                  </span>
-                </button>
-              );
-            })}
-          </div>
-
-          {/* Selected Threat Family Detail Canvas */}
-          {(() => {
-            const selected = threatFamilies.find((f) => f.id === activeTab) || threatFamilies[0];
-            return (
-              <div className="tactical-box" style={{ padding: "32px", background: "var(--surface-deep)" }}>
-                <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", marginBottom: "20px" }}>
-                  <div>
-                    <span className="eyebrow-tactical" style={{ color: "var(--accent-cyan)" }}>
-                      VECTOR SPECIFICATION // {selected.code}
-                    </span>
-                    <h3 className="display-font" style={{ fontSize: "24px", fontWeight: 800, marginTop: "4px" }}>
-                      {selected.name}
-                    </h3>
-                  </div>
-                  <span className="badge-severity high">{selected.severity} RISK</span>
-                </div>
-
-                <p style={{ fontSize: "14px", lineHeight: 1.6, color: "var(--muted)", marginBottom: "24px" }}>
-                  {selected.description}
-                </p>
-
-                {/* Evidence Quote Example */}
-                <div
-                  style={{
-                    backgroundColor: "var(--bg)",
-                    border: "var(--line)",
-                    borderLeft: "3px solid var(--accent-quarantined)",
-                    padding: "14px 18px",
-                    marginBottom: "24px",
-                  }}
-                >
-                  <div className="eyebrow-tactical" style={{ color: "var(--dim)", marginBottom: "6px" }}>
-                    REPRESENTATIVE ADVERSARIAL PAYLOAD:
-                  </div>
-                  <div className="mono" style={{ fontSize: "11px", color: "#f87171", lineHeight: 1.5 }}>
-                    {selected.example}
-                  </div>
-                </div>
-
-                {/* Policy & Threshold Breakdown */}
-                <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: "16px" }}>
-                  <div style={{ padding: "16px", backgroundColor: "var(--surface)", border: "var(--line)" }}>
-                    <div className="eyebrow-tactical" style={{ color: "var(--dim)", marginBottom: "6px" }}>
-                      QUARANTINE TRIGGER
-                    </div>
-                    <div style={{ fontSize: "12px", color: "var(--paper)", lineHeight: 1.5 }}>
-                      {selected.threshold}
-                    </div>
-                  </div>
-                  <div style={{ padding: "16px", backgroundColor: "var(--surface)", border: "var(--line)" }}>
-                    <div className="eyebrow-tactical" style={{ color: "var(--dim)", marginBottom: "6px" }}>
-                      ON-CHAIN RESOLUTION
-                    </div>
-                    <div style={{ fontSize: "12px", color: "var(--paper)", lineHeight: 1.5 }}>
-                      {selected.handling}
-                    </div>
-                  </div>
-                </div>
-              </div>
-            );
-          })()}
-        </div>
-      </section>
-
-      {/* Comparison Grid: Prompt Filters vs SourceFirewall */}
-      <section id="consensus" style={{ padding: "88px 36px" }}>
-        <div style={{ textAlign: "center", marginBottom: "52px" }}>
-          <div className="eyebrow-tactical" style={{ color: "var(--accent-amber)", marginBottom: "8px" }}>
-            // ARCHITECTURAL COMPARISON
-          </div>
-          <h2
-            className="display-font"
-            style={{ fontSize: "38px", fontWeight: 800, letterSpacing: "-0.04em", textTransform: "uppercase", marginBottom: "12px" }}
-          >
-            Runtime Consensus vs Local Guardrails
-          </h2>
-          <p style={{ color: "var(--muted)", fontSize: "14px", maxWidth: "600px", margin: "0 auto" }}>
-            Local prompt filters run inside the same memory space as the LLM. SourceFirewall places the boundary outside
-            the execution runtime on decentralized smart contracts.
-          </p>
-        </div>
-
-        <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: "24px" }}>
-          {/* Traditional In-Context Filters */}
-          <div
-            style={{
-              padding: "28px",
-              backgroundColor: "var(--surface)",
-              border: "1px solid rgba(239, 68, 68, 0.25)",
-            }}
-          >
-            <div style={{ display: "flex", alignItems: "center", gap: "8px", color: "var(--accent-quarantined)", marginBottom: "16px" }}>
-              <AlertTriangle size={17} />
-              <span className="mono" style={{ fontSize: "12px", fontWeight: 700 }}>
-                TRADITIONAL LLM GUARDRAILS
-              </span>
-            </div>
-            <ul style={{ listStyle: "none", display: "flex", flexDirection: "column", gap: "14px", fontSize: "12px", color: "var(--muted)" }}>
-              <li style={{ display: "flex", gap: "10px" }}>
-                <span style={{ color: "var(--accent-quarantined)" }}>✕</span>
-                <span><strong>Bypassable via Encoding:</strong> Base64, token smuggling, or unicode zero-width spaces easily evade regex or client-side filters.</span>
-              </li>
-              <li style={{ display: "flex", gap: "10px" }}>
-                <span style={{ color: "var(--accent-quarantined)" }}>✕</span>
-                <span><strong>Single Point of Failure:</strong> An individual evaluator LLM hallucinating or tricked by prefix-injection clears the breach.</span>
-              </li>
-              <li style={{ display: "flex", gap: "10px" }}>
-                <span style={{ color: "var(--accent-quarantined)" }}>✕</span>
-                <span><strong>Zero Tamper-Evident Proof:</strong> Downstream consumers have no cryptographic proof that the inspected source matches what was fetched.</span>
-              </li>
-            </ul>
-          </div>
-
-          {/* SourceFirewall Intelligent Contract */}
-          <div
-            style={{
-              padding: "28px",
-              backgroundColor: "var(--surface)",
-              border: "1px solid rgba(16, 185, 129, 0.35)",
-              boxShadow: "0 0 30px rgba(16, 185, 129, 0.05)",
-            }}
-          >
-            <div style={{ display: "flex", alignItems: "center", gap: "8px", color: "var(--accent-cleared)", marginBottom: "16px" }}>
-              <ShieldCheck size={17} />
-              <span className="mono" style={{ fontSize: "12px", fontWeight: 700 }}>
-                SOURCEFIREWALL RUNTIME CONSENSUS
-              </span>
-            </div>
-            <ul style={{ listStyle: "none", display: "flex", flexDirection: "column", gap: "14px", fontSize: "12px", color: "var(--muted)" }}>
-              <li style={{ display: "flex", gap: "10px" }}>
-                <span style={{ color: "var(--accent-cleared)" }}>✓</span>
-                <span><strong>Multi-Validator Quorum:</strong> Independent validators run the strict equality principle (<code className="mono">gl.eq_principle.strict_eq</code>).</span>
-              </li>
-              <li style={{ display: "flex", gap: "10px" }}>
-                <span style={{ color: "var(--accent-cleared)" }}>✓</span>
-                <span><strong>Cryptographic Content Digest:</strong> Source is hashed (SHA-256) on-chain. Source drift between nodes immediately triggers quarantine.</span>
-              </li>
-              <li style={{ display: "flex", gap: "10px" }}>
-                <span style={{ color: "var(--accent-cleared)" }}>✓</span>
-                <span><strong>Autonomous On-Chain Gate:</strong> AI agents simply check <code className="mono">is_safe(record_id)</code> before reading. If false, task halts.</span>
-              </li>
-            </ul>
-          </div>
+            <Terminal size={16} />
+            ENTER OPERATIONAL THREAT DESK
+            <ArrowRight size={15} />
+          </button>
         </div>
       </section>
 
       {/* Industrial Footer */}
       <footer
         style={{
-          borderTop: "var(--line)",
+          borderTop: "var(--border-specular)",
           backgroundColor: "var(--surface-deep)",
-          padding: "28px 36px",
+          padding: "28px 32px",
           color: "var(--dim)",
           fontSize: "11px",
           fontFamily: "var(--font-mono)",
@@ -911,6 +634,8 @@ export function LandingPage({ onLaunchWorkbench, liveRecordCount, isDemoMode }) 
       >
         <div
           style={{
+            maxWidth: "1280px",
+            margin: "0 auto",
             display: "flex",
             justifyContent: "space-between",
             alignItems: "center",
@@ -919,7 +644,7 @@ export function LandingPage({ onLaunchWorkbench, liveRecordCount, isDemoMode }) 
           }}
         >
           <div>
-            SOURCEFIREWALL // INGRESS SECURITY &amp; CONSENSUS BOUNDARY · GENLAYER STUDIONET
+            SOURCEFIREWALL // INGRESS CONSENSUS PERIMETER · GENLAYER STUDIONET
           </div>
           <div style={{ display: "flex", gap: "20px" }}>
             <a href={contractUrl(CONTRACT_ADDRESS)} target="_blank" rel="noreferrer" style={{ color: "var(--muted)" }}>
@@ -929,7 +654,7 @@ export function LandingPage({ onLaunchWorkbench, liveRecordCount, isDemoMode }) 
               GITHUB
             </a>
             <a href="https://docs.genlayer.com" target="_blank" rel="noreferrer" style={{ color: "var(--muted)" }}>
-              GENLAYER DOCS
+              DOCS
             </a>
           </div>
         </div>
