@@ -8,6 +8,14 @@ These contracts demonstrate GenLayer's core capability: combining **live web dat
 
 ## Contracts
 
+### 0. SourceFirewall (`sourcefirewall/`)
+
+SourceFirewall is a fail-closed, consensus-backed inspection boundary for untrusted external content. It stores bounded source metadata, a source digest, exactly five structured risk categories, evidence pointers, and an explicit lifecycle state before downstream agents rely on a source.
+
+The Studio Next-compatible contract, direct-mode tests, and responsive reviewer desk live in [`sourcefirewall/`](sourcefirewall/). See the [architecture](sourcefirewall/docs/ARCHITECTURE.md), [demo script](sourcefirewall/docs/DEMO_SCRIPT.md), and [evidence log](sourcefirewall/docs/EVIDENCE_LOG.md).
+
+The frontend deliberately runs in labeled **EXAMPLE MODE** until a deployed contract address is supplied. Contract deployment and any on-chain transaction remain an operator-controlled step.
+
 ### 1. Crypto Price Checker (`crypto_price_checker.py`)
 Fetches the live price of any cryptocurrency from CoinGecko, uses an LLM to parse the response, and stores an ABOVE/BELOW/EQUAL status on-chain relative to a user-defined target.
 
