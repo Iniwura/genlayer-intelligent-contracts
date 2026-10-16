@@ -104,5 +104,9 @@ The direct Studio-runner tests cover creation and indexing, owner checks, URL an
     2. Operational Threat Desk & Ingress Terminal (`WORKBENCH`): Searchable and filterable queue, active forensic canvas, hazard-striped quarantine framing (`is_safe: FALSE`) and emerald neon clearance (`is_safe: TRUE`), 5-point threat vector breakdown with source pointers and evidence quotes, cryptographic receipt drawer (SHA-256 digest, fingerprint), live transaction evaluation button (`evaluate_record`), and modal target intake (`create_record`).
   - Visual Design System: Anchored to `monodrift.framer.website` and `riwadesign.framer.website` using deep tactical obsidian `#08090a`, card surface `#0d0f12`, technical corner crosshair accents, radar status pulses, and monospace telemetry.
   - Dependencies: Integrated `lucide-react`, `clsx`, and `tailwind-merge`.
+- Dissent & Veil Gold-Standard UI Upgrade:
+  - Typography: Space Grotesk (600, 700, 800) display headers with tight negative tracking (-0.05em), JetBrains Mono (400, 500, 700) for telemetry, and Inter for neutral body copy.
+  - Surface Elevation Stack: Bounded `.site-frame` (1440px max-width, 16px margins, hairline borders, corner tick crosshairs, box-shadow) over obsidian base `#08090a`, sunken pit `#050606`, card surface `#0d0f12`, and raised layer `#12151a`.
+  - Tactical Primitives: Connected horizontal `lifecycle-rail` with past, active, and quarantine states; dual-mode Ingress Stream featuring a fixed-column dense ledger table (`.ledger-table`) with row hover states; health dots with wash rings (`box-shadow: 0 0 0 3px`); sticky cryptographic receipt drawer with left accent border; and cubic-bezier surgical transitions (`--ease-surgical: cubic-bezier(0.2, 0, 0, 1)`).
 - Current public URL: [sourcefirewall.vercel.app](https://sourcefirewall.vercel.app/). Application exits EXAMPLE MODE and links directly to on-chain state.
 

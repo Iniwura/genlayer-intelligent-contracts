@@ -189,7 +189,7 @@ function App() {
   };
 
   return (
-    <>
+    <div className="site-frame">
       {viewMode === "LANDING" ? (
         <LandingPage
           onLaunchWorkbench={() => switchView("WORKBENCH")}
@@ -215,19 +215,19 @@ function App() {
       {/* Global Tactical Toast */}
       {toast && (
         <div className={`tactical-toast ${toast.type}`}>
-          <div className="mono" style={{ fontSize: "10px", color: "var(--text-dim)", textTransform: "uppercase" }}>
+          <div className="mono" style={{ fontSize: "10px", color: "var(--dim)", textTransform: "uppercase" }}>
             [{toast.type}]
           </div>
           <div style={{ flex: 1 }}>{toast.message}</div>
           <button
             onClick={() => setToast(null)}
-            style={{ color: "var(--text-dim)", fontSize: "14px", lineHeight: 1 }}
+            style={{ color: "var(--dim)", fontSize: "14px", lineHeight: 1 }}
           >
             ✕
           </button>
         </div>
       )}
-    </>
+    </div>
   );
 }
 
