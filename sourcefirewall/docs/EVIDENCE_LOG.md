@@ -86,9 +86,10 @@ The direct Studio-runner tests cover creation and indexing, owner checks, URL an
 
 - Implementation commit SHA: `793551f8255d6cd22ccf3c09c6247f1f19da86df`.
 - Build-hardening commit SHA: `f94b5848896a9cbec9b80ea1a9142a28f76866c1`.
+- Audit-fix commit SHA: `a73a3e8f6518f8fbecb56de90d544b15b4e42908` (`Harden SourceFirewall audit boundaries`).
 - GitHub branch: [feat/sourcefirewall](https://github.com/Iniwura/genlayer-intelligent-contracts/tree/feat/sourcefirewall).
 - Vercel project: `sourcefirewall` (`prj_V1DnO8jP63LB1hgU2YLFD15DBAMw`), team `team_N0Gp9Gr5qfzo5WfYxVHm9rgp`.
-- Production deployment: `dpl_4UBxtGpcpTxGEqjWawRXuSXYwFgH`, built from `feat/sourcefirewall` at `f94b5848896a9cbec9b80ea1a9142a28f76866c1`, state `READY`.
-- Public URL: [sourcefirewall.vercel.app](https://sourcefirewall.vercel.app/). Live verification returned HTTP `200`; the deployed bundle contained `EXAMPLE MODE`, the hero copy, and the missing-contract warning.
-- The evidence-log update is docs-only; the deployed application corresponds to the build-hardening commit above.
+- Prior production deployment: `dpl_4UBxtGpcpTxGEqjWawRXuSXYwFgH`, built from `feat/sourcefirewall` at `f94b5848896a9cbec9b80ea1a9142a28f76866c1`, state `READY`.
+- Current production deployment: `dpl_F5Jj2AUyRHkjtZQgndMsD4CXhmSC`, target `production`, state `READY`, built from `feat/sourcefirewall` at `a73a3e8f6518f8fbecb56de90d544b15b4e42908`.
+- Current public URL: [sourcefirewall.vercel.app](https://sourcefirewall.vercel.app/). Live verification returned HTTP `200`; the deployed HTML referenced the current Vite bundle, and the fetched bundle contained `EXAMPLE MODE`, the missing-address message, `View transaction`, and `BRADBURY LINKED` strings.
 - On-chain transaction hashes: none; any future GEN/on-chain action requires explicit user approval with exact transaction, purpose, estimated total cost, and maximum spend shown first.
