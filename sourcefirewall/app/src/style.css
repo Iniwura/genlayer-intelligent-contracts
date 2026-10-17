@@ -44,12 +44,12 @@
 
 ::selection {
   background-color: #F4F1EA;
-  color: #0A0A0C;
+  color: #09090B;
 }
 
 ::-moz-selection {
   background-color: #F4F1EA;
-  color: #0A0A0C;
+  color: #09090B;
 }
 
 *, *::before, *::after {
