@@ -8,14 +8,14 @@
   --font-mono: 'JetBrains Mono', ui-monospace, SFMono-Regular, monospace;
 
   /* Meridian Palette: Deep Warm Obsidian & Ivory */
-  --bg-obsidian: #0A0A0C;
+  --bg-obsidian: #09090B;
   --bg-surface: #0C0C0E;
   --bg-surface-raised: #121215;
   --bg-sunken: #060608;
 
-  /* Editorial Borders */
-  --border-line: 1px solid #222225;
-  --border-subtle: 1px solid #18181B;
+  /* Editorial Borders: Whisper-thin charcoal #1C1C1F */
+  --border-line: 1px solid #1C1C1F;
+  --border-subtle: 1px solid #141416;
 
   /* Typography Colors */
   --text-ivory: #F4F1EA;
@@ -25,12 +25,12 @@
 
   /* Understated Editorial Status Accents */
   --status-cleared-text: #F4F1EA;
-  --status-cleared-bg: rgba(244, 241, 234, 0.06);
-  --status-cleared-border: #333338;
+  --status-cleared-bg: rgba(244, 241, 234, 0.05);
+  --status-cleared-border: #2A2A2E;
 
-  --status-quarantined-text: #E06D53;
-  --status-quarantined-bg: rgba(224, 109, 83, 0.08);
-  --status-quarantined-border: rgba(224, 109, 83, 0.25);
+  --status-quarantined-text: #c25e4a;
+  --status-quarantined-bg: rgba(194, 94, 74, 0.08);
+  --status-quarantined-border: rgba(194, 94, 74, 0.25);
 
   --status-amber-text: #D4956A;
   --status-amber-bg: rgba(212, 149, 106, 0.08);
@@ -38,8 +38,9 @@
 
   /* Radius */
   --radius-pill: 9999px;
-  --radius-card: 4px;
+  --radius-card: 2px;
 }
+
 
 ::selection {
   background-color: #F4F1EA;
