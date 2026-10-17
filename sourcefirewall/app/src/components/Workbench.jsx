@@ -9,11 +9,8 @@ import {
   RefreshCw,
   Wallet,
   ArrowLeft,
-  Terminal,
   X,
-  ShieldAlert,
-  ShieldCheck,
-  Clock,
+  ArrowUpRight,
 } from "lucide-react";
 import {
   CONTRACT_ADDRESS,
@@ -111,6 +108,7 @@ export function Workbench({
     }
   };
 
+  // Extract domain helper
   const getDomain = (url) => {
     try {
       const parsed = new URL(url);
@@ -123,7 +121,7 @@ export function Workbench({
   // Handle Consensus Evaluation
   const handleEvaluate = async (recordId) => {
     if (!writeClient) {
-      onNotify("Connect a browser wallet on GenLayer Studionet to run consensus.", "error");
+      onNotify("Connect a browser wallet on GenLayer Studionet to execute evaluation.", "error");
       return;
     }
     setIsEvaluating(true);
@@ -196,65 +194,73 @@ export function Workbench({
 
   return (
     <div style={{ flex: 1, display: "flex", flexDirection: "column" }}>
-      {/* Top Bar: Minimal Operational HUD Header */}
+      {/* Clean Top Navigation: Luxury-Tier Inspection Desk */}
       <header
         style={{
-          height: "58px",
+          height: "64px",
           display: "flex",
           alignItems: "center",
           justifyContent: "space-between",
-          padding: "0 28px",
-          borderBottom: "1px solid rgba(255, 255, 255, 0.05)",
-          backgroundColor: "#040507",
+          padding: "0 36px",
+          borderBottom: "1px solid #1C1C1F",
+          backgroundColor: "#09090B",
           position: "sticky",
           top: 0,
           zIndex: 50,
         }}
       >
         {/* Left: Back & Breadcrumb */}
-        <div style={{ display: "flex", alignItems: "center", gap: "16px" }}>
-          <motion.button
+        <div style={{ display: "flex", alignItems: "center", gap: "20px" }}>
+          <button
             onClick={onReturnLanding}
-            whileHover={{ y: -1 }}
-            className="btn-tactical"
-            style={{ fontSize: "11px", padding: "6px 14px" }}
-          >
-            <ArrowLeft size={13} />
-            BACK
-          </motion.button>
-          <div style={{ width: "1px", height: "14px", backgroundColor: "rgba(255, 255, 255, 0.1)" }} />
-          <div className="mono" style={{ fontSize: "12px", color: "var(--text-white)", letterSpacing: "0.06em", fontWeight: 600 }}>
-            SOURCEFIREWALL // TERMINAL
-          </div>
-        </div>
-
-        {/* Center: Live Studionet Status Dot */}
-        <div style={{ display: "flex", alignItems: "center", gap: "12px" }}>
-          <div
             style={{
+              fontFamily: "var(--font-mono)",
+              fontSize: "11px",
+              color: "var(--text-stone)",
+              letterSpacing: "0.14em",
+              textTransform: "uppercase",
               display: "flex",
               alignItems: "center",
-              gap: "8px",
-              padding: "5px 14px",
-              borderRadius: "9999px",
-              boxShadow: "0 0 0 1px rgba(255, 255, 255, 0.06)",
-              backgroundColor: "rgba(255, 255, 255, 0.02)",
+              gap: "6px",
             }}
           >
-            <span className="radar-dot cleared" />
-            <span className="mono" style={{ fontSize: "11px", color: "var(--text-muted)" }}>
+            <ArrowLeft size={13} />
+            OVERVIEW
+          </button>
+          <span style={{ color: "#222225" }}>|</span>
+          <span
+            className="serif-font"
+            style={{
+              fontSize: "18px",
+              color: "var(--text-ivory)",
+              fontStyle: "italic",
+              letterSpacing: "-0.01em",
+            }}
+          >
+            SourceFirewall Studio
+          </span>
+        </div>
+
+        {/* Center: Live Studionet Network Label */}
+        <div style={{ display: "flex", alignItems: "center", gap: "16px" }}>
+          <div style={{ display: "flex", alignItems: "center", gap: "6px" }}>
+            <span style={{ width: "5px", height: "5px", borderRadius: "50%", backgroundColor: "#F4F1EA" }} />
+            <span className="meta-label" style={{ fontSize: "10px", color: "var(--text-stone)" }}>
               {CHAIN_NAME} [{CHAIN_ID}]
             </span>
           </div>
 
           <button
             onClick={onToggleDemoMode}
-            className="btn-tactical"
             style={{
+              fontFamily: "var(--font-mono)",
               fontSize: "10px",
-              padding: "5px 10px",
-              color: isDemoMode ? "var(--accent-amber)" : "var(--text-muted)",
-              boxShadow: isDemoMode ? "0 0 0 1px rgba(245, 158, 11, 0.3)" : "var(--specular-pill)",
+              letterSpacing: "0.14em",
+              textTransform: "uppercase",
+              padding: "4px 10px",
+              border: "1px solid #222225",
+              color: isDemoMode ? "var(--status-amber-text)" : "var(--text-meta)",
+              borderRadius: "2px",
             }}
           >
             {isDemoMode ? "SAMPLE MODE" : "LIVE MODE"}
@@ -263,108 +269,101 @@ export function Workbench({
           <button
             onClick={onRefresh}
             disabled={isRefreshing}
-            className="btn-tactical"
-            style={{ fontSize: "11px", padding: "6px 10px" }}
-            title="Refresh Registry"
+            style={{ color: "var(--text-stone)" }}
+            title="Refresh Ledger"
           >
-            <RefreshCw size={12} className={isRefreshing ? "animate-spin" : ""} />
+            <RefreshCw size={13} className={isRefreshing ? "animate-spin" : ""} />
           </button>
         </div>
 
-        {/* Right: Wallet Connection Pill */}
-        <div style={{ display: "flex", alignItems: "center", gap: "10px" }}>
+        {/* Right: Minimalist Wallet Address Trigger */}
+        <div style={{ display: "flex", alignItems: "center", gap: "12px" }}>
           {walletAccount ? (
             <div
               style={{
+                fontFamily: "var(--font-mono)",
+                fontSize: "11px",
+                color: "var(--text-ivory)",
+                padding: "6px 14px",
+                border: "1px solid #222225",
+                borderRadius: "2px",
                 display: "flex",
                 alignItems: "center",
                 gap: "8px",
-                padding: "5px 14px",
-                backgroundColor: "var(--surface-deep)",
-                boxShadow: "0 0 0 1px rgba(255, 255, 255, 0.1)",
-                borderRadius: "9999px",
-                fontSize: "11px",
-                fontFamily: "var(--font-mono)",
               }}
             >
-              <span className="radar-dot cleared" />
-              <span style={{ color: "var(--text-white)" }}>
-                {walletAccount.slice(0, 6)}…{walletAccount.slice(-4)}
-              </span>
-              <span style={{ color: "var(--text-dim)" }}>|</span>
-              <span style={{ color: "var(--accent-cleared)", fontWeight: 600 }}>
-                {walletBalance} GEN
-              </span>
+              <span>{walletAccount.slice(0, 6)}…{walletAccount.slice(-4)}</span>
+              <span style={{ color: "#333338" }}>/</span>
+              <span style={{ color: "var(--text-stone)" }}>{walletBalance} GEN</span>
             </div>
           ) : (
-            <motion.button
+            <button
               onClick={onConnectWallet}
-              whileHover={{ y: -1 }}
-              className="btn-primary"
-              style={{ fontSize: "11px", padding: "6px 16px" }}
+              className="btn-ivory"
+              style={{ fontSize: "12px", padding: "7px 18px" }}
             >
               <Wallet size={12} />
-              CONNECT WALLET
-            </motion.button>
+              Connect Wallet
+            </button>
           )}
         </div>
       </header>
 
-      {/* Main Console Split View: 340px Stream + Right Forensic Stage */}
-      <div style={{ flex: 1, display: "grid", gridTemplateColumns: "340px 1fr", overflow: "hidden" }}>
-        {/* Left Stream: Dark-Glass Ledger Rows (340px) */}
+      {/* Asymmetric Split View: Left Ledger (380px) + Right Canvas */}
+      <div style={{ flex: 1, display: "grid", gridTemplateColumns: "380px 1fr", overflow: "hidden" }}>
+        {/* Left Ledger: Borderless List with Hairline Dividers (380px) */}
         <aside
           style={{
-            borderRight: "1px solid rgba(255, 255, 255, 0.05)",
-            backgroundColor: "#050608",
+            borderRight: "1px solid #1C1C1F",
+            backgroundColor: "#09090B",
             display: "flex",
             flexDirection: "column",
-            height: "calc(100vh - 58px)",
+            height: "calc(100vh - 64px)",
             overflowY: "auto",
           }}
         >
           {/* Action & Filter Bar */}
-          <div style={{ padding: "16px 18px", borderBottom: "1px solid rgba(255, 255, 255, 0.05)" }}>
-            <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", marginBottom: "12px" }}>
-              <span className="telemetry-label" style={{ fontSize: "10px" }}>
-                INGRESS STREAM ({records.length})
+          <div style={{ padding: "20px 24px", borderBottom: "1px solid #1C1C1F" }}>
+            <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", marginBottom: "16px" }}>
+              <span className="meta-label">
+                INGRESS LEDGER ({records.length})
               </span>
-              <motion.button
+              <button
                 onClick={() => setShowCreateModal(true)}
-                whileHover={{ y: -1 }}
-                className="btn-primary"
-                style={{ fontSize: "10px", padding: "4px 10px" }}
+                style={{
+                  fontFamily: "var(--font-mono)",
+                  fontSize: "10px",
+                  letterSpacing: "0.14em",
+                  textTransform: "uppercase",
+                  padding: "4px 10px",
+                  border: "1px solid #333338",
+                  color: "var(--text-ivory)",
+                  borderRadius: "2px",
+                  display: "flex",
+                  alignItems: "center",
+                  gap: "4px",
+                }}
               >
                 <Plus size={11} />
-                INTAKE
-              </motion.button>
+                NEW TARGET
+              </button>
             </div>
 
             {/* Search Input */}
-            <div style={{ position: "relative", marginBottom: "12px" }}>
+            <div style={{ position: "relative", marginBottom: "16px" }}>
               <Search size={13} style={{ position: "absolute", left: "10px", top: "10px", color: "var(--text-dim)" }} />
               <input
                 type="text"
                 value={searchQuery}
                 onChange={(e) => setSearchQuery(e.target.value)}
-                placeholder="Search domain or ID…"
+                placeholder="Search domain or record ID…"
                 className="tactical-input"
-                style={{ paddingLeft: "30px", fontSize: "11px", padding: "8px 10px 8px 30px" }}
+                style={{ paddingLeft: "32px", fontSize: "11px", padding: "8px 10px 8px 32px" }}
               />
             </div>
 
-            {/* Filter Pills with fluid framer-motion sliding background */}
-            <div
-              style={{
-                display: "flex",
-                gap: "2px",
-                padding: "2px",
-                backgroundColor: "var(--surface-deep)",
-                borderRadius: "8px",
-                boxShadow: "0 0 0 1px rgba(255, 255, 255, 0.05) inset",
-                position: "relative",
-              }}
-            >
+            {/* Filter Tabs */}
+            <div style={{ display: "flex", gap: "14px" }}>
               {["ALL", "CLEARED", "QUARANTINED", "SUBMITTED"].map((filter) => {
                 const countKey = filter.toLowerCase();
                 const badgeCount = counts[countKey] || 0;
@@ -374,230 +373,213 @@ export function Workbench({
                     key={filter}
                     onClick={() => setFilterState(filter)}
                     style={{
-                      flex: 1,
-                      position: "relative",
-                      padding: "5px 2px",
-                      fontSize: "9px",
                       fontFamily: "var(--font-mono)",
-                      fontWeight: 600,
-                      color: isSelected ? "var(--text-white)" : "var(--text-dim)",
-                      zIndex: 1,
-                      textAlign: "center",
+                      fontSize: "10px",
+                      letterSpacing: "0.14em",
+                      textTransform: "uppercase",
+                      color: isSelected ? "var(--text-ivory)" : "var(--text-dim)",
+                      paddingBottom: "4px",
+                      borderBottom: isSelected ? "1px solid var(--text-ivory)" : "1px solid transparent",
+                      transition: "color 0.15s ease",
                     }}
                   >
-                    {isSelected && (
-                      <motion.div
-                        layoutId="workbenchHudFilter"
-                        style={{
-                          position: "absolute",
-                          inset: 0,
-                          backgroundColor: "rgba(255, 255, 255, 0.08)",
-                          borderRadius: "6px",
-                          boxShadow: "0 0 0 1px rgba(255, 255, 255, 0.12)",
-                          zIndex: -1,
-                        }}
-                        transition={{ type: "spring", stiffness: 450, damping: 32 }}
-                      />
-                    )}
-                    {filter} ({badgeCount})
+                    {filter} [{badgeCount}]
                   </button>
                 );
               })}
             </div>
           </div>
 
-          {/* Clean Ledger Table */}
-          <div style={{ flex: 1, overflowY: "auto", padding: "8px" }}>
+          {/* Borderless Ledger Rows with Hairline Dividers */}
+          <div style={{ flex: 1, overflowY: "auto" }}>
             {filteredRecords.length === 0 ? (
-              <div style={{ padding: "40px 16px", textAlign: "center", color: "var(--text-dim)", fontSize: "12px" }}>
+              <div style={{ padding: "48px 24px", textAlign: "center", color: "var(--text-dim)", fontSize: "12px" }}>
                 No records match current filter.
               </div>
             ) : (
-              <div className="ledger-table-wrap">
-                <table className="ledger-table">
-                  <thead>
-                    <tr>
-                      <th style={{ width: "60%" }}>TARGET DOMAIN / ID</th>
-                      <th style={{ width: "40%", textAlign: "right" }}>STATUS</th>
-                    </tr>
-                  </thead>
-                  <tbody>
-                    {filteredRecords.map((r) => {
-                      const isSelected = r.record_id === activeRecord?.record_id;
-                      const domain = getDomain(r.source_url);
-                      return (
-                        <tr
-                          key={r.record_id}
-                          className={isSelected ? "selected" : ""}
-                          onClick={() => setSelectedRecordId(r.record_id)}
-                        >
-                          <td>
-                            <div className="mono" style={{ fontSize: "11px", fontWeight: 600, color: isSelected ? "#FFFFFF" : "var(--text-white)" }}>
-                              {domain}
-                            </div>
-                            <div className="mono" style={{ fontSize: "10px", color: "var(--text-dim)", marginTop: "2px" }}>
-                              {r.record_id}
-                            </div>
-                          </td>
-                          <td style={{ textAlign: "right" }}>
-                            <span className={`status-chip ${r.state.toLowerCase()}`}>
-                              <span className={`radar-dot ${r.state.toLowerCase()}`} />
-                              {r.state}
-                            </span>
-                          </td>
-                        </tr>
-                      );
-                    })}
-                  </tbody>
-                </table>
+              <div>
+                {filteredRecords.map((r) => {
+                  const isSelected = r.record_id === activeRecord?.record_id;
+                  const domain = getDomain(r.source_url);
+                  return (
+                    <div
+                      key={r.record_id}
+                      onClick={() => setSelectedRecordId(r.record_id)}
+                      style={{
+                        padding: "16px 24px",
+                        borderBottom: "1px solid #141416",
+                        backgroundColor: isSelected ? "#0F0F12" : "transparent",
+                        cursor: "pointer",
+                        transition: "background-color 0.15s ease",
+                      }}
+                    >
+                      <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", marginBottom: "6px" }}>
+                        <span className="mono" style={{ fontSize: "12px", color: isSelected ? "var(--text-ivory)" : "var(--text-stone)", fontWeight: 500 }}>
+                          {domain}
+                        </span>
+                        <span className={`status-tag ${r.state.toLowerCase()}`}>
+                          {r.state}
+                        </span>
+                      </div>
+
+                      <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between" }}>
+                        <span className="mono" style={{ fontSize: "11px", color: "var(--text-dim)" }}>
+                          {r.record_id}
+                        </span>
+                        <span style={{ fontSize: "11px", color: "var(--text-dim)", maxWidth: "160px", overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap" }}>
+                          {r.source_label}
+                        </span>
+                      </div>
+                    </div>
+                  );
+                })}
               </div>
             )}
           </div>
         </aside>
 
-        {/* Right Forensic Stage */}
+        {/* Right Canvas: Quiet Luxury Inspection Desk */}
         <main
           style={{
-            height: "calc(100vh - 58px)",
+            height: "calc(100vh - 64px)",
             overflowY: "auto",
-            padding: "36px 48px 80px",
-            backgroundColor: "#040507",
+            padding: "48px 56px 96px",
+            backgroundColor: "#0B0B0D",
           }}
         >
           {activeRecord ? (
-            <div style={{ maxWidth: "980px", margin: "0 auto" }}>
-              {/* Authoritative Clearance Banner with Specular Highlight */}
-              <div
-                className="framer-glass-card"
-                style={{
-                  padding: "28px 32px",
-                  marginBottom: "28px",
-                  boxShadow:
-                    activeRecord.state === "QUARANTINED"
-                      ? "0 0 0 1px rgba(239, 68, 68, 0.25), 0 1px 0 0 rgba(255, 255, 255, 0.2) inset, 0 20px 50px -15px rgba(239, 68, 68, 0.15)"
-                      : activeRecord.state === "CLEARED"
-                      ? "0 0 0 1px rgba(16, 185, 129, 0.25), 0 1px 0 0 rgba(255, 255, 255, 0.2) inset, 0 20px 50px -15px rgba(16, 185, 129, 0.15)"
-                      : "var(--specular-card)",
-                }}
-              >
-                <div style={{ display: "flex", alignItems: "flex-start", justifyContent: "space-between", gap: "24px", flexWrap: "wrap" }}>
+            <div style={{ maxWidth: "920px", margin: "0 auto" }}>
+              {/* Header Dossier */}
+              <div style={{ paddingBottom: "32px", borderBottom: "1px solid #1C1C1F", marginBottom: "36px" }}>
+                <div style={{ display: "flex", alignItems: "flex-start", justifyContent: "space-between", gap: "24px", flexWrap: "wrap", marginBottom: "16px" }}>
                   <div>
-                    <div style={{ display: "flex", alignItems: "center", gap: "10px", marginBottom: "8px" }}>
-                      <span className="mono" style={{ fontSize: "18px", fontWeight: 700, color: "var(--text-white)" }}>
-                        {activeRecord.record_id}
-                      </span>
-                      <button
-                        onClick={() => copyToClipboard(activeRecord.record_id, "id")}
-                        style={{ color: copiedField === "id" ? "var(--accent-cleared)" : "var(--text-dim)" }}
-                        title="Copy Record ID"
-                      >
-                        {copiedField === "id" ? <Check size={14} /> : <Copy size={14} />}
-                      </button>
-                      <a
-                        href={activeRecord.source_url}
-                        target="_blank"
-                        rel="noreferrer"
-                        className="btn-tactical"
-                        style={{ fontSize: "10px", padding: "4px 10px" }}
-                      >
-                        SOURCE <ExternalLink size={11} />
-                      </a>
+                    <div className="meta-label" style={{ marginBottom: "6px" }}>
+                      INGRESS RECORD // {activeRecord.record_id}
                     </div>
-
-                    <div style={{ fontSize: "16px", fontWeight: 600, color: "var(--text-white)", marginBottom: "6px" }}>
+                    <h2
+                      className="serif-font"
+                      style={{
+                        fontSize: "36px",
+                        color: "var(--text-ivory)",
+                        margin: 0,
+                        fontWeight: 500,
+                        lineHeight: 1.1,
+                      }}
+                    >
                       {activeRecord.source_label}
-                    </div>
-
-                    <div className="mono" style={{ fontSize: "11px", color: "var(--text-dim)" }}>
-                      {activeRecord.source_url}
-                    </div>
+                    </h2>
                   </div>
 
-                  {/* Single Authoritative Status Badge */}
+                  {/* Understated Status Badge */}
                   <div style={{ textAlign: "right" }}>
-                    <div className="telemetry-label" style={{ marginBottom: "6px" }}>
-                      QUARANTINE BOUNDARY VERDICT
+                    <div className="meta-label" style={{ marginBottom: "6px" }}>
+                      CONSENSUS STATE
                     </div>
-                    <span
-                      className={`status-chip ${activeRecord.state.toLowerCase()}`}
-                      style={{ fontSize: "12px", padding: "7px 16px" }}
-                    >
-                      <span className={`radar-dot ${activeRecord.state.toLowerCase()}`} />
-                      {activeRecord.state} // is_safe: {activeRecord.state === "CLEARED" ? "TRUE" : "FALSE"}
+                    <span className={`status-tag ${activeRecord.state.toLowerCase()}`} style={{ fontSize: "11px", padding: "4px 10px" }}>
+                      {activeRecord.state} // IS_SAFE: {activeRecord.state === "CLEARED" ? "TRUE" : "FALSE"}
                     </span>
                   </div>
                 </div>
 
-                {/* Subhead / Agent Purpose */}
-                <div style={{ marginTop: "20px", paddingTop: "16px", borderTop: "1px solid rgba(255, 255, 255, 0.05)" }}>
-                  <div className="telemetry-label" style={{ marginBottom: "4px" }}>
-                    PERMITTED DOWNSTREAM AGENT PURPOSE
+                <div className="mono" style={{ fontSize: "12px", color: "var(--text-stone)", marginBottom: "16px" }}>
+                  {activeRecord.source_url}
+                </div>
+
+                <div style={{ display: "flex", alignItems: "center", gap: "16px" }}>
+                  <a
+                    href={activeRecord.source_url}
+                    target="_blank"
+                    rel="noreferrer"
+                    style={{
+                      fontFamily: "var(--font-mono)",
+                      fontSize: "11px",
+                      color: "var(--text-stone)",
+                      display: "inline-flex",
+                      alignItems: "center",
+                      gap: "4px",
+                      textDecoration: "underline",
+                      textUnderlineOffset: "3px",
+                    }}
+                  >
+                    View Source Web Target <ExternalLink size={11} />
+                  </a>
+
+                  <button
+                    onClick={() => copyToClipboard(activeRecord.record_id, "recId")}
+                    style={{
+                      fontFamily: "var(--font-mono)",
+                      fontSize: "11px",
+                      color: copiedField === "recId" ? "var(--text-ivory)" : "var(--text-dim)",
+                      display: "inline-flex",
+                      alignItems: "center",
+                      gap: "4px",
+                    }}
+                  >
+                    {copiedField === "recId" ? <Check size={12} /> : <Copy size={12} />}
+                    Copy ID
+                  </button>
+                </div>
+
+                {/* Downstream Agent Purpose */}
+                <div style={{ marginTop: "24px", paddingTop: "16px", borderTop: "1px solid #141416" }}>
+                  <div className="meta-label" style={{ fontSize: "10px", marginBottom: "4px" }}>
+                    DOWNSTREAM PERMITTED AGENT PURPOSE
                   </div>
-                  <div style={{ fontSize: "14px", color: "var(--text-subhead)" }}>
+                  <div style={{ fontSize: "14px", color: "var(--text-stone)", lineHeight: 1.6 }}>
                     {activeRecord.agent_purpose || "General read-only research assistant."}
                   </div>
                 </div>
 
-                {/* If SUBMITTED: High-Contrast Evaluation Button */}
+                {/* If SUBMITTED: Run Consensus Evaluation Button */}
                 {activeRecord.state === "SUBMITTED" && (
-                  <div style={{ marginTop: "22px", paddingTop: "18px", borderTop: "1px solid rgba(255, 255, 255, 0.06)", display: "flex", alignItems: "center", justifyContent: "space-between" }}>
-                    <div style={{ fontSize: "13px", color: "var(--text-muted)" }}>
-                      Target registered on-chain. Multi-validator consensus pending.
+                  <div style={{ marginTop: "24px", paddingTop: "18px", borderTop: "1px solid #1C1C1F", display: "flex", alignItems: "center", justifyContent: "space-between" }}>
+                    <div style={{ fontSize: "13px", color: "var(--text-stone)" }}>
+                      Target registered. Quorum verification pending execution.
                     </div>
-                    <motion.button
+                    <button
                       onClick={() => handleEvaluate(activeRecord.record_id)}
                       disabled={isEvaluating}
-                      whileHover={{ y: -1 }}
-                      className="btn-primary"
+                      className="btn-ivory"
                       style={{ fontSize: "12px", padding: "8px 20px" }}
                     >
                       {isEvaluating && evaluatingRecordId === activeRecord.record_id ? (
                         <>
-                          <RefreshCw size={13} className="animate-spin" />
-                          RUNNING CONSENSUS…
+                          <RefreshCw size={12} className="animate-spin" />
+                          Running Consensus…
                         </>
                       ) : (
-                        <>
-                          <Terminal size={13} />
-                          Run Consensus Evaluation
-                        </>
+                        <>Run Consensus Evaluation</>
                       )}
-                    </motion.button>
+                    </button>
                   </div>
                 )}
               </div>
 
-              {/* 5 Threat Vectors: High-Density Telemetry Table */}
-              <div style={{ marginBottom: "32px" }}>
-                <div className="telemetry-label" style={{ marginBottom: "14px" }}>
-                  5-POINT THREAT VECTOR ANALYSIS
+              {/* 5 Threat Vectors: Borderless Typographic Table */}
+              <div style={{ marginBottom: "44px" }}>
+                <div className="meta-label" style={{ marginBottom: "16px" }}>
+                  5-POINT THREAT VECTOR INSPECTION
                 </div>
 
-                <div
-                  className="framer-glass-card"
-                  style={{
-                    overflow: "hidden",
-                    padding: "6px 0",
-                  }}
-                >
-                  {activeRecord.findings.length === 0 ? (
-                    <div style={{ padding: "36px", textAlign: "center", color: "var(--text-dim)", fontSize: "13px" }}>
-                      No threat findings recorded yet. Execute consensus evaluation to inspect adversarial vectors.
-                    </div>
-                  ) : (
-                    activeRecord.findings.map((f, i) => {
+                {activeRecord.findings.length === 0 ? (
+                  <div style={{ padding: "40px 0", color: "var(--text-dim)", fontSize: "13px" }}>
+                    No threat findings recorded yet. Execute consensus evaluation to inspect adversarial vectors.
+                  </div>
+                ) : (
+                  <div style={{ borderTop: "1px solid #1C1C1F" }}>
+                    {activeRecord.findings.map((f, i) => {
                       const label = CATEGORY_META[f.category] || f.category;
                       return (
                         <div
                           key={i}
                           style={{
-                            padding: "18px 24px",
-                            borderBottom: i === activeRecord.findings.length - 1 ? "none" : "1px solid rgba(255, 255, 255, 0.04)",
+                            padding: "20px 0",
+                            borderBottom: "1px solid #141416",
                           }}
                         >
                           <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", marginBottom: "8px" }}>
                             <div style={{ display: "flex", alignItems: "center", gap: "10px" }}>
-                              <span style={{ fontSize: "14px", fontWeight: 600, color: "var(--text-white)" }}>
+                              <span style={{ fontSize: "14px", color: "var(--text-ivory)", fontWeight: 500 }}>
                                 {label}
                               </span>
                               <span className={`badge-severity ${f.severity.toLowerCase()}`}>
@@ -609,86 +591,86 @@ export function Workbench({
                             </div>
                           </div>
 
-                          <div style={{ fontSize: "13px", color: "var(--text-subhead)", marginBottom: f.evidence_quote ? "12px" : "4px", lineHeight: 1.5 }}>
+                          <div style={{ fontSize: "13px", color: "var(--text-stone)", marginBottom: f.evidence_quote ? "12px" : "4px", lineHeight: 1.6 }}>
                             {f.explanation}
                           </div>
 
-                          {/* Verbatim Quoted Evidence in Sunken #030406 Code Block */}
+                          {/* Sunken Quoted Evidence in Warm Container */}
                           {f.evidence_quote && (
                             <div
-                              className="sunken-code"
+                              className="sunken-box"
                               style={{
-                                padding: "11px 16px",
                                 fontFamily: "var(--font-mono)",
                                 fontSize: "11px",
-                                color: "var(--text-white)",
-                                lineHeight: 1.5,
-                                borderLeft: f.severity === "HIGH" ? "2px solid var(--accent-quarantined)" : "2px solid rgba(255, 255, 255, 0.18)",
+                                color: "var(--text-ivory)",
+                                lineHeight: 1.6,
                               }}
                             >
-                              <span style={{ color: "var(--text-dim)", marginRight: "8px" }}>EXTRACT //</span>
+                              <span style={{ color: "var(--text-meta)", marginRight: "8px" }}>EXTRACT //</span>
                               “{f.evidence_quote}”
                             </div>
                           )}
                         </div>
                       );
-                    })
-                  )}
-                </div>
+                    })}
+                  </div>
+                )}
               </div>
 
-              {/* Compact 4-Column Cryptographic Proof Bar */}
+              {/* Minimalist Cryptographic Receipt Footer with One-Click Copy */}
               <div
-                className="framer-glass-card"
                 style={{
-                  padding: "22px 28px",
+                  borderTop: "1px solid #1C1C1F",
+                  paddingTop: "28px",
+                  display: "grid",
+                  gridTemplateColumns: "repeat(auto-fit, minmax(200px, 1fr))",
+                  gap: "24px",
                 }}
               >
-                <div className="telemetry-label" style={{ marginBottom: "16px" }}>
-                  CRYPTOGRAPHIC PROOF &amp; AUDIT RECEIPT
+                <div>
+                  <div className="meta-label" style={{ fontSize: "9px", marginBottom: "4px" }}>
+                    CONTENT SHA-256 DIGEST
+                  </div>
+                  <div style={{ display: "flex", alignItems: "center", gap: "6px" }}>
+                    <div className="mono" style={{ fontSize: "11px", color: "var(--text-ivory)", wordBreak: "break-all" }}>
+                      {activeRecord.source_digest ? `${activeRecord.source_digest.slice(0, 16)}…` : "Pending consensus"}
+                    </div>
+                    {activeRecord.source_digest && (
+                      <button
+                        onClick={() => copyToClipboard(activeRecord.source_digest, "digest")}
+                        style={{ color: copiedField === "digest" ? "var(--text-ivory)" : "var(--text-dim)" }}
+                        title="Copy Digest"
+                      >
+                        {copiedField === "digest" ? <Check size={11} /> : <Copy size={11} />}
+                      </button>
+                    )}
+                  </div>
                 </div>
 
-                <div
-                  style={{
-                    display: "grid",
-                    gridTemplateColumns: "repeat(auto-fit, minmax(200px, 1fr))",
-                    gap: "24px",
-                  }}
-                >
-                  <div>
-                    <div className="telemetry-label" style={{ fontSize: "9px", marginBottom: "4px" }}>
-                      CONTENT SHA-256 DIGEST
-                    </div>
-                    <div className="mono" style={{ fontSize: "10px", color: "var(--text-white)", wordBreak: "break-all" }}>
-                      {activeRecord.source_digest || "Pending consensus"}
-                    </div>
+                <div>
+                  <div className="meta-label" style={{ fontSize: "9px", marginBottom: "4px" }}>
+                    RESULT FINGERPRINT
                   </div>
-
-                  <div>
-                    <div className="telemetry-label" style={{ fontSize: "9px", marginBottom: "4px" }}>
-                      RESULT FINGERPRINT
-                    </div>
-                    <div className="mono" style={{ fontSize: "10px", color: "var(--text-dim)", wordBreak: "break-all" }}>
-                      {activeRecord.result_fingerprint || "00000000000000000000000000000000"}
-                    </div>
+                  <div className="mono" style={{ fontSize: "11px", color: "var(--text-stone)", wordBreak: "break-all" }}>
+                    {activeRecord.result_fingerprint || "00000000000000000000"}
                   </div>
+                </div>
 
-                  <div>
-                    <div className="telemetry-label" style={{ fontSize: "9px", marginBottom: "4px" }}>
-                      VALIDATOR QUORUM
-                    </div>
-                    <div className="mono" style={{ fontSize: "11px", color: "var(--accent-cleared)", fontWeight: 600 }}>
-                      100% CONSENSUS AGREEMENT
-                    </div>
+                <div>
+                  <div className="meta-label" style={{ fontSize: "9px", marginBottom: "4px" }}>
+                    QUORUM AGREEMENT
                   </div>
+                  <div className="mono" style={{ fontSize: "11px", color: "var(--text-ivory)" }}>
+                    100% (Strict Equivalence)
+                  </div>
+                </div>
 
-                  <div>
-                    <div className="telemetry-label" style={{ fontSize: "9px", marginBottom: "4px" }}>
-                      CALLER &amp; ATTEMPTS
-                    </div>
-                    <div className="mono" style={{ fontSize: "10px", color: "var(--text-muted)", wordBreak: "break-all" }}>
-                      {activeRecord.owner ? `${activeRecord.owner.slice(0, 6)}…${activeRecord.owner.slice(-4)}` : CONTRACT_ADDRESS.slice(0, 10)} ({activeRecord.evaluation_attempts} att.)
-                    </div>
+                <div>
+                  <div className="meta-label" style={{ fontSize: "9px", marginBottom: "4px" }}>
+                    RECORD OWNER
+                  </div>
+                  <div className="mono" style={{ fontSize: "11px", color: "var(--text-stone)" }}>
+                    {activeRecord.owner ? `${activeRecord.owner.slice(0, 6)}…${activeRecord.owner.slice(-4)}` : CONTRACT_ADDRESS.slice(0, 10)}
                   </div>
                 </div>
               </div>
@@ -701,38 +683,21 @@ export function Workbench({
         </main>
       </div>
 
-      {/* Target Intake Modal with Framer-motion Spring */}
+      {/* Target Intake Modal */}
       <AnimatePresence>
         {showCreateModal && (
-          <motion.div
-            initial={{ opacity: 0 }}
-            animate={{ opacity: 1 }}
-            exit={{ opacity: 0 }}
-            className="modal-overlay"
-            onClick={() => setShowCreateModal(false)}
-          >
-            <motion.div
-              initial={{ opacity: 0, scale: 0.95, y: 14 }}
-              animate={{ opacity: 1, scale: 1, y: 0 }}
-              exit={{ opacity: 0, scale: 0.95, y: 14 }}
-              transition={{ type: "spring", damping: 26, stiffness: 350 }}
-              className="modal-content"
-              onClick={(e) => e.stopPropagation()}
-              style={{ padding: "32px" }}
-            >
-              <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", marginBottom: "22px", paddingBottom: "16px", borderBottom: "1px solid rgba(255, 255, 255, 0.06)" }}>
+          <div className="modal-overlay" onClick={() => setShowCreateModal(false)}>
+            <div className="modal-content" onClick={(e) => e.stopPropagation()} style={{ padding: "36px" }}>
+              <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", marginBottom: "24px", paddingBottom: "16px", borderBottom: "1px solid #1C1C1F" }}>
                 <div>
-                  <h3 className="display-font" style={{ fontSize: "17px", fontWeight: 700, color: "var(--text-white)", margin: 0 }}>
-                    REGISTER INGRESS TARGET
+                  <h3 className="serif-font" style={{ fontSize: "22px", color: "var(--text-ivory)", margin: 0, fontStyle: "italic" }}>
+                    Register Ingress Target
                   </h3>
-                  <p style={{ fontSize: "11px", color: "var(--text-dim)", margin: 0 }}>
+                  <div className="meta-label" style={{ fontSize: "9px", marginTop: "2px" }}>
                     On-chain intake quarantine via GenLayer
-                  </p>
+                  </div>
                 </div>
-                <button
-                  onClick={() => setShowCreateModal(false)}
-                  style={{ color: "var(--text-dim)" }}
-                >
+                <button onClick={() => setShowCreateModal(false)} style={{ color: "var(--text-dim)" }}>
                   <X size={16} />
                 </button>
               </div>
@@ -740,8 +705,8 @@ export function Workbench({
               <form onSubmit={handleCreateRecord}>
                 <div style={{ display: "flex", flexDirection: "column", gap: "16px" }}>
                   <div>
-                    <label className="telemetry-label" style={{ display: "block", marginBottom: "6px" }}>
-                      RECORD ID
+                    <label className="meta-label" style={{ display: "block", marginBottom: "6px" }}>
+                      RECORD IDENTIFIER
                     </label>
                     <input
                       type="text"
@@ -754,8 +719,8 @@ export function Workbench({
                   </div>
 
                   <div>
-                    <label className="telemetry-label" style={{ display: "block", marginBottom: "6px" }}>
-                      SOURCE URL (HTTPS)
+                    <label className="meta-label" style={{ display: "block", marginBottom: "6px" }}>
+                      SOURCE URL (CANONICAL HTTPS)
                     </label>
                     <input
                       type="url"
@@ -766,15 +731,15 @@ export function Workbench({
                       required
                     />
                     {urlError && (
-                      <div className="mono" style={{ color: "var(--accent-quarantined)", fontSize: "10px", marginTop: "4px" }}>
+                      <div className="mono" style={{ color: "var(--status-quarantined-text)", fontSize: "10px", marginTop: "4px" }}>
                         {urlError}
                       </div>
                     )}
                   </div>
 
                   <div>
-                    <label className="telemetry-label" style={{ display: "block", marginBottom: "6px" }}>
-                      SOURCE LABEL
+                    <label className="meta-label" style={{ display: "block", marginBottom: "6px" }}>
+                      TARGET LABEL
                     </label>
                     <input
                       type="text"
@@ -787,7 +752,7 @@ export function Workbench({
                   </div>
 
                   <div>
-                    <label className="telemetry-label" style={{ display: "block", marginBottom: "6px" }}>
+                    <label className="meta-label" style={{ display: "block", marginBottom: "6px" }}>
                       DOWNSTREAM AGENT PURPOSE
                     </label>
                     <textarea
@@ -801,35 +766,32 @@ export function Workbench({
                   </div>
                 </div>
 
-                <div style={{ display: "flex", alignItems: "center", justifyContent: "flex-end", gap: "12px", marginTop: "26px", paddingTop: "16px", borderTop: "1px solid rgba(255, 255, 255, 0.06)" }}>
+                <div style={{ display: "flex", alignItems: "center", justifyContent: "flex-end", gap: "12px", marginTop: "28px", paddingTop: "16px", borderTop: "1px solid #1C1C1F" }}>
                   <button
                     type="button"
                     onClick={() => setShowCreateModal(false)}
-                    className="btn-tactical"
+                    className="btn-ghost"
                   >
-                    CANCEL
+                    Cancel
                   </button>
                   <button
                     type="submit"
                     disabled={isSubmittingRecord}
-                    className="btn-primary"
+                    className="btn-ivory"
                   >
                     {isSubmittingRecord ? (
                       <>
-                        <RefreshCw size={13} className="animate-spin" />
-                        SUBMITTING…
+                        <RefreshCw size={12} className="animate-spin" />
+                        Submitting…
                       </>
                     ) : (
-                      <>
-                        <Plus size={13} />
-                        CREATE RECORD
-                      </>
+                      <>Create Record</>
                     )}
                   </button>
                 </div>
               </form>
-            </motion.div>
-          </motion.div>
+            </div>
+          </div>
         )}
       </AnimatePresence>
     </div>
