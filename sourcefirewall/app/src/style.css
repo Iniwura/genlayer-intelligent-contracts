@@ -906,6 +906,169 @@ button {
   border-left-color: #2A2A2E;
 }
 
+/* ==========================================================================
+   FRAMER-GRADE EDITORIAL STUDIO LANDING PAGE SYSTEM
+   ========================================================================== */
+
+.framer-canvas-wrapper {
+  background-color: #F8F8F6;
+  color: #111113;
+  padding: 12px;
+  min-height: 100vh;
+  box-sizing: border-box;
+}
+
+@media (min-width: 640px) {
+  .framer-canvas-wrapper {
+    padding: 16px;
+  }
+}
+
+@media (min-width: 1024px) {
+  .framer-canvas-wrapper {
+    padding: 24px;
+  }
+}
+
+/* Hero Rounded Frame with Metallic Backdrop */
+.framer-hero-container {
+  background-color: #0A0A0C;
+  color: #F4F1EA;
+  border: 1px solid #1C1C20;
+  border-radius: 24px;
+  position: relative;
+  overflow: hidden;
+  display: flex;
+  flex-direction: column;
+  justify-content: space-between;
+  min-height: clamp(540px, 86vh, 720px);
+  padding: 24px 20px 40px;
+  box-sizing: border-box;
+  box-shadow: 0 24px 64px -16px rgba(0, 0, 0, 0.4);
+}
+
+@media (min-width: 640px) {
+  .framer-hero-container {
+    border-radius: 32px;
+    padding: 32px 32px 48px;
+    min-height: clamp(620px, 88vh, 800px);
+  }
+}
+
+@media (min-width: 1024px) {
+  .framer-hero-container {
+    border-radius: 36px;
+    padding: 40px 48px 56px;
+    min-height: clamp(680px, 90vh, 860px);
+  }
+}
+
+/* Flowing Metallic Background */
+.framer-metallic-mesh {
+  position: absolute;
+  inset: 0;
+  background: 
+    radial-gradient(ellipse 70% 50% at 75% 25%, rgba(32, 60, 102, 0.32) 0%, transparent 65%),
+    radial-gradient(ellipse 55% 45% at 20% 80%, rgba(45, 45, 58, 0.42) 0%, transparent 70%),
+    linear-gradient(180deg, rgba(14, 14, 18, 0.6) 0%, rgba(8, 8, 10, 0.95) 100%),
+    #0A0A0C;
+  pointer-events: none;
+  z-index: 0;
+}
+
+.framer-metallic-mesh::after {
+  content: "";
+  position: absolute;
+  inset: 0;
+  background-image: radial-gradient(rgba(255, 255, 255, 0.08) 1px, transparent 0);
+  background-size: 32px 32px;
+  opacity: 0.18;
+  pointer-events: none;
+}
+
+/* Landscape Mockup Card */
+.framer-landscape-card {
+  position: relative;
+  border-radius: 20px;
+  overflow: hidden;
+  background: #08080A;
+  border: 1px solid rgba(0, 0, 0, 0.08);
+  box-shadow: 0 16px 40px -12px rgba(0, 0, 0, 0.12);
+  transition: transform 0.4s cubic-bezier(0.16, 1, 0.3, 1), box-shadow 0.4s cubic-bezier(0.16, 1, 0.3, 1);
+}
+
+.framer-landscape-card:hover {
+  transform: translateY(-4px);
+  box-shadow: 0 28px 60px -16px rgba(0, 0, 0, 0.2);
+}
+
+/* Services Expandable Item */
+.framer-service-row {
+  border-top: 1px solid #E5E5E7;
+  padding: 32px 0;
+  transition: background-color 0.2s ease;
+  cursor: pointer;
+}
+
+.framer-service-row:last-child {
+  border-bottom: 1px solid #E5E5E7;
+}
+
+/* Pricing Popular Glow */
+.framer-pricing-popular {
+  border: 1px solid rgba(59, 130, 246, 0.4) !important;
+  box-shadow: 0 0 50px -10px rgba(59, 130, 246, 0.18), 0 20px 40px -12px rgba(0, 0, 0, 0.6) !important;
+  position: relative;
+}
+
+/* FAQ Accordion Styling */
+.framer-faq-item {
+  border-radius: 16px;
+  border: 1px solid #E5E5E7;
+  overflow: hidden;
+  transition: all 0.25s cubic-bezier(0.16, 1, 0.3, 1);
+  margin-bottom: 12px;
+}
+
+.framer-faq-item.expanded {
+  background-color: #F4F4F6;
+  border-color: #D4D4D8;
+}
+
+.hero-btn-short {
+  display: none;
+}
+
+@media (max-width: 580px) {
+  .header-studio-tag {
+    display: none !important;
+  }
+}
+
+@media (max-width: 520px) {
+  .hero-status-label {
+    display: none !important;
+  }
+  .hero-status-pill {
+    padding: 6px 10px !important;
+  }
+}
+
+@media (max-width: 480px) {
+  .hero-btn-full {
+    display: none !important;
+  }
+  .hero-btn-short {
+    display: inline !important;
+  }
+  .hero-header-btn {
+    padding: 6px 14px !important;
+    font-size: 11px !important;
+  }
+}
+
+
+
 
 
 
