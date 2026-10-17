@@ -4,7 +4,6 @@ import {
   ExternalLink,
   Copy,
   Check,
-  Search,
   Plus,
   RefreshCw,
   Wallet,
@@ -16,10 +15,11 @@ import {
   ShieldCheck,
   AlertTriangle,
   Lock,
-  Layers,
   FileText,
   Activity,
   Terminal,
+  ChevronDown,
+  ChevronUp,
 } from "lucide-react";
 import {
   CONTRACT_ADDRESS,
@@ -52,16 +52,12 @@ export function Workbench({
   onNotify,
 }) {
   const [selectedRecordId, setSelectedRecordId] = useState(records[0]?.record_id || "");
-  const [searchQuery, setSearchQuery] = useState("");
-  const [filterState, setFilterState] = useState("ALL");
+  const [showSafeVectors, setShowSafeVectors] = useState(false);
   const [isEvaluating, setIsEvaluating] = useState(false);
   const [evaluatingRecordId, setEvaluatingRecordId] = useState("");
   const [showCreateModal, setShowCreateModal] = useState(false);
   const [isSubmittingRecord, setIsSubmittingRecord] = useState(false);
   const [copiedField, setCopiedField] = useState("");
-
-  // Mobile Tab State: "LEDGER" vs "DETAIL"
-  const [mobileTab, setMobileTab] = useState("LEDGER");
 
   // Create Target Form State
   const [newRecordForm, setNewRecordForm] = useState({
@@ -81,30 +77,6 @@ export function Workbench({
     );
   }, [records, selectedRecordId]);
 
-  // Filtered Records
-  const filteredRecords = useMemo(() => {
-    return records.filter((r) => {
-      const matchesSearch =
-        r.record_id.toLowerCase().includes(searchQuery.toLowerCase()) ||
-        r.source_label.toLowerCase().includes(searchQuery.toLowerCase()) ||
-        r.source_url.toLowerCase().includes(searchQuery.toLowerCase());
-
-      if (!matchesSearch) return false;
-      if (filterState === "ALL") return true;
-      return r.state === filterState;
-    });
-  }, [records, searchQuery, filterState]);
-
-  // Record Counts
-  const counts = useMemo(() => {
-    return {
-      all: records.length,
-      cleared: records.filter((r) => r.state === "CLEARED").length,
-      quarantined: records.filter((r) => r.state === "QUARANTINED").length,
-      submitted: records.filter((r) => r.state === "SUBMITTED").length,
-    };
-  }, [records]);
-
   // Threat Breakdown for Active Record
   const threatCounts = useMemo(() => {
     if (!activeRecord || !activeRecord.findings) return { high: 0, medium: 0, low: 0 };
@@ -113,6 +85,18 @@ export function Workbench({
       medium: activeRecord.findings.filter((f) => f.severity === "MEDIUM").length,
       low: activeRecord.findings.filter((f) => f.severity === "LOW").length,
     };
+  }, [activeRecord]);
+
+  // Progressive Disclosure: Separate triggered threats from safe/cleared vectors
+  const { triggeredFindings, safeFindings } = useMemo(() => {
+    if (!activeRecord || !activeRecord.findings) {
+      return { triggeredFindings: [], safeFindings: [] };
+    }
+    const triggered = activeRecord.findings.filter(
+      (f) => f.severity === "HIGH" || f.severity === "MEDIUM"
+    );
+    const safe = activeRecord.findings.filter((f) => f.severity === "LOW");
+    return { triggeredFindings: triggered, safeFindings: safe };
   }, [activeRecord]);
 
   const copyToClipboard = (text, fieldName) => {
@@ -206,7 +190,6 @@ export function Workbench({
       onNotify(`Record created on-chain: ${result.hash.slice(0, 10)}…`, "success");
       setShowCreateModal(false);
       setSelectedRecordId(newRecordForm.recordId.trim());
-      setMobileTab("DETAIL");
       await onRefresh();
     } catch (err) {
       onNotify(errorText(err), "error");
@@ -230,10 +213,12 @@ export function Workbench({
           position: "sticky",
           top: 0,
           zIndex: 50,
+          width: "100%",
+          boxSizing: "border-box",
         }}
       >
         {/* Left: Return & Identification */}
-        <div style={{ display: "flex", alignItems: "center", gap: "16px" }}>
+        <div style={{ display: "flex", alignItems: "center", gap: "12px", minWidth: 0 }}>
           <button
             onClick={onReturnLanding}
             style={{
@@ -246,12 +231,13 @@ export function Workbench({
               alignItems: "center",
               gap: "6px",
               transition: "color 0.2s ease",
+              flexShrink: 0,
             }}
           >
             <ArrowLeft size={13} />
             <span className="header-btn-prefix">OVERVIEW</span>
           </button>
-          <span style={{ color: "#2B2B30" }}>/</span>
+          <span className="header-overview-slash" style={{ color: "#2B2B30" }}>/</span>
           <span
             className="serif-font"
             style={{
@@ -260,6 +246,7 @@ export function Workbench({
               fontStyle: "italic",
               letterSpacing: "-0.01em",
               fontWeight: 500,
+              whiteSpace: "nowrap",
             }}
           >
             SourceFirewall
@@ -269,8 +256,8 @@ export function Workbench({
           </span>
         </div>
 
-        {/* Center: Live Studionet Telemetry & Mode Controls */}
-        <div style={{ display: "flex", alignItems: "center", gap: "14px" }}>
+        {/* Right: Telemetry Controls & Wallet */}
+        <div style={{ display: "flex", alignItems: "center", gap: "10px", flexShrink: 0 }}>
           <div
             className="header-status-pill"
             style={{
@@ -311,15 +298,12 @@ export function Workbench({
           <button
             onClick={onRefresh}
             disabled={isRefreshing}
-            style={{ color: "var(--text-stone)", padding: "4px" }}
+            style={{ color: "var(--text-stone)", padding: "4px", display: "flex", alignItems: "center" }}
             title="Refresh Ledger Telemetry"
           >
             <RefreshCw size={13} className={isRefreshing ? "animate-spin" : ""} />
           </button>
-        </div>
 
-        {/* Right: Wallet Integration */}
-        <div style={{ display: "flex", alignItems: "center", gap: "12px" }}>
           {walletAccount ? (
             <div
               style={{
@@ -343,7 +327,7 @@ export function Workbench({
             <button
               onClick={onConnectWallet}
               className="btn-ivory"
-              style={{ fontSize: "12px", padding: "7px 16px" }}
+              style={{ fontSize: "12px", padding: "6px 14px", whiteSpace: "nowrap" }}
             >
               <Wallet size={12} />
               <span className="header-btn-prefix">Connect </span>Wallet
@@ -352,554 +336,741 @@ export function Workbench({
         </div>
       </header>
 
-      {/* Mobile Master-Detail Switcher Bar (< 900px) */}
-      <div className="workbench-mobile-tabs">
-        <button
-          onClick={() => setMobileTab("LEDGER")}
-          style={{
-            flex: 1,
-            padding: "10px 16px",
-            fontFamily: "var(--font-mono)",
-            fontSize: "11px",
-            letterSpacing: "0.12em",
-            textTransform: "uppercase",
-            color: mobileTab === "LEDGER" ? "var(--text-ivory)" : "var(--text-dim)",
-            borderBottom: mobileTab === "LEDGER" ? "2px solid var(--text-ivory)" : "2px solid transparent",
-            backgroundColor: mobileTab === "LEDGER" ? "#0F1014" : "transparent",
-          }}
-        >
-          TARGET LEDGER ({records.length})
-        </button>
-        <button
-          onClick={() => setMobileTab("DETAIL")}
-          style={{
-            flex: 1,
-            padding: "10px 16px",
-            fontFamily: "var(--font-mono)",
-            fontSize: "11px",
-            letterSpacing: "0.12em",
-            textTransform: "uppercase",
-            color: mobileTab === "DETAIL" ? "var(--text-ivory)" : "var(--text-dim)",
-            borderBottom: mobileTab === "DETAIL" ? "2px solid var(--text-ivory)" : "2px solid transparent",
-            backgroundColor: mobileTab === "DETAIL" ? "#0F1014" : "transparent",
-          }}
-        >
-          INSPECTION DOSSIER
-        </button>
-      </div>
+      {/* 2. CENTERED SINGLE-COLUMN WORKSPACE */}
+      <main className="workbench-workspace">
+        {/* SLEEK HORIZONTAL TARGET BAR */}
+        <div className="record-tabs-bar">
+          <div className="record-tabs-list">
+            {records.map((r) => {
+              const isSelected = r.record_id === activeRecord?.record_id;
+              const domain = getDomain(r.source_url);
+              const statusColor =
+                r.state === "CLEARED"
+                  ? "var(--status-cleared-text)"
+                  : r.state === "QUARANTINED"
+                  ? "var(--status-quarantined-text)"
+                  : "var(--status-amber-text)";
 
-      {/* 2. MASTER-DETAIL WORKSPACE */}
-      <div className="workbench-layout">
-        {/* LEFT PANE: INGRESS LEDGER (360px - 380px) */}
-        <aside
-          className="workbench-ledger"
-          style={{
-            display: mobileTab === "LEDGER" ? "flex" : undefined,
-          }}
-        >
-          {/* Action & Filter Bar */}
-          <div style={{ padding: "18px 20px", borderBottom: "1px solid #1C1C1F" }}>
-            <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", marginBottom: "14px" }}>
-              <span className="meta-label" style={{ fontSize: "10px" }}>
-                INGRESS TARGETS ({records.length})
-              </span>
-              <button
-                onClick={() => setShowCreateModal(true)}
+              return (
+                <button
+                  key={r.record_id}
+                  onClick={() => {
+                    setSelectedRecordId(r.record_id);
+                    setShowSafeVectors(false);
+                  }}
+                  className={`record-tab ${isSelected ? "active" : ""}`}
+                >
+                  <span
+                    style={{
+                      width: "6px",
+                      height: "6px",
+                      borderRadius: "50%",
+                      backgroundColor: statusColor,
+                      flexShrink: 0,
+                    }}
+                  />
+                  <span style={{ fontWeight: isSelected ? 500 : 400 }}>
+                    {domain}
+                  </span>
+                  <span
+                    className={`status-tag ${r.state.toLowerCase()}`}
+                    style={{ fontSize: "9px", padding: "2px 6px" }}
+                  >
+                    {r.state}
+                  </span>
+                </button>
+              );
+            })}
+          </div>
+
+          <button
+            onClick={() => setShowCreateModal(true)}
+            className="record-new-btn"
+          >
+            <Plus size={12} />
+            <span>NEW TARGET</span>
+          </button>
+        </div>
+
+        {activeRecord ? (
+          <div>
+            {/* DOSSIER HEADER (Editorial Minimal) */}
+            <div style={{ paddingBottom: "24px" }}>
+              <div
                 style={{
-                  fontFamily: "var(--font-mono)",
-                  fontSize: "10px",
-                  letterSpacing: "0.12em",
-                  textTransform: "uppercase",
-                  padding: "4px 10px",
-                  border: "1px solid #333338",
-                  color: "var(--text-ivory)",
-                  borderRadius: "2px",
                   display: "flex",
                   alignItems: "center",
-                  gap: "4px",
-                  backgroundColor: "rgba(255, 255, 255, 0.02)",
-                  transition: "all 0.15s ease",
+                  gap: "10px",
+                  flexWrap: "wrap",
+                  marginBottom: "8px",
                 }}
               >
-                <Plus size={11} />
-                NEW TARGET
-              </button>
-            </div>
+                <div className="meta-label" style={{ fontSize: "10px" }}>
+                  INGRESS TARGET // {activeRecord.record_id}
+                </div>
 
-            {/* Search Input */}
-            <div style={{ position: "relative", marginBottom: "14px" }}>
-              <Search size={12} style={{ position: "absolute", left: "10px", top: "10px", color: "var(--text-dim)" }} />
-              <input
-                type="text"
-                value={searchQuery}
-                onChange={(e) => setSearchQuery(e.target.value)}
-                placeholder="Search domain, label, or record ID…"
-                className="tactical-input"
-                style={{ paddingLeft: "30px", fontSize: "11px", padding: "7px 10px 7px 30px" }}
-              />
-            </div>
-
-            {/* Filter Tabs */}
-            <div style={{ display: "flex", gap: "10px", flexWrap: "wrap" }}>
-              {["ALL", "CLEARED", "QUARANTINED", "SUBMITTED"].map((filter) => {
-                const countKey = filter.toLowerCase();
-                const badgeCount = counts[countKey] || 0;
-                const isSelected = filterState === filter;
-                return (
-                  <button
-                    key={filter}
-                    onClick={() => setFilterState(filter)}
-                    style={{
-                      fontFamily: "var(--font-mono)",
-                      fontSize: "9px",
-                      letterSpacing: "0.12em",
-                      textTransform: "uppercase",
-                      color: isSelected ? "var(--text-ivory)" : "var(--text-dim)",
-                      paddingBottom: "3px",
-                      borderBottom: isSelected ? "1px solid var(--text-ivory)" : "1px solid transparent",
-                      transition: "color 0.15s ease",
-                    }}
-                  >
-                    {filter} [{badgeCount}]
-                  </button>
-                );
-              })}
-            </div>
-          </div>
-
-          {/* Ledger Records List */}
-          <div style={{ flex: 1, overflowY: "auto" }}>
-            {filteredRecords.length === 0 ? (
-              <div style={{ padding: "48px 20px", textAlign: "center", color: "var(--text-dim)", fontSize: "12px" }}>
-                No records match current filter.
+                <span
+                  className={`status-tag ${activeRecord.state.toLowerCase()}`}
+                  style={{ fontSize: "10px", padding: "3px 8px" }}
+                >
+                  {activeRecord.state}
+                </span>
               </div>
-            ) : (
-              <div>
-                {filteredRecords.map((r) => {
-                  const isSelected = r.record_id === activeRecord?.record_id;
-                  const domain = getDomain(r.source_url);
-                  const highThreats = r.findings?.filter((f) => f.severity === "HIGH").length || 0;
-                  return (
-                    <div
-                      key={r.record_id}
-                      onClick={() => {
-                        setSelectedRecordId(r.record_id);
-                        setMobileTab("DETAIL");
-                      }}
-                      className={`ledger-item ${isSelected ? "selected" : ""}`}
-                    >
-                      <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", marginBottom: "4px", gap: "8px" }}>
-                        <span className="mono" style={{ fontSize: "12px", color: isSelected ? "var(--text-ivory)" : "var(--text-stone)", fontWeight: 500, maxWidth: "180px", overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap" }}>
-                          {domain}
-                        </span>
-                        <span className={`status-tag ${r.state.toLowerCase()}`} style={{ fontSize: "9px", flexShrink: 0 }}>
-                          {r.state}
-                        </span>
-                      </div>
 
-                      <div style={{ fontSize: "12px", color: isSelected ? "var(--text-ivory)" : "var(--text-stone)", marginBottom: "6px", whiteSpace: "nowrap", overflow: "hidden", textOverflow: "ellipsis" }}>
-                        {r.source_label}
-                      </div>
+              <h1
+                className="serif-font"
+                style={{
+                  fontSize: "clamp(26px, 5.5vw, 44px)",
+                  color: "var(--text-ivory)",
+                  margin: "0 0 12px 0",
+                  fontWeight: 500,
+                  lineHeight: 1.1,
+                  letterSpacing: "-0.02em",
+                  wordBreak: "break-word",
+                }}
+              >
+                {activeRecord.source_label}
+              </h1>
 
-                      <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between" }}>
-                        <span className="mono" style={{ fontSize: "10px", color: "var(--text-dim)" }}>
-                          {r.record_id}
-                        </span>
-                        <span className="mono" style={{ fontSize: "10px", color: highThreats > 0 ? "var(--status-quarantined-text)" : "var(--text-dim)" }}>
-                          {r.state === "SUBMITTED" ? "PENDING QUORUM" : `${highThreats} HIGH THREATS`}
-                        </span>
-                      </div>
-                    </div>
-                  );
-                })}
+              <div
+                className="mono"
+                style={{
+                  fontSize: "12px",
+                  color: "var(--text-stone)",
+                  marginBottom: "16px",
+                  wordBreak: "break-all",
+                }}
+              >
+                {activeRecord.source_url}
               </div>
-            )}
-          </div>
-        </aside>
 
-        {/* RIGHT PANE: DETAIL INSPECTION CANVAS */}
-        <main
-          className="workbench-canvas"
-          style={{
-            display: mobileTab === "DETAIL" ? "block" : undefined,
-          }}
-        >
-          {activeRecord ? (
-            <div style={{ maxWidth: "940px", margin: "0 auto" }}>
-              {/* Mobile Return to Ledger Button */}
-              <div style={{ marginBottom: "16px" }} className="header-demo-toggle">
-                <button
-                  onClick={() => setMobileTab("LEDGER")}
+              <div style={{ display: "flex", alignItems: "center", gap: "18px", flexWrap: "wrap" }}>
+                <a
+                  href={activeRecord.source_url}
+                  target="_blank"
+                  rel="noreferrer"
                   style={{
                     fontFamily: "var(--font-mono)",
-                    fontSize: "10px",
-                    letterSpacing: "0.12em",
-                    textTransform: "uppercase",
+                    fontSize: "11px",
                     color: "var(--text-stone)",
                     display: "inline-flex",
                     alignItems: "center",
-                    gap: "6px",
-                    padding: "4px 0",
+                    gap: "5px",
+                    textDecoration: "underline",
+                    textUnderlineOffset: "3px",
                   }}
                 >
-                  <ArrowLeft size={11} /> BACK TO TARGET LEDGER
-                </button>
-              </div>
-              {/* Header Dossier Bar */}
-              <div style={{ paddingBottom: "24px", borderBottom: "1px solid #1C1C1F", marginBottom: "28px" }}>
-                <div style={{ display: "flex", alignItems: "flex-start", justifyContent: "space-between", gap: "20px", flexWrap: "wrap", marginBottom: "12px" }}>
-                  <div>
-                    <div className="meta-label" style={{ fontSize: "10px", marginBottom: "6px" }}>
-                      INGRESS DOSSIER // {activeRecord.record_id}
-                    </div>
-                    <h2
-                      className="serif-font"
-                      style={{
-                        fontSize: "clamp(26px, 3.2vw, 36px)",
-                        color: "var(--text-ivory)",
-                        margin: 0,
-                        fontWeight: 500,
-                        lineHeight: 1.15,
-                      }}
-                    >
-                      {activeRecord.source_label}
-                    </h2>
-                  </div>
+                  Source Document <ExternalLink size={11} />
+                </a>
 
-                  <div style={{ display: "flex", alignItems: "center", gap: "10px" }}>
-                    <span className={`status-tag ${activeRecord.state.toLowerCase()}`} style={{ fontSize: "11px", padding: "5px 12px" }}>
-                      {activeRecord.state}
-                    </span>
-                  </div>
-                </div>
-
-                <div className="mono" style={{ fontSize: "12px", color: "var(--text-stone)", marginBottom: "14px", wordBreak: "break-all" }}>
-                  {activeRecord.source_url}
-                </div>
-
-                <div style={{ display: "flex", alignItems: "center", gap: "16px", flexWrap: "wrap" }}>
-                  <a
-                    href={activeRecord.source_url}
-                    target="_blank"
-                    rel="noreferrer"
-                    style={{
-                      fontFamily: "var(--font-mono)",
-                      fontSize: "11px",
-                      color: "var(--text-stone)",
-                      display: "inline-flex",
-                      alignItems: "center",
-                      gap: "4px",
-                      textDecoration: "underline",
-                      textUnderlineOffset: "3px",
-                    }}
-                  >
-                    View Source Web Target <ExternalLink size={11} />
-                  </a>
-
-                  <button
-                    onClick={() => copyToClipboard(activeRecord.record_id, "recId")}
-                    style={{
-                      fontFamily: "var(--font-mono)",
-                      fontSize: "11px",
-                      color: copiedField === "recId" ? "var(--text-ivory)" : "var(--text-dim)",
-                      display: "inline-flex",
-                      alignItems: "center",
-                      gap: "4px",
-                    }}
-                  >
-                    {copiedField === "recId" ? <Check size={12} /> : <Copy size={12} />}
-                    Copy ID
-                  </button>
-
-                  <a
-                    href={contractUrl(CONTRACT_ADDRESS)}
-                    target="_blank"
-                    rel="noreferrer"
-                    style={{
-                      fontFamily: "var(--font-mono)",
-                      fontSize: "11px",
-                      color: "var(--text-dim)",
-                      display: "inline-flex",
-                      alignItems: "center",
-                      gap: "4px",
-                    }}
-                  >
-                    Contract <ArrowUpRight size={11} />
-                  </a>
-                </div>
-              </div>
-
-              {/* COMPACT SCANNABLE TELEMETRY DASHBOARD (4 Tiles) */}
-              <div className="telemetry-kpi-grid">
-                {/* Tile 1: Consensus Verdict */}
-                <div className="telemetry-kpi-card">
-                  <div className="meta-label" style={{ fontSize: "9px", marginBottom: "6px" }}>
-                    CONSENSUS GATE
-                  </div>
-                  <div className="mono" style={{ fontSize: "16px", fontWeight: 700, color: activeRecord.state === "CLEARED" ? "var(--text-ivory)" : activeRecord.state === "QUARANTINED" ? "var(--status-quarantined-text)" : "var(--status-amber-text)" }}>
-                    {activeRecord.state === "CLEARED" ? "is_safe() = TRUE" : activeRecord.state === "QUARANTINED" ? "is_safe() = FALSE" : "PENDING QUORUM"}
-                  </div>
-                  <div className="mono" style={{ fontSize: "10px", color: "var(--text-dim)", marginTop: "4px" }}>
-                    {activeRecord.state === "CLEARED" ? "Cleared for agent intake" : activeRecord.state === "QUARANTINED" ? "Blocked by fail-closed gate" : "Awaiting validator execution"}
-                  </div>
-                </div>
-
-                {/* Tile 2: Threat Profile */}
-                <div className="telemetry-kpi-card">
-                  <div className="meta-label" style={{ fontSize: "9px", marginBottom: "6px" }}>
-                    THREAT PROFILE
-                  </div>
-                  <div className="mono" style={{ fontSize: "16px", fontWeight: 700, color: threatCounts.high > 0 ? "var(--status-quarantined-text)" : "var(--text-ivory)" }}>
-                    {threatCounts.high} HIGH / {threatCounts.medium} MED / {threatCounts.low} LOW
-                  </div>
-                  <div className="mono" style={{ fontSize: "10px", color: "var(--text-dim)", marginTop: "4px" }}>
-                    5 Canonical vectors inspected
-                  </div>
-                </div>
-
-                {/* Tile 3: Payload Digest */}
-                <div className="telemetry-kpi-card">
-                  <div className="meta-label" style={{ fontSize: "9px", marginBottom: "6px" }}>
-                    SHA-256 DIGEST
-                  </div>
-                  <div style={{ display: "flex", alignItems: "center", gap: "6px" }}>
-                    <div className="mono" style={{ fontSize: "13px", color: "var(--text-ivory)", wordBreak: "break-all" }}>
-                      {activeRecord.source_digest ? `${activeRecord.source_digest.slice(0, 14)}…` : "Pending evaluation"}
-                    </div>
-                    {activeRecord.source_digest && (
-                      <button
-                        onClick={() => copyToClipboard(activeRecord.source_digest, "digest")}
-                        style={{ color: copiedField === "digest" ? "var(--text-ivory)" : "var(--text-dim)" }}
-                        title="Copy SHA-256 Digest"
-                      >
-                        {copiedField === "digest" ? <Check size={11} /> : <Copy size={11} />}
-                      </button>
-                    )}
-                  </div>
-                  <div className="mono" style={{ fontSize: "10px", color: "var(--text-dim)", marginTop: "4px" }}>
-                    Invariant content fingerprint
-                  </div>
-                </div>
-
-                {/* Tile 4: Quorum Consensus */}
-                <div className="telemetry-kpi-card">
-                  <div className="meta-label" style={{ fontSize: "9px", marginBottom: "6px" }}>
-                    QUORUM MODEL
-                  </div>
-                  <div className="mono" style={{ fontSize: "14px", color: "var(--text-ivory)", fontWeight: 600 }}>
-                    Strict Equivalence
-                  </div>
-                  <div className="mono" style={{ fontSize: "10px", color: "var(--text-dim)", marginTop: "4px" }}>
-                    Multi-validator consensus
-                  </div>
-                </div>
-              </div>
-
-              {/* ACTION CALLOUT IF PENDING SUBMISSION */}
-              {activeRecord.state === "SUBMITTED" && (
-                <div
+                <button
+                  onClick={() => copyToClipboard(activeRecord.record_id, "recId")}
                   style={{
-                    padding: "20px 24px",
-                    borderRadius: "2px",
-                    border: "1px solid var(--status-amber-border)",
-                    backgroundColor: "var(--status-amber-bg)",
-                    display: "flex",
+                    fontFamily: "var(--font-mono)",
+                    fontSize: "11px",
+                    color: copiedField === "recId" ? "var(--text-ivory)" : "var(--text-dim)",
+                    display: "inline-flex",
                     alignItems: "center",
-                    justifyContent: "space-between",
-                    flexWrap: "wrap",
-                    gap: "16px",
-                    marginBottom: "32px",
+                    gap: "5px",
                   }}
                 >
-                  <div>
-                    <div className="meta-label" style={{ color: "var(--status-amber-text)", fontSize: "10px", marginBottom: "2px" }}>
-                      INGRESS RECORD COMMITTED TO ON-CHAIN LEDGER
-                    </div>
-                    <div style={{ fontSize: "13px", color: "var(--text-ivory)" }}>
-                      Awaiting validator consensus evaluation. Run evaluate_record() to execute 5-point adversarial analysis.
-                    </div>
-                  </div>
+                  {copiedField === "recId" ? <Check size={12} /> : <Copy size={12} />}
+                  Copy ID
+                </button>
 
-                  <button
-                    onClick={() => handleEvaluate(activeRecord.record_id)}
-                    disabled={isEvaluating}
-                    className="btn-ivory"
-                    style={{ fontSize: "12px", padding: "8px 20px" }}
+                <a
+                  href={contractUrl(CONTRACT_ADDRESS)}
+                  target="_blank"
+                  rel="noreferrer"
+                  style={{
+                    fontFamily: "var(--font-mono)",
+                    fontSize: "11px",
+                    color: "var(--text-dim)",
+                    display: "inline-flex",
+                    alignItems: "center",
+                    gap: "4px",
+                  }}
+                >
+                  Contract <ArrowUpRight size={11} />
+                </a>
+              </div>
+            </div>
+
+            {/* STAGE 2: FLATTENED 4-KPI TELEMETRY GRID (No bulky boxes, pure whitespace & typography) */}
+            <div className="telemetry-flat-grid">
+              {/* Tile 1: Consensus Verdict */}
+              <div className="telemetry-flat-item">
+                <div className="meta-label" style={{ fontSize: "9px" }}>
+                  CONSENSUS GATE
+                </div>
+                <div
+                  className="mono"
+                  style={{
+                    fontSize: "18px",
+                    fontWeight: 600,
+                    color:
+                      activeRecord.state === "CLEARED"
+                        ? "var(--text-ivory)"
+                        : activeRecord.state === "QUARANTINED"
+                        ? "var(--status-quarantined-text)"
+                        : "var(--status-amber-text)",
+                  }}
+                >
+                  {activeRecord.state === "CLEARED"
+                    ? "is_safe() = TRUE"
+                    : activeRecord.state === "QUARANTINED"
+                    ? "is_safe() = FALSE"
+                    : "PENDING"}
+                </div>
+                <div className="mono" style={{ fontSize: "11px", color: "var(--text-dim)" }}>
+                  {activeRecord.state === "CLEARED"
+                    ? "Cleared for intake"
+                    : activeRecord.state === "QUARANTINED"
+                    ? "Fail-closed quarantine"
+                    : "Awaiting execution"}
+                </div>
+              </div>
+
+              {/* Tile 2: Threat Profile */}
+              <div className="telemetry-flat-item">
+                <div className="meta-label" style={{ fontSize: "9px" }}>
+                  THREAT PROFILE
+                </div>
+                <div
+                  className="mono"
+                  style={{
+                    fontSize: "18px",
+                    fontWeight: 600,
+                    color:
+                      threatCounts.high > 0
+                        ? "var(--status-quarantined-text)"
+                        : threatCounts.medium > 0
+                        ? "var(--status-amber-text)"
+                        : "var(--text-ivory)",
+                  }}
+                >
+                  {threatCounts.high > 0
+                    ? `${threatCounts.high} HIGH THREAT${threatCounts.high > 1 ? "S" : ""}`
+                    : threatCounts.medium > 0
+                    ? `${threatCounts.medium} WARNING`
+                    : "0 DETECTED"}
+                </div>
+                <div className="mono" style={{ fontSize: "11px", color: "var(--text-dim)" }}>
+                  5 canonical vectors evaluated
+                </div>
+              </div>
+
+              {/* Tile 3: Payload Digest */}
+              <div className="telemetry-flat-item">
+                <div className="meta-label" style={{ fontSize: "9px" }}>
+                  SHA-256 DIGEST
+                </div>
+                <div style={{ display: "flex", alignItems: "center", gap: "6px" }}>
+                  <div
+                    className="mono"
+                    style={{
+                      fontSize: "14px",
+                      color: "var(--text-ivory)",
+                      wordBreak: "break-all",
+                    }}
                   >
-                    {isEvaluating && evaluatingRecordId === activeRecord.record_id ? (
-                      <>
-                        <RefreshCw size={12} className="animate-spin" />
-                        Executing Consensus…
-                      </>
-                    ) : (
-                      <>Execute Consensus Evaluation</>
-                    )}
-                  </button>
+                    {activeRecord.source_digest
+                      ? `${activeRecord.source_digest.slice(0, 12)}…`
+                      : "Pending"}
+                  </div>
+                  {activeRecord.source_digest && (
+                    <button
+                      onClick={() => copyToClipboard(activeRecord.source_digest, "digest")}
+                      style={{
+                        color: copiedField === "digest" ? "var(--text-ivory)" : "var(--text-dim)",
+                      }}
+                      title="Copy SHA-256 Digest"
+                    >
+                      {copiedField === "digest" ? <Check size={12} /> : <Copy size={12} />}
+                    </button>
+                  )}
                 </div>
-              )}
-
-              {/* PERMITTED AGENT PURPOSE */}
-              <div style={{ marginBottom: "32px", padding: "20px 24px", backgroundColor: "var(--bg-surface)", border: "1px solid #1C1C1F", borderRadius: "2px" }}>
-                <div className="meta-label" style={{ fontSize: "10px", marginBottom: "6px" }}>
-                  DOWNSTREAM PERMITTED AGENT INTAKE OBJECTIVE
-                </div>
-                <div style={{ fontSize: "13px", color: "var(--text-stone)", lineHeight: 1.65 }}>
-                  {activeRecord.agent_purpose || "General read-only research assistant."}
+                <div className="mono" style={{ fontSize: "11px", color: "var(--text-dim)" }}>
+                  Invariant payload hash
                 </div>
               </div>
 
-              {/* FINDINGS EVIDENCE HIERARCHY */}
-              <div style={{ marginBottom: "40px" }}>
-                <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", marginBottom: "16px" }}>
-                  <span className="meta-label" style={{ fontSize: "10px" }}>
-                    5-POINT THREAT VECTOR CONSENSUS FINDINGS
-                  </span>
-                  <span className="mono" style={{ fontSize: "10px", color: "var(--text-dim)" }}>
-                    EVALUATOR SYNTHESIS &amp; RAW EVIDENCE
-                  </span>
+              {/* Tile 4: Quorum Consensus */}
+              <div className="telemetry-flat-item">
+                <div className="meta-label" style={{ fontSize: "9px" }}>
+                  QUORUM MODEL
                 </div>
-
-                {activeRecord.findings.length === 0 ? (
-                  <div style={{ padding: "48px 24px", textAlign: "center", backgroundColor: "var(--bg-surface)", border: "1px solid #1C1C1F", borderRadius: "2px", color: "var(--text-dim)", fontSize: "13px" }}>
-                    No threat vector findings recorded yet. Execute consensus evaluation to generate verified evidence.
-                  </div>
-                ) : (
-                  <div style={{ display: "flex", flexDirection: "column", gap: "12px" }}>
-                    {activeRecord.findings.map((f, i) => {
-                      const meta = CATEGORY_META[f.category] || { label: f.category, icon: Shield };
-                      const IconComp = meta.icon;
-                      const isQuarantined = f.severity === "HIGH";
-                      return (
-                        <div
-                          key={i}
-                          style={{
-                            padding: "20px 24px",
-                            backgroundColor: "var(--bg-surface)",
-                            border: "1px solid #1C1C1F",
-                            borderRadius: "2px",
-                          }}
-                        >
-                          {/* Finding Header */}
-                          <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", marginBottom: "10px" }}>
-                            <div style={{ display: "flex", alignItems: "center", gap: "10px" }}>
-                              <IconComp size={15} color={isQuarantined ? "var(--status-quarantined-text)" : "var(--text-ivory)"} />
-                              <span style={{ fontSize: "14px", color: "var(--text-ivory)", fontWeight: 500 }}>
-                                {meta.label}
-                              </span>
-                              <span className={`badge-severity ${f.severity.toLowerCase()}`}>
-                                {f.severity}
-                              </span>
-                            </div>
-
-                            <div className="mono" style={{ fontSize: "10px", color: "var(--text-dim)" }}>
-                              CONFIDENCE: {f.confidence}
-                            </div>
-                          </div>
-
-                          {/* Evaluator Interpretation */}
-                          <div style={{ fontSize: "13px", color: "var(--text-stone)", lineHeight: 1.6, marginBottom: f.evidence_quote ? "14px" : "0" }}>
-                            {f.explanation}
-                          </div>
-
-                          {/* Extracted Raw Material (Sunken Raw Text Box) */}
-                          {f.evidence_quote && (
-                            <div className={`raw-evidence-box ${isQuarantined ? "quarantined" : "cleared"}`}>
-                              <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", marginBottom: "4px" }}>
-                                <span className="meta-label" style={{ fontSize: "9px", color: isQuarantined ? "var(--status-quarantined-text)" : "var(--text-meta)" }}>
-                                  RAW PAYLOAD EXCERPT // EXTRACTED FROM SOURCE
-                                </span>
-                                {f.source_pointer && (
-                                  <span className="mono" style={{ fontSize: "9px", color: "var(--text-dim)" }}>
-                                    POINTER: {f.source_pointer}
-                                  </span>
-                                )}
-                              </div>
-                              <div>“{f.evidence_quote}”</div>
-                            </div>
-                          )}
-                        </div>
-                      );
-                    })}
-                  </div>
-                )}
+                <div
+                  className="mono"
+                  style={{ fontSize: "15px", color: "var(--text-ivory)", fontWeight: 500 }}
+                >
+                  Strict Equivalence
+                </div>
+                <div className="mono" style={{ fontSize: "11px", color: "var(--text-dim)" }}>
+                  GenLayer Studionet
+                </div>
               </div>
+            </div>
 
-              {/* CRYPTOGRAPHIC VERIFICATION RECEIPT */}
+            {/* ACTION CALLOUT IF PENDING SUBMISSION */}
+            {activeRecord.state === "SUBMITTED" && (
               <div
                 style={{
-                  borderTop: "1px solid #1C1C1F",
-                  paddingTop: "24px",
-                  display: "grid",
-                  gridTemplateColumns: "repeat(auto-fit, minmax(180px, 1fr))",
-                  gap: "20px",
+                  padding: "20px 24px",
+                  borderRadius: "2px",
+                  border: "1px solid var(--status-amber-border)",
+                  backgroundColor: "var(--status-amber-bg)",
+                  display: "flex",
+                  alignItems: "center",
+                  justifyContent: "space-between",
+                  flexWrap: "wrap",
+                  gap: "16px",
+                  marginBottom: "36px",
                 }}
               >
                 <div>
-                  <div className="meta-label" style={{ fontSize: "9px", marginBottom: "4px" }}>
-                    RESULT FINGERPRINT
-                  </div>
-                  <div className="mono" style={{ fontSize: "11px", color: "var(--text-stone)", wordBreak: "break-all" }}>
-                    {activeRecord.result_fingerprint || "00000000000000000000"}
-                  </div>
-                </div>
-
-                <div>
-                  <div className="meta-label" style={{ fontSize: "9px", marginBottom: "4px" }}>
-                    EVALUATION ATTEMPTS
-                  </div>
-                  <div className="mono" style={{ fontSize: "11px", color: "var(--text-ivory)" }}>
-                    {activeRecord.evaluation_attempts || 1} Attempt(s) committed
-                  </div>
-                </div>
-
-                <div>
-                  <div className="meta-label" style={{ fontSize: "9px", marginBottom: "4px" }}>
-                    RECORD OWNER
-                  </div>
-                  <div className="mono" style={{ fontSize: "11px", color: "var(--text-stone)" }}>
-                    {activeRecord.owner ? `${activeRecord.owner.slice(0, 6)}…${activeRecord.owner.slice(-4)}` : CONTRACT_ADDRESS.slice(0, 10)}
-                  </div>
-                </div>
-
-                <div>
-                  <div className="meta-label" style={{ fontSize: "9px", marginBottom: "4px" }}>
-                    INTELLIGENT CONTRACT
-                  </div>
-                  <a
-                    href={contractUrl(CONTRACT_ADDRESS)}
-                    target="_blank"
-                    rel="noreferrer"
+                  <div
+                    className="meta-label"
                     style={{
-                      fontFamily: "var(--font-mono)",
-                      fontSize: "11px",
-                      color: "var(--text-stone)",
-                      textDecoration: "underline",
-                      display: "inline-flex",
-                      alignItems: "center",
-                      gap: "4px",
+                      color: "var(--status-amber-text)",
+                      fontSize: "10px",
+                      marginBottom: "4px",
                     }}
                   >
-                    Explorer Proof <ExternalLink size={10} />
-                  </a>
+                    INGRESS RECORD COMMITTED TO ON-CHAIN LEDGER
+                  </div>
+                  <div style={{ fontSize: "13px", color: "var(--text-ivory)" }}>
+                    Awaiting validator consensus evaluation. Run evaluate_record() to execute 5-point adversarial analysis.
+                  </div>
                 </div>
+
+                <button
+                  onClick={() => handleEvaluate(activeRecord.record_id)}
+                  disabled={isEvaluating}
+                  className="btn-ivory"
+                  style={{ fontSize: "12px", padding: "8px 20px" }}
+                >
+                  {isEvaluating && evaluatingRecordId === activeRecord.record_id ? (
+                    <>
+                      <RefreshCw size={12} className="animate-spin" />
+                      Executing Consensus…
+                    </>
+                  ) : (
+                    <>Execute Consensus Evaluation</>
+                  )}
+                </button>
+              </div>
+            )}
+
+            {/* PERMITTED AGENT PURPOSE (Clean unboxed statement) */}
+            <div
+              style={{
+                marginBottom: "36px",
+                paddingBottom: "24px",
+                borderBottom: "1px solid #1C1C1F",
+              }}
+            >
+              <div className="meta-label" style={{ fontSize: "10px", marginBottom: "8px" }}>
+                DOWNSTREAM PERMITTED AGENT PURPOSE
+              </div>
+              <div
+                style={{
+                  fontSize: "14px",
+                  color: "var(--text-stone)",
+                  lineHeight: 1.6,
+                  fontStyle: "italic",
+                }}
+              >
+                “{activeRecord.agent_purpose || "General read-only research assistant."}”
               </div>
             </div>
-          ) : (
-            <div style={{ textAlign: "center", padding: "80px", color: "var(--text-dim)" }}>
-              No ingress target selected.
+
+            {/* STAGE 2: PROGRESSIVE DISCLOSURE FOR THREAT FINDINGS */}
+            <div style={{ marginBottom: "48px" }}>
+              <div
+                style={{
+                  display: "flex",
+                  alignItems: "center",
+                  justifyContent: "space-between",
+                  marginBottom: "20px",
+                }}
+              >
+                <span className="meta-label" style={{ fontSize: "10px" }}>
+                  SECURITY VECTOR EVALUATION
+                </span>
+                <span className="mono" style={{ fontSize: "10px", color: "var(--text-dim)" }}>
+                  {activeRecord.findings.length} TOTAL VECTORS INSPECTED
+                </span>
+              </div>
+
+              {activeRecord.findings.length === 0 ? (
+                <div
+                  style={{
+                    padding: "40px 24px",
+                    textAlign: "center",
+                    border: "1px dashed #222225",
+                    borderRadius: "2px",
+                    color: "var(--text-dim)",
+                    fontSize: "13px",
+                  }}
+                >
+                  No threat vector findings recorded yet. Execute consensus evaluation to generate verified evidence.
+                </div>
+              ) : triggeredFindings.length > 0 ? (
+                /* A. THREAT/QUARANTINED RECORD: PROMINENT TRIGGERED VECTORS + COLLAPSED SAFE STATE */
+                <div style={{ display: "flex", flexDirection: "column", gap: "24px" }}>
+                  {/* Prominent Triggered Vectors */}
+                  {triggeredFindings.map((f, i) => {
+                    const meta = CATEGORY_META[f.category] || { label: f.category, icon: Shield };
+                    const IconComp = meta.icon;
+                    const isHigh = f.severity === "HIGH";
+
+                    return (
+                      <div
+                        key={i}
+                        style={{
+                          paddingBottom: "24px",
+                          borderBottom: "1px solid #1C1C1F",
+                        }}
+                      >
+                        {/* Finding Header */}
+                        <div
+                          style={{
+                            display: "flex",
+                            alignItems: "center",
+                            justifyContent: "space-between",
+                            marginBottom: "12px",
+                            flexWrap: "wrap",
+                            gap: "8px",
+                          }}
+                        >
+                          <div style={{ display: "flex", alignItems: "center", gap: "10px" }}>
+                            <IconComp
+                              size={16}
+                              color={isHigh ? "var(--status-quarantined-text)" : "var(--status-amber-text)"}
+                            />
+                            <span
+                              style={{
+                                fontSize: "15px",
+                                color: "var(--text-ivory)",
+                                fontWeight: 500,
+                              }}
+                            >
+                              {meta.label}
+                            </span>
+                            <span className={`badge-severity ${f.severity.toLowerCase()}`}>
+                              {f.severity} THREAT
+                            </span>
+                          </div>
+
+                          <div className="mono" style={{ fontSize: "10px", color: "var(--text-dim)" }}>
+                            CONSENSUS CONFIDENCE: {f.confidence}
+                          </div>
+                        </div>
+
+                        {/* Raw Ingress Material (Prominently displayed) */}
+                        {f.evidence_quote && (
+                          <div
+                            className={`raw-evidence-box ${isHigh ? "quarantined" : "cleared"}`}
+                          >
+                            <div
+                              style={{
+                                display: "flex",
+                                alignItems: "center",
+                                justifyContent: "space-between",
+                                marginBottom: "6px",
+                              }}
+                            >
+                              <span
+                                className="meta-label"
+                                style={{
+                                  fontSize: "9px",
+                                  color: isHigh ? "var(--status-quarantined-text)" : "var(--text-meta)",
+                                }}
+                              >
+                                RAW INGRESS EXCERPT // EXTRACTED FROM UNTRUSTED SOURCE
+                              </span>
+                              {f.source_pointer && (
+                                <span className="mono" style={{ fontSize: "9px", color: "var(--text-dim)" }}>
+                                  {f.source_pointer}
+                                </span>
+                              )}
+                            </div>
+                            <div style={{ fontSize: "12px", color: "var(--text-ivory)" }}>
+                              “{f.evidence_quote}”
+                            </div>
+                          </div>
+                        )}
+
+                        {/* Validator Consensus Rationale */}
+                        <div style={{ marginTop: "12px" }}>
+                          <div
+                            className="meta-label"
+                            style={{ fontSize: "9px", color: "var(--text-meta)", marginBottom: "4px" }}
+                          >
+                            VALIDATOR CONSENSUS RATIONALE
+                          </div>
+                          <div
+                            style={{
+                              fontSize: "13px",
+                              color: "var(--text-stone)",
+                              lineHeight: 1.6,
+                            }}
+                          >
+                            {f.explanation}
+                          </div>
+                        </div>
+                      </div>
+                    );
+                  })}
+
+                  {/* Collapsed Safe Vectors in Minimal "Passed" State */}
+                  {safeFindings.length > 0 && (
+                    <div>
+                      <div
+                        onClick={() => setShowSafeVectors(!showSafeVectors)}
+                        className="safe-vectors-collapsed-bar"
+                        style={{ cursor: "pointer" }}
+                      >
+                        <div style={{ display: "flex", alignItems: "center", gap: "10px", flexWrap: "wrap" }}>
+                          <Check size={14} color="#10B981" />
+                          <span
+                            className="mono"
+                            style={{ fontSize: "11px", color: "var(--text-ivory)", fontWeight: 500 }}
+                          >
+                            {safeFindings.length} Security Vectors Cleared
+                          </span>
+                          <span style={{ color: "#333338" }}>/</span>
+                          <span style={{ fontSize: "11px", color: "var(--text-dim)" }}>
+                            {safeFindings.map((v) => CATEGORY_META[v.category]?.label || v.category).join(" · ")}
+                          </span>
+                        </div>
+
+                        <button
+                          type="button"
+                          style={{
+                            fontFamily: "var(--font-mono)",
+                            fontSize: "10px",
+                            letterSpacing: "0.1em",
+                            textTransform: "uppercase",
+                            color: "var(--text-stone)",
+                            display: "flex",
+                            alignItems: "center",
+                            gap: "4px",
+                            background: "transparent",
+                            border: "none",
+                            padding: "4px",
+                          }}
+                        >
+                          {showSafeVectors ? (
+                            <>
+                              Hide Details <ChevronUp size={12} />
+                            </>
+                          ) : (
+                            <>
+                              View Passed ({safeFindings.length}) <ChevronDown size={12} />
+                            </>
+                          )}
+                        </button>
+                      </div>
+
+                      {/* Expandable Minimal Passed Checks */}
+                      <AnimatePresence>
+                        {showSafeVectors && (
+                          <motion.div
+                            initial={{ opacity: 0, height: 0 }}
+                            animate={{ opacity: 1, height: "auto" }}
+                            exit={{ opacity: 0, height: 0 }}
+                            style={{ overflow: "hidden", marginTop: "12px" }}
+                          >
+                            <div style={{ display: "flex", flexDirection: "column", gap: "10px", paddingLeft: "12px" }}>
+                              {safeFindings.map((f, i) => (
+                                <div
+                                  key={i}
+                                  style={{
+                                    display: "flex",
+                                    alignItems: "flex-start",
+                                    gap: "10px",
+                                    padding: "8px 0",
+                                    borderBottom: "1px solid #141417",
+                                  }}
+                                >
+                                  <span style={{ color: "#10B981", fontSize: "12px", marginTop: "1px" }}>✓</span>
+                                  <div style={{ flex: 1 }}>
+                                    <div style={{ display: "flex", alignItems: "center", gap: "8px", marginBottom: "2px" }}>
+                                      <span style={{ fontSize: "12px", color: "var(--text-ivory)", fontWeight: 500 }}>
+                                        {CATEGORY_META[f.category]?.label || f.category}
+                                      </span>
+                                      <span className="mono" style={{ fontSize: "9px", color: "var(--text-dim)" }}>
+                                        CONFIDENCE: {f.confidence}
+                                      </span>
+                                    </div>
+                                    <div style={{ fontSize: "12px", color: "var(--text-stone)", lineHeight: 1.5 }}>
+                                      {f.explanation}
+                                    </div>
+                                  </div>
+                                </div>
+                              ))}
+                            </div>
+                          </motion.div>
+                        )}
+                      </AnimatePresence>
+                    </div>
+                  )}
+                </div>
+              ) : (
+                /* B. CLEARED RECORD: ALL VECTORS PASSED */
+                <div>
+                  <div
+                    style={{
+                      padding: "20px 0",
+                      borderBottom: "1px solid #1C1C1F",
+                      marginBottom: "20px",
+                    }}
+                  >
+                    <div style={{ display: "flex", alignItems: "center", gap: "10px", marginBottom: "8px" }}>
+                      <ShieldCheck size={18} color="#10B981" />
+                      <span
+                        style={{
+                          fontSize: "16px",
+                          color: "var(--text-ivory)",
+                          fontWeight: 500,
+                        }}
+                      >
+                        All 5 Ingress Vectors Certified Safe
+                      </span>
+                      <span className="status-tag cleared" style={{ fontSize: "10px" }}>
+                        QUORUM TRUE
+                      </span>
+                    </div>
+                    <div style={{ fontSize: "13px", color: "var(--text-stone)", lineHeight: 1.6 }}>
+                      Multi-validator consensus achieved. Zero prompt injection, instruction hijacking, secret exfiltration, or malicious tool redirection patterns detected in ingress payload.
+                    </div>
+                  </div>
+
+                  {/* Clean Minimal Checklist */}
+                  <div style={{ display: "flex", flexDirection: "column", gap: "12px" }}>
+                    {safeFindings.map((f, i) => (
+                      <div
+                        key={i}
+                        style={{
+                          display: "flex",
+                          alignItems: "flex-start",
+                          gap: "12px",
+                          padding: "10px 0",
+                          borderBottom: "1px solid #141417",
+                        }}
+                      >
+                        <span style={{ color: "#10B981", fontSize: "13px", marginTop: "1px" }}>✓</span>
+                        <div style={{ flex: 1 }}>
+                          <div style={{ display: "flex", alignItems: "center", gap: "8px", marginBottom: "3px" }}>
+                            <span style={{ fontSize: "13px", color: "var(--text-ivory)", fontWeight: 500 }}>
+                              {CATEGORY_META[f.category]?.label || f.category}
+                            </span>
+                            <span className="mono" style={{ fontSize: "9px", color: "var(--text-dim)" }}>
+                              CONFIDENCE: {f.confidence}
+                            </span>
+                          </div>
+                          <div style={{ fontSize: "12px", color: "var(--text-stone)", lineHeight: 1.5 }}>
+                            {f.explanation}
+                          </div>
+                        </div>
+                      </div>
+                    ))}
+                  </div>
+                </div>
+              )}
             </div>
-          )}
-        </main>
-      </div>
+
+            {/* CRYPTOGRAPHIC VERIFICATION RECEIPT (Whisper-thin divider footer) */}
+            <div className="receipt-grid">
+              <div>
+                <div className="meta-label" style={{ fontSize: "9px", marginBottom: "4px" }}>
+                  RESULT FINGERPRINT
+                </div>
+                <div
+                  className="mono"
+                  style={{ fontSize: "11px", color: "var(--text-stone)", wordBreak: "break-all" }}
+                >
+                  {activeRecord.result_fingerprint || "00000000000000000000"}
+                </div>
+              </div>
+
+              <div>
+                <div className="meta-label" style={{ fontSize: "9px", marginBottom: "4px" }}>
+                  EVALUATION ATTEMPTS
+                </div>
+                <div className="mono" style={{ fontSize: "11px", color: "var(--text-ivory)" }}>
+                  {activeRecord.evaluation_attempts || 1} Attempt(s) committed
+                </div>
+              </div>
+
+              <div>
+                <div className="meta-label" style={{ fontSize: "9px", marginBottom: "4px" }}>
+                  RECORD OWNER
+                </div>
+                <div className="mono" style={{ fontSize: "11px", color: "var(--text-stone)" }}>
+                  {activeRecord.owner
+                    ? `${activeRecord.owner.slice(0, 6)}…${activeRecord.owner.slice(-4)}`
+                    : CONTRACT_ADDRESS.slice(0, 10)}
+                </div>
+              </div>
+
+              <div>
+                <div className="meta-label" style={{ fontSize: "9px", marginBottom: "4px" }}>
+                  INTELLIGENT CONTRACT
+                </div>
+                <a
+                  href={contractUrl(CONTRACT_ADDRESS)}
+                  target="_blank"
+                  rel="noreferrer"
+                  style={{
+                    fontFamily: "var(--font-mono)",
+                    fontSize: "11px",
+                    color: "var(--text-stone)",
+                    textDecoration: "underline",
+                    display: "inline-flex",
+                    alignItems: "center",
+                    gap: "4px",
+                  }}
+                >
+                  Explorer Proof <ExternalLink size={10} />
+                </a>
+              </div>
+            </div>
+          </div>
+        ) : (
+          <div style={{ textAlign: "center", padding: "80px 20px", color: "var(--text-dim)" }}>
+            No ingress target available. Register a new target to begin.
+          </div>
+        )}
+      </main>
 
       {/* Target Intake Modal */}
       <AnimatePresence>
         {showCreateModal && (
           <div className="modal-overlay" onClick={() => setShowCreateModal(false)}>
             <div className="modal-content" onClick={(e) => e.stopPropagation()} style={{ padding: "32px" }}>
-              <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", marginBottom: "20px", paddingBottom: "14px", borderBottom: "1px solid #1C1C1F" }}>
+              <div
+                style={{
+                  display: "flex",
+                  alignItems: "center",
+                  justifyContent: "space-between",
+                  marginBottom: "20px",
+                  paddingBottom: "14px",
+                  borderBottom: "1px solid #1C1C1F",
+                }}
+              >
                 <div>
-                  <h3 className="serif-font" style={{ fontSize: "22px", color: "var(--text-ivory)", margin: 0, fontStyle: "italic" }}>
+                  <h3
+                    className="serif-font"
+                    style={{
+                      fontSize: "22px",
+                      color: "var(--text-ivory)",
+                      margin: 0,
+                      fontStyle: "italic",
+                    }}
+                  >
                     Register Ingress Target
                   </h3>
                   <div className="meta-label" style={{ fontSize: "9px", marginTop: "2px" }}>
@@ -940,7 +1111,14 @@ export function Workbench({
                       required
                     />
                     {urlError && (
-                      <div className="mono" style={{ color: "var(--status-quarantined-text)", fontSize: "10px", marginTop: "4px" }}>
+                      <div
+                        className="mono"
+                        style={{
+                          color: "var(--status-quarantined-text)",
+                          fontSize: "10px",
+                          marginTop: "4px",
+                        }}
+                      >
                         {urlError}
                       </div>
                     )}
@@ -975,7 +1153,17 @@ export function Workbench({
                   </div>
                 </div>
 
-                <div style={{ display: "flex", alignItems: "center", justifyContent: "flex-end", gap: "12px", marginTop: "24px", paddingTop: "16px", borderTop: "1px solid #1C1C1F" }}>
+                <div
+                  style={{
+                    display: "flex",
+                    alignItems: "center",
+                    justifyContent: "flex-end",
+                    gap: "12px",
+                    marginTop: "24px",
+                    paddingTop: "16px",
+                    borderTop: "1px solid #1C1C1F",
+                  }}
+                >
                   <button
                     type="button"
                     onClick={() => setShowCreateModal(false)}
