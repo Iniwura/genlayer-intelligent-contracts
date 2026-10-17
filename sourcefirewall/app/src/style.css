@@ -8,7 +8,7 @@
   --font-mono: 'JetBrains Mono', ui-monospace, SFMono-Regular, monospace;
 
   /* Meridian Palette: Deep Warm Obsidian & Ivory */
-  --bg-obsidian: #09090B;
+  --bg-obsidian: #0A0A0C;
   --bg-surface: #0C0C0E;
   --bg-surface-raised: #121215;
   --bg-sunken: #060608;
@@ -41,6 +41,16 @@
   --radius-card: 4px;
 }
 
+::selection {
+  background-color: #F4F1EA;
+  color: #0A0A0C;
+}
+
+::-moz-selection {
+  background-color: #F4F1EA;
+  color: #0A0A0C;
+}
+
 *, *::before, *::after {
   box-sizing: border-box;
   margin: 0;
@@ -63,6 +73,7 @@ body {
   -webkit-font-smoothing: antialiased;
   -moz-osx-font-smoothing: grayscale;
 }
+
 
 /* Custom Scrollbars */
 ::-webkit-scrollbar {
