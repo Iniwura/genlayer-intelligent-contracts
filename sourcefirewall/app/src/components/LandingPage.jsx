@@ -40,7 +40,8 @@ export function LandingPage({ onLaunchWorkbench, liveRecordCount, isDemoMode }) 
         { name: "Unsupported Claim", severity: "LOW", detail: "Claims within bounds" },
       ],
       fingerprint: "0x8f2d41b6c70319ea9120",
-      validatorCount: "5 / 5 Unanimous",
+      quorumProof: "Equivalence Consensus (Unanimous)",
+      benchmarkTag: "AUDITED BENCHMARK // MALICIOUS INGRESS",
     },
     VERIFIED: {
       id: "REC-DOC-01",
@@ -59,7 +60,8 @@ export function LandingPage({ onLaunchWorkbench, liveRecordCount, isDemoMode }) 
         { name: "Unsupported Claim", severity: "LOW", detail: "Verified developer technical documentation" },
       ],
       fingerprint: "0x12c49a71b80321fd4081",
-      validatorCount: "5 / 5 Unanimous",
+      quorumProof: "Equivalence Consensus (Unanimous)",
+      benchmarkTag: "AUDITED BENCHMARK // SAFE SPECIFICATION",
     },
   };
 
@@ -226,29 +228,29 @@ export function LandingPage({ onLaunchWorkbench, liveRecordCount, isDemoMode }) 
 
             {/* Giant Display Headline */}
             <motion.h1
-              initial={{ opacity: 0, y: 18 }}
+              initial={{ opacity: 0, y: 16 }}
               animate={{ opacity: 1, y: 0 }}
               transition={{ duration: 0.6, delay: 0.1 }}
               style={{
-                fontSize: "clamp(42px, 6vw, 88px)",
+                fontSize: "clamp(44px, 6.2vw, 90px)",
                 fontWeight: 500,
                 letterSpacing: "-0.04em",
-                lineHeight: 0.95,
+                lineHeight: 0.92,
                 color: "var(--text-ivory)",
                 marginBottom: "24px",
               }}
             >
-              <span className="serif-font" style={{ fontStyle: "italic", display: "block" }}>
+              <span className="serif-font" style={{ fontStyle: "italic", display: "inline-block", paddingRight: "0.08em" }}>
                 Provably Secure
               </span>
-              <span className="display-font" style={{ fontWeight: 600 }}>
+              <span className="display-font" style={{ fontWeight: 600, display: "block", letterSpacing: "-0.045em" }}>
                 AI Ingress.
               </span>
             </motion.h1>
 
             {/* Restrained 1-Sentence Hook */}
             <motion.p
-              initial={{ opacity: 0, y: 18 }}
+              initial={{ opacity: 0, y: 16 }}
               animate={{ opacity: 1, y: 0 }}
               transition={{ duration: 0.6, delay: 0.18 }}
               style={{
@@ -467,7 +469,7 @@ export function LandingPage({ onLaunchWorkbench, liveRecordCount, isDemoMode }) 
                     5-POINT THREAT VECTOR CONSENSUS
                   </span>
                   <span className="mono" style={{ fontSize: "10px", color: "var(--text-stone)" }}>
-                    {currentProof.validatorCount}
+                    {currentProof.quorumProof}
                   </span>
                 </div>
 

@@ -11,6 +11,15 @@ import {
   ArrowLeft,
   X,
   ArrowUpRight,
+  Shield,
+  ShieldAlert,
+  ShieldCheck,
+  AlertTriangle,
+  Lock,
+  Layers,
+  FileText,
+  Activity,
+  Terminal,
 } from "lucide-react";
 import {
   CONTRACT_ADDRESS,
@@ -22,11 +31,11 @@ import {
 } from "../api";
 
 const CATEGORY_META = {
-  PROMPT_INJECTION: "Prompt Injection",
-  INSTRUCTION_HIJACKING: "Instruction Hijacking",
-  SECRET_EXFILTRATION: "Secret Exfiltration",
-  MALICIOUS_TOOL_REDIRECTION: "Tool Redirection",
-  UNSUPPORTED_CLAIM: "Unsupported Claim",
+  PROMPT_INJECTION: { label: "Prompt Injection", icon: ShieldAlert },
+  INSTRUCTION_HIJACKING: { label: "Instruction Hijacking", icon: Lock },
+  SECRET_EXFILTRATION: { label: "Secret Exfiltration", icon: AlertTriangle },
+  MALICIOUS_TOOL_REDIRECTION: { label: "Tool Redirection", icon: Terminal },
+  UNSUPPORTED_CLAIM: { label: "Unsupported Claim", icon: FileText },
 };
 
 export function Workbench({
@@ -51,7 +60,10 @@ export function Workbench({
   const [isSubmittingRecord, setIsSubmittingRecord] = useState(false);
   const [copiedField, setCopiedField] = useState("");
 
-  // Create Form State
+  // Mobile Tab State: "LEDGER" vs "DETAIL"
+  const [mobileTab, setMobileTab] = useState("LEDGER");
+
+  // Create Target Form State
   const [newRecordForm, setNewRecordForm] = useState({
     recordId: `target-sec-${Math.floor(Math.random() * 900 + 100)}`,
     label: "Untrusted Research Paper",
@@ -83,7 +95,7 @@ export function Workbench({
     });
   }, [records, searchQuery, filterState]);
 
-  // Counts
+  // Record Counts
   const counts = useMemo(() => {
     return {
       all: records.length,
@@ -93,7 +105,18 @@ export function Workbench({
     };
   }, [records]);
 
+  // Threat Breakdown for Active Record
+  const threatCounts = useMemo(() => {
+    if (!activeRecord || !activeRecord.findings) return { high: 0, medium: 0, low: 0 };
+    return {
+      high: activeRecord.findings.filter((f) => f.severity === "HIGH").length,
+      medium: activeRecord.findings.filter((f) => f.severity === "MEDIUM").length,
+      low: activeRecord.findings.filter((f) => f.severity === "LOW").length,
+    };
+  }, [activeRecord]);
+
   const copyToClipboard = (text, fieldName) => {
+    if (!text) return;
     navigator.clipboard.writeText(text);
     setCopiedField(fieldName);
     setTimeout(() => setCopiedField(""), 2000);
@@ -108,7 +131,6 @@ export function Workbench({
     }
   };
 
-  // Extract domain helper
   const getDomain = (url) => {
     try {
       const parsed = new URL(url);
@@ -118,7 +140,7 @@ export function Workbench({
     }
   };
 
-  // Handle Consensus Evaluation
+  // Execute Evaluation on GenLayer Studionet
   const handleEvaluate = async (recordId) => {
     if (!writeClient) {
       onNotify("Connect a browser wallet on GenLayer Studionet to execute evaluation.", "error");
@@ -147,7 +169,7 @@ export function Workbench({
     }
   };
 
-  // Handle Record Creation
+  // Submit New Ingress Target
   const handleCreateRecord = async (e) => {
     e.preventDefault();
     if (urlError || !newRecordForm.url.startsWith("https://")) {
@@ -184,6 +206,7 @@ export function Workbench({
       onNotify(`Record created on-chain: ${result.hash.slice(0, 10)}…`, "success");
       setShowCreateModal(false);
       setSelectedRecordId(newRecordForm.recordId.trim());
+      setMobileTab("DETAIL");
       await onRefresh();
     } catch (err) {
       onNotify(errorText(err), "error");
@@ -193,15 +216,15 @@ export function Workbench({
   };
 
   return (
-    <div style={{ flex: 1, display: "flex", flexDirection: "column" }}>
-      {/* Clean Top Navigation: Luxury-Tier Inspection Desk */}
+    <div className="workbench-shell">
+      {/* 1. OPERATIONAL STUDIO HEADER */}
       <header
         style={{
           height: "64px",
           display: "flex",
           alignItems: "center",
           justifyContent: "space-between",
-          padding: "0 36px",
+          padding: "0 clamp(16px, 3vw, 36px)",
           borderBottom: "1px solid #1C1C1F",
           backgroundColor: "#09090B",
           position: "sticky",
@@ -209,8 +232,8 @@ export function Workbench({
           zIndex: 50,
         }}
       >
-        {/* Left: Back & Breadcrumb */}
-        <div style={{ display: "flex", alignItems: "center", gap: "20px" }}>
+        {/* Left: Return & Identification */}
+        <div style={{ display: "flex", alignItems: "center", gap: "16px" }}>
           <button
             onClick={onReturnLanding}
             style={{
@@ -222,36 +245,53 @@ export function Workbench({
               display: "flex",
               alignItems: "center",
               gap: "6px",
+              transition: "color 0.2s ease",
             }}
           >
             <ArrowLeft size={13} />
-            OVERVIEW
+            <span className="header-btn-prefix">OVERVIEW</span>
           </button>
-          <span style={{ color: "#222225" }}>|</span>
+          <span style={{ color: "#2B2B30" }}>/</span>
           <span
             className="serif-font"
             style={{
-              fontSize: "18px",
+              fontSize: "19px",
               color: "var(--text-ivory)",
               fontStyle: "italic",
               letterSpacing: "-0.01em",
+              fontWeight: 500,
             }}
           >
-            SourceFirewall Studio
+            SourceFirewall
+          </span>
+          <span className="meta-label header-edition-tag" style={{ fontSize: "10px", color: "var(--text-meta)" }}>
+            [STUDIO WORKBENCH]
           </span>
         </div>
 
-        {/* Center: Live Studionet Network Label */}
-        <div style={{ display: "flex", alignItems: "center", gap: "16px" }}>
-          <div style={{ display: "flex", alignItems: "center", gap: "6px" }}>
+        {/* Center: Live Studionet Telemetry & Mode Controls */}
+        <div style={{ display: "flex", alignItems: "center", gap: "14px" }}>
+          <div
+            className="header-status-pill"
+            style={{
+              display: "flex",
+              alignItems: "center",
+              gap: "6px",
+              padding: "4px 10px",
+              borderRadius: "9999px",
+              border: "1px solid #1C1C1F",
+              backgroundColor: "rgba(255, 255, 255, 0.02)",
+            }}
+          >
             <span style={{ width: "5px", height: "5px", borderRadius: "50%", backgroundColor: "#F4F1EA" }} />
             <span className="meta-label" style={{ fontSize: "10px", color: "var(--text-stone)" }}>
-              {CHAIN_NAME} [{CHAIN_ID}]
+              {CHAIN_NAME} [61999]
             </span>
           </div>
 
           <button
             onClick={onToggleDemoMode}
+            className="header-demo-toggle"
             style={{
               fontFamily: "var(--font-mono)",
               fontSize: "10px",
@@ -261,6 +301,8 @@ export function Workbench({
               border: "1px solid #222225",
               color: isDemoMode ? "var(--status-amber-text)" : "var(--text-meta)",
               borderRadius: "2px",
+              backgroundColor: isDemoMode ? "rgba(212, 149, 106, 0.06)" : "transparent",
+              transition: "all 0.15s ease",
             }}
           >
             {isDemoMode ? "SAMPLE MODE" : "LIVE MODE"}
@@ -269,14 +311,14 @@ export function Workbench({
           <button
             onClick={onRefresh}
             disabled={isRefreshing}
-            style={{ color: "var(--text-stone)" }}
-            title="Refresh Ledger"
+            style={{ color: "var(--text-stone)", padding: "4px" }}
+            title="Refresh Ledger Telemetry"
           >
             <RefreshCw size={13} className={isRefreshing ? "animate-spin" : ""} />
           </button>
         </div>
 
-        {/* Right: Minimalist Wallet Address Trigger */}
+        {/* Right: Wallet Integration */}
         <div style={{ display: "flex", alignItems: "center", gap: "12px" }}>
           {walletAccount ? (
             <div
@@ -284,12 +326,13 @@ export function Workbench({
                 fontFamily: "var(--font-mono)",
                 fontSize: "11px",
                 color: "var(--text-ivory)",
-                padding: "6px 14px",
+                padding: "6px 12px",
                 border: "1px solid #222225",
                 borderRadius: "2px",
                 display: "flex",
                 alignItems: "center",
                 gap: "8px",
+                backgroundColor: "var(--bg-sunken)",
               }}
             >
               <span>{walletAccount.slice(0, 6)}…{walletAccount.slice(-4)}</span>
@@ -300,40 +343,72 @@ export function Workbench({
             <button
               onClick={onConnectWallet}
               className="btn-ivory"
-              style={{ fontSize: "12px", padding: "7px 18px" }}
+              style={{ fontSize: "12px", padding: "7px 16px" }}
             >
               <Wallet size={12} />
-              Connect Wallet
+              <span className="header-btn-prefix">Connect </span>Wallet
             </button>
           )}
         </div>
       </header>
 
-      {/* Asymmetric Split View: Left Ledger (380px) + Right Canvas */}
-      <div style={{ flex: 1, display: "grid", gridTemplateColumns: "380px 1fr", overflow: "hidden" }}>
-        {/* Left Ledger: Borderless List with Hairline Dividers (380px) */}
-        <aside
+      {/* Mobile Master-Detail Switcher Bar (< 900px) */}
+      <div className="workbench-mobile-tabs">
+        <button
+          onClick={() => setMobileTab("LEDGER")}
           style={{
-            borderRight: "1px solid #1C1C1F",
-            backgroundColor: "#09090B",
-            display: "flex",
-            flexDirection: "column",
-            height: "calc(100vh - 64px)",
-            overflowY: "auto",
+            flex: 1,
+            padding: "10px 16px",
+            fontFamily: "var(--font-mono)",
+            fontSize: "11px",
+            letterSpacing: "0.12em",
+            textTransform: "uppercase",
+            color: mobileTab === "LEDGER" ? "var(--text-ivory)" : "var(--text-dim)",
+            borderBottom: mobileTab === "LEDGER" ? "2px solid var(--text-ivory)" : "2px solid transparent",
+            backgroundColor: mobileTab === "LEDGER" ? "#0F1014" : "transparent",
+          }}
+        >
+          TARGET LEDGER ({records.length})
+        </button>
+        <button
+          onClick={() => setMobileTab("DETAIL")}
+          style={{
+            flex: 1,
+            padding: "10px 16px",
+            fontFamily: "var(--font-mono)",
+            fontSize: "11px",
+            letterSpacing: "0.12em",
+            textTransform: "uppercase",
+            color: mobileTab === "DETAIL" ? "var(--text-ivory)" : "var(--text-dim)",
+            borderBottom: mobileTab === "DETAIL" ? "2px solid var(--text-ivory)" : "2px solid transparent",
+            backgroundColor: mobileTab === "DETAIL" ? "#0F1014" : "transparent",
+          }}
+        >
+          INSPECTION DOSSIER
+        </button>
+      </div>
+
+      {/* 2. MASTER-DETAIL WORKSPACE */}
+      <div className="workbench-layout">
+        {/* LEFT PANE: INGRESS LEDGER (360px - 380px) */}
+        <aside
+          className="workbench-ledger"
+          style={{
+            display: mobileTab === "LEDGER" ? "flex" : undefined,
           }}
         >
           {/* Action & Filter Bar */}
-          <div style={{ padding: "20px 24px", borderBottom: "1px solid #1C1C1F" }}>
-            <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", marginBottom: "16px" }}>
-              <span className="meta-label">
-                INGRESS LEDGER ({records.length})
+          <div style={{ padding: "18px 20px", borderBottom: "1px solid #1C1C1F" }}>
+            <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", marginBottom: "14px" }}>
+              <span className="meta-label" style={{ fontSize: "10px" }}>
+                INGRESS TARGETS ({records.length})
               </span>
               <button
                 onClick={() => setShowCreateModal(true)}
                 style={{
                   fontFamily: "var(--font-mono)",
                   fontSize: "10px",
-                  letterSpacing: "0.14em",
+                  letterSpacing: "0.12em",
                   textTransform: "uppercase",
                   padding: "4px 10px",
                   border: "1px solid #333338",
@@ -342,6 +417,8 @@ export function Workbench({
                   display: "flex",
                   alignItems: "center",
                   gap: "4px",
+                  backgroundColor: "rgba(255, 255, 255, 0.02)",
+                  transition: "all 0.15s ease",
                 }}
               >
                 <Plus size={11} />
@@ -350,20 +427,20 @@ export function Workbench({
             </div>
 
             {/* Search Input */}
-            <div style={{ position: "relative", marginBottom: "16px" }}>
-              <Search size={13} style={{ position: "absolute", left: "10px", top: "10px", color: "var(--text-dim)" }} />
+            <div style={{ position: "relative", marginBottom: "14px" }}>
+              <Search size={12} style={{ position: "absolute", left: "10px", top: "10px", color: "var(--text-dim)" }} />
               <input
                 type="text"
                 value={searchQuery}
                 onChange={(e) => setSearchQuery(e.target.value)}
-                placeholder="Search domain or record ID…"
+                placeholder="Search domain, label, or record ID…"
                 className="tactical-input"
-                style={{ paddingLeft: "32px", fontSize: "11px", padding: "8px 10px 8px 32px" }}
+                style={{ paddingLeft: "30px", fontSize: "11px", padding: "7px 10px 7px 30px" }}
               />
             </div>
 
             {/* Filter Tabs */}
-            <div style={{ display: "flex", gap: "14px" }}>
+            <div style={{ display: "flex", gap: "10px", flexWrap: "wrap" }}>
               {["ALL", "CLEARED", "QUARANTINED", "SUBMITTED"].map((filter) => {
                 const countKey = filter.toLowerCase();
                 const badgeCount = counts[countKey] || 0;
@@ -374,11 +451,11 @@ export function Workbench({
                     onClick={() => setFilterState(filter)}
                     style={{
                       fontFamily: "var(--font-mono)",
-                      fontSize: "10px",
-                      letterSpacing: "0.14em",
+                      fontSize: "9px",
+                      letterSpacing: "0.12em",
                       textTransform: "uppercase",
                       color: isSelected ? "var(--text-ivory)" : "var(--text-dim)",
-                      paddingBottom: "4px",
+                      paddingBottom: "3px",
                       borderBottom: isSelected ? "1px solid var(--text-ivory)" : "1px solid transparent",
                       transition: "color 0.15s ease",
                     }}
@@ -390,10 +467,10 @@ export function Workbench({
             </div>
           </div>
 
-          {/* Borderless Ledger Rows with Hairline Dividers */}
+          {/* Ledger Records List */}
           <div style={{ flex: 1, overflowY: "auto" }}>
             {filteredRecords.length === 0 ? (
-              <div style={{ padding: "48px 24px", textAlign: "center", color: "var(--text-dim)", fontSize: "12px" }}>
+              <div style={{ padding: "48px 20px", textAlign: "center", color: "var(--text-dim)", fontSize: "12px" }}>
                 No records match current filter.
               </div>
             ) : (
@@ -401,33 +478,35 @@ export function Workbench({
                 {filteredRecords.map((r) => {
                   const isSelected = r.record_id === activeRecord?.record_id;
                   const domain = getDomain(r.source_url);
+                  const highThreats = r.findings?.filter((f) => f.severity === "HIGH").length || 0;
                   return (
                     <div
                       key={r.record_id}
-                      onClick={() => setSelectedRecordId(r.record_id)}
-                      style={{
-                        padding: "16px 24px",
-                        borderBottom: "1px solid #141416",
-                        backgroundColor: isSelected ? "#0F0F12" : "transparent",
-                        cursor: "pointer",
-                        transition: "background-color 0.15s ease",
+                      onClick={() => {
+                        setSelectedRecordId(r.record_id);
+                        setMobileTab("DETAIL");
                       }}
+                      className={`ledger-item ${isSelected ? "selected" : ""}`}
                     >
-                      <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", marginBottom: "6px" }}>
-                        <span className="mono" style={{ fontSize: "12px", color: isSelected ? "var(--text-ivory)" : "var(--text-stone)", fontWeight: 500 }}>
+                      <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", marginBottom: "4px", gap: "8px" }}>
+                        <span className="mono" style={{ fontSize: "12px", color: isSelected ? "var(--text-ivory)" : "var(--text-stone)", fontWeight: 500, maxWidth: "180px", overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap" }}>
                           {domain}
                         </span>
-                        <span className={`status-tag ${r.state.toLowerCase()}`}>
+                        <span className={`status-tag ${r.state.toLowerCase()}`} style={{ fontSize: "9px", flexShrink: 0 }}>
                           {r.state}
                         </span>
                       </div>
 
+                      <div style={{ fontSize: "12px", color: isSelected ? "var(--text-ivory)" : "var(--text-stone)", marginBottom: "6px", whiteSpace: "nowrap", overflow: "hidden", textOverflow: "ellipsis" }}>
+                        {r.source_label}
+                      </div>
+
                       <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between" }}>
-                        <span className="mono" style={{ fontSize: "11px", color: "var(--text-dim)" }}>
+                        <span className="mono" style={{ fontSize: "10px", color: "var(--text-dim)" }}>
                           {r.record_id}
                         </span>
-                        <span style={{ fontSize: "11px", color: "var(--text-dim)", maxWidth: "160px", overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap" }}>
-                          {r.source_label}
+                        <span className="mono" style={{ fontSize: "10px", color: highThreats > 0 ? "var(--status-quarantined-text)" : "var(--text-dim)" }}>
+                          {r.state === "SUBMITTED" ? "PENDING QUORUM" : `${highThreats} HIGH THREATS`}
                         </span>
                       </div>
                     </div>
@@ -438,54 +517,67 @@ export function Workbench({
           </div>
         </aside>
 
-        {/* Right Canvas: Quiet Luxury Inspection Desk */}
+        {/* RIGHT PANE: DETAIL INSPECTION CANVAS */}
         <main
+          className="workbench-canvas"
           style={{
-            height: "calc(100vh - 64px)",
-            overflowY: "auto",
-            padding: "48px 56px 96px",
-            backgroundColor: "#0B0B0D",
+            display: mobileTab === "DETAIL" ? "block" : undefined,
           }}
         >
           {activeRecord ? (
-            <div style={{ maxWidth: "920px", margin: "0 auto" }}>
-              {/* Header Dossier */}
-              <div style={{ paddingBottom: "32px", borderBottom: "1px solid #1C1C1F", marginBottom: "36px" }}>
-                <div style={{ display: "flex", alignItems: "flex-start", justifyContent: "space-between", gap: "24px", flexWrap: "wrap", marginBottom: "16px" }}>
+            <div style={{ maxWidth: "940px", margin: "0 auto" }}>
+              {/* Mobile Return to Ledger Button */}
+              <div style={{ marginBottom: "16px" }} className="header-demo-toggle">
+                <button
+                  onClick={() => setMobileTab("LEDGER")}
+                  style={{
+                    fontFamily: "var(--font-mono)",
+                    fontSize: "10px",
+                    letterSpacing: "0.12em",
+                    textTransform: "uppercase",
+                    color: "var(--text-stone)",
+                    display: "inline-flex",
+                    alignItems: "center",
+                    gap: "6px",
+                    padding: "4px 0",
+                  }}
+                >
+                  <ArrowLeft size={11} /> BACK TO TARGET LEDGER
+                </button>
+              </div>
+              {/* Header Dossier Bar */}
+              <div style={{ paddingBottom: "24px", borderBottom: "1px solid #1C1C1F", marginBottom: "28px" }}>
+                <div style={{ display: "flex", alignItems: "flex-start", justifyContent: "space-between", gap: "20px", flexWrap: "wrap", marginBottom: "12px" }}>
                   <div>
-                    <div className="meta-label" style={{ marginBottom: "6px" }}>
-                      INGRESS RECORD // {activeRecord.record_id}
+                    <div className="meta-label" style={{ fontSize: "10px", marginBottom: "6px" }}>
+                      INGRESS DOSSIER // {activeRecord.record_id}
                     </div>
                     <h2
                       className="serif-font"
                       style={{
-                        fontSize: "36px",
+                        fontSize: "clamp(26px, 3.2vw, 36px)",
                         color: "var(--text-ivory)",
                         margin: 0,
                         fontWeight: 500,
-                        lineHeight: 1.1,
+                        lineHeight: 1.15,
                       }}
                     >
                       {activeRecord.source_label}
                     </h2>
                   </div>
 
-                  {/* Understated Status Badge */}
-                  <div style={{ textAlign: "right" }}>
-                    <div className="meta-label" style={{ marginBottom: "6px" }}>
-                      CONSENSUS STATE
-                    </div>
-                    <span className={`status-tag ${activeRecord.state.toLowerCase()}`} style={{ fontSize: "11px", padding: "4px 10px" }}>
-                      {activeRecord.state} // IS_SAFE: {activeRecord.state === "CLEARED" ? "TRUE" : "FALSE"}
+                  <div style={{ display: "flex", alignItems: "center", gap: "10px" }}>
+                    <span className={`status-tag ${activeRecord.state.toLowerCase()}`} style={{ fontSize: "11px", padding: "5px 12px" }}>
+                      {activeRecord.state}
                     </span>
                   </div>
                 </div>
 
-                <div className="mono" style={{ fontSize: "12px", color: "var(--text-stone)", marginBottom: "16px" }}>
+                <div className="mono" style={{ fontSize: "12px", color: "var(--text-stone)", marginBottom: "14px", wordBreak: "break-all" }}>
                   {activeRecord.source_url}
                 </div>
 
-                <div style={{ display: "flex", alignItems: "center", gap: "16px" }}>
+                <div style={{ display: "flex", alignItems: "center", gap: "16px", flexWrap: "wrap" }}>
                   <a
                     href={activeRecord.source_url}
                     target="_blank"
@@ -518,96 +610,211 @@ export function Workbench({
                     {copiedField === "recId" ? <Check size={12} /> : <Copy size={12} />}
                     Copy ID
                   </button>
-                </div>
 
-                {/* Downstream Agent Purpose */}
-                <div style={{ marginTop: "24px", paddingTop: "16px", borderTop: "1px solid #141416" }}>
-                  <div className="meta-label" style={{ fontSize: "10px", marginBottom: "4px" }}>
-                    DOWNSTREAM PERMITTED AGENT PURPOSE
-                  </div>
-                  <div style={{ fontSize: "14px", color: "var(--text-stone)", lineHeight: 1.6 }}>
-                    {activeRecord.agent_purpose || "General read-only research assistant."}
-                  </div>
+                  <a
+                    href={contractUrl(CONTRACT_ADDRESS)}
+                    target="_blank"
+                    rel="noreferrer"
+                    style={{
+                      fontFamily: "var(--font-mono)",
+                      fontSize: "11px",
+                      color: "var(--text-dim)",
+                      display: "inline-flex",
+                      alignItems: "center",
+                      gap: "4px",
+                    }}
+                  >
+                    Contract <ArrowUpRight size={11} />
+                  </a>
                 </div>
-
-                {/* If SUBMITTED: Run Consensus Evaluation Button */}
-                {activeRecord.state === "SUBMITTED" && (
-                  <div style={{ marginTop: "24px", paddingTop: "18px", borderTop: "1px solid #1C1C1F", display: "flex", alignItems: "center", justifyContent: "space-between" }}>
-                    <div style={{ fontSize: "13px", color: "var(--text-stone)" }}>
-                      Target registered. Quorum verification pending execution.
-                    </div>
-                    <button
-                      onClick={() => handleEvaluate(activeRecord.record_id)}
-                      disabled={isEvaluating}
-                      className="btn-ivory"
-                      style={{ fontSize: "12px", padding: "8px 20px" }}
-                    >
-                      {isEvaluating && evaluatingRecordId === activeRecord.record_id ? (
-                        <>
-                          <RefreshCw size={12} className="animate-spin" />
-                          Running Consensus…
-                        </>
-                      ) : (
-                        <>Run Consensus Evaluation</>
-                      )}
-                    </button>
-                  </div>
-                )}
               </div>
 
-              {/* 5 Threat Vectors: Borderless Typographic Table */}
-              <div style={{ marginBottom: "44px" }}>
-                <div className="meta-label" style={{ marginBottom: "16px" }}>
-                  5-POINT THREAT VECTOR INSPECTION
+              {/* COMPACT SCANNABLE TELEMETRY DASHBOARD (4 Tiles) */}
+              <div className="telemetry-kpi-grid">
+                {/* Tile 1: Consensus Verdict */}
+                <div className="telemetry-kpi-card">
+                  <div className="meta-label" style={{ fontSize: "9px", marginBottom: "6px" }}>
+                    CONSENSUS GATE
+                  </div>
+                  <div className="mono" style={{ fontSize: "16px", fontWeight: 700, color: activeRecord.state === "CLEARED" ? "var(--text-ivory)" : activeRecord.state === "QUARANTINED" ? "var(--status-quarantined-text)" : "var(--status-amber-text)" }}>
+                    {activeRecord.state === "CLEARED" ? "is_safe() = TRUE" : activeRecord.state === "QUARANTINED" ? "is_safe() = FALSE" : "PENDING QUORUM"}
+                  </div>
+                  <div className="mono" style={{ fontSize: "10px", color: "var(--text-dim)", marginTop: "4px" }}>
+                    {activeRecord.state === "CLEARED" ? "Cleared for agent intake" : activeRecord.state === "QUARANTINED" ? "Blocked by fail-closed gate" : "Awaiting validator execution"}
+                  </div>
+                </div>
+
+                {/* Tile 2: Threat Profile */}
+                <div className="telemetry-kpi-card">
+                  <div className="meta-label" style={{ fontSize: "9px", marginBottom: "6px" }}>
+                    THREAT PROFILE
+                  </div>
+                  <div className="mono" style={{ fontSize: "16px", fontWeight: 700, color: threatCounts.high > 0 ? "var(--status-quarantined-text)" : "var(--text-ivory)" }}>
+                    {threatCounts.high} HIGH / {threatCounts.medium} MED / {threatCounts.low} LOW
+                  </div>
+                  <div className="mono" style={{ fontSize: "10px", color: "var(--text-dim)", marginTop: "4px" }}>
+                    5 Canonical vectors inspected
+                  </div>
+                </div>
+
+                {/* Tile 3: Payload Digest */}
+                <div className="telemetry-kpi-card">
+                  <div className="meta-label" style={{ fontSize: "9px", marginBottom: "6px" }}>
+                    SHA-256 DIGEST
+                  </div>
+                  <div style={{ display: "flex", alignItems: "center", gap: "6px" }}>
+                    <div className="mono" style={{ fontSize: "13px", color: "var(--text-ivory)", wordBreak: "break-all" }}>
+                      {activeRecord.source_digest ? `${activeRecord.source_digest.slice(0, 14)}…` : "Pending evaluation"}
+                    </div>
+                    {activeRecord.source_digest && (
+                      <button
+                        onClick={() => copyToClipboard(activeRecord.source_digest, "digest")}
+                        style={{ color: copiedField === "digest" ? "var(--text-ivory)" : "var(--text-dim)" }}
+                        title="Copy SHA-256 Digest"
+                      >
+                        {copiedField === "digest" ? <Check size={11} /> : <Copy size={11} />}
+                      </button>
+                    )}
+                  </div>
+                  <div className="mono" style={{ fontSize: "10px", color: "var(--text-dim)", marginTop: "4px" }}>
+                    Invariant content fingerprint
+                  </div>
+                </div>
+
+                {/* Tile 4: Quorum Consensus */}
+                <div className="telemetry-kpi-card">
+                  <div className="meta-label" style={{ fontSize: "9px", marginBottom: "6px" }}>
+                    QUORUM MODEL
+                  </div>
+                  <div className="mono" style={{ fontSize: "14px", color: "var(--text-ivory)", fontWeight: 600 }}>
+                    Strict Equivalence
+                  </div>
+                  <div className="mono" style={{ fontSize: "10px", color: "var(--text-dim)", marginTop: "4px" }}>
+                    Multi-validator consensus
+                  </div>
+                </div>
+              </div>
+
+              {/* ACTION CALLOUT IF PENDING SUBMISSION */}
+              {activeRecord.state === "SUBMITTED" && (
+                <div
+                  style={{
+                    padding: "20px 24px",
+                    borderRadius: "2px",
+                    border: "1px solid var(--status-amber-border)",
+                    backgroundColor: "var(--status-amber-bg)",
+                    display: "flex",
+                    alignItems: "center",
+                    justifyContent: "space-between",
+                    flexWrap: "wrap",
+                    gap: "16px",
+                    marginBottom: "32px",
+                  }}
+                >
+                  <div>
+                    <div className="meta-label" style={{ color: "var(--status-amber-text)", fontSize: "10px", marginBottom: "2px" }}>
+                      INGRESS RECORD COMMITTED TO ON-CHAIN LEDGER
+                    </div>
+                    <div style={{ fontSize: "13px", color: "var(--text-ivory)" }}>
+                      Awaiting validator consensus evaluation. Run evaluate_record() to execute 5-point adversarial analysis.
+                    </div>
+                  </div>
+
+                  <button
+                    onClick={() => handleEvaluate(activeRecord.record_id)}
+                    disabled={isEvaluating}
+                    className="btn-ivory"
+                    style={{ fontSize: "12px", padding: "8px 20px" }}
+                  >
+                    {isEvaluating && evaluatingRecordId === activeRecord.record_id ? (
+                      <>
+                        <RefreshCw size={12} className="animate-spin" />
+                        Executing Consensus…
+                      </>
+                    ) : (
+                      <>Execute Consensus Evaluation</>
+                    )}
+                  </button>
+                </div>
+              )}
+
+              {/* PERMITTED AGENT PURPOSE */}
+              <div style={{ marginBottom: "32px", padding: "20px 24px", backgroundColor: "var(--bg-surface)", border: "1px solid #1C1C1F", borderRadius: "2px" }}>
+                <div className="meta-label" style={{ fontSize: "10px", marginBottom: "6px" }}>
+                  DOWNSTREAM PERMITTED AGENT INTAKE OBJECTIVE
+                </div>
+                <div style={{ fontSize: "13px", color: "var(--text-stone)", lineHeight: 1.65 }}>
+                  {activeRecord.agent_purpose || "General read-only research assistant."}
+                </div>
+              </div>
+
+              {/* FINDINGS EVIDENCE HIERARCHY */}
+              <div style={{ marginBottom: "40px" }}>
+                <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", marginBottom: "16px" }}>
+                  <span className="meta-label" style={{ fontSize: "10px" }}>
+                    5-POINT THREAT VECTOR CONSENSUS FINDINGS
+                  </span>
+                  <span className="mono" style={{ fontSize: "10px", color: "var(--text-dim)" }}>
+                    EVALUATOR SYNTHESIS &amp; RAW EVIDENCE
+                  </span>
                 </div>
 
                 {activeRecord.findings.length === 0 ? (
-                  <div style={{ padding: "40px 0", color: "var(--text-dim)", fontSize: "13px" }}>
-                    No threat findings recorded yet. Execute consensus evaluation to inspect adversarial vectors.
+                  <div style={{ padding: "48px 24px", textAlign: "center", backgroundColor: "var(--bg-surface)", border: "1px solid #1C1C1F", borderRadius: "2px", color: "var(--text-dim)", fontSize: "13px" }}>
+                    No threat vector findings recorded yet. Execute consensus evaluation to generate verified evidence.
                   </div>
                 ) : (
-                  <div style={{ borderTop: "1px solid #1C1C1F" }}>
+                  <div style={{ display: "flex", flexDirection: "column", gap: "12px" }}>
                     {activeRecord.findings.map((f, i) => {
-                      const label = CATEGORY_META[f.category] || f.category;
+                      const meta = CATEGORY_META[f.category] || { label: f.category, icon: Shield };
+                      const IconComp = meta.icon;
+                      const isQuarantined = f.severity === "HIGH";
                       return (
                         <div
                           key={i}
                           style={{
-                            padding: "20px 0",
-                            borderBottom: "1px solid #141416",
+                            padding: "20px 24px",
+                            backgroundColor: "var(--bg-surface)",
+                            border: "1px solid #1C1C1F",
+                            borderRadius: "2px",
                           }}
                         >
-                          <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", marginBottom: "8px" }}>
+                          {/* Finding Header */}
+                          <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", marginBottom: "10px" }}>
                             <div style={{ display: "flex", alignItems: "center", gap: "10px" }}>
+                              <IconComp size={15} color={isQuarantined ? "var(--status-quarantined-text)" : "var(--text-ivory)"} />
                               <span style={{ fontSize: "14px", color: "var(--text-ivory)", fontWeight: 500 }}>
-                                {label}
+                                {meta.label}
                               </span>
                               <span className={`badge-severity ${f.severity.toLowerCase()}`}>
                                 {f.severity}
                               </span>
                             </div>
-                            <div className="mono" style={{ fontSize: "11px", color: "var(--text-dim)" }}>
+
+                            <div className="mono" style={{ fontSize: "10px", color: "var(--text-dim)" }}>
                               CONFIDENCE: {f.confidence}
                             </div>
                           </div>
 
-                          <div style={{ fontSize: "13px", color: "var(--text-stone)", marginBottom: f.evidence_quote ? "12px" : "4px", lineHeight: 1.6 }}>
+                          {/* Evaluator Interpretation */}
+                          <div style={{ fontSize: "13px", color: "var(--text-stone)", lineHeight: 1.6, marginBottom: f.evidence_quote ? "14px" : "0" }}>
                             {f.explanation}
                           </div>
 
-                          {/* Sunken Quoted Evidence in Warm Container */}
+                          {/* Extracted Raw Material (Sunken Raw Text Box) */}
                           {f.evidence_quote && (
-                            <div
-                              className="sunken-box"
-                              style={{
-                                fontFamily: "var(--font-mono)",
-                                fontSize: "11px",
-                                color: "var(--text-ivory)",
-                                lineHeight: 1.6,
-                              }}
-                            >
-                              <span style={{ color: "var(--text-meta)", marginRight: "8px" }}>EXTRACT //</span>
-                              “{f.evidence_quote}”
+                            <div className={`raw-evidence-box ${isQuarantined ? "quarantined" : "cleared"}`}>
+                              <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", marginBottom: "4px" }}>
+                                <span className="meta-label" style={{ fontSize: "9px", color: isQuarantined ? "var(--status-quarantined-text)" : "var(--text-meta)" }}>
+                                  RAW PAYLOAD EXCERPT // EXTRACTED FROM SOURCE
+                                </span>
+                                {f.source_pointer && (
+                                  <span className="mono" style={{ fontSize: "9px", color: "var(--text-dim)" }}>
+                                    POINTER: {f.source_pointer}
+                                  </span>
+                                )}
+                              </div>
+                              <div>“{f.evidence_quote}”</div>
                             </div>
                           )}
                         </div>
@@ -617,36 +824,16 @@ export function Workbench({
                 )}
               </div>
 
-              {/* Minimalist Cryptographic Receipt Footer with One-Click Copy */}
+              {/* CRYPTOGRAPHIC VERIFICATION RECEIPT */}
               <div
                 style={{
                   borderTop: "1px solid #1C1C1F",
-                  paddingTop: "28px",
+                  paddingTop: "24px",
                   display: "grid",
-                  gridTemplateColumns: "repeat(auto-fit, minmax(200px, 1fr))",
-                  gap: "24px",
+                  gridTemplateColumns: "repeat(auto-fit, minmax(180px, 1fr))",
+                  gap: "20px",
                 }}
               >
-                <div>
-                  <div className="meta-label" style={{ fontSize: "9px", marginBottom: "4px" }}>
-                    CONTENT SHA-256 DIGEST
-                  </div>
-                  <div style={{ display: "flex", alignItems: "center", gap: "6px" }}>
-                    <div className="mono" style={{ fontSize: "11px", color: "var(--text-ivory)", wordBreak: "break-all" }}>
-                      {activeRecord.source_digest ? `${activeRecord.source_digest.slice(0, 16)}…` : "Pending consensus"}
-                    </div>
-                    {activeRecord.source_digest && (
-                      <button
-                        onClick={() => copyToClipboard(activeRecord.source_digest, "digest")}
-                        style={{ color: copiedField === "digest" ? "var(--text-ivory)" : "var(--text-dim)" }}
-                        title="Copy Digest"
-                      >
-                        {copiedField === "digest" ? <Check size={11} /> : <Copy size={11} />}
-                      </button>
-                    )}
-                  </div>
-                </div>
-
                 <div>
                   <div className="meta-label" style={{ fontSize: "9px", marginBottom: "4px" }}>
                     RESULT FINGERPRINT
@@ -658,10 +845,10 @@ export function Workbench({
 
                 <div>
                   <div className="meta-label" style={{ fontSize: "9px", marginBottom: "4px" }}>
-                    QUORUM AGREEMENT
+                    EVALUATION ATTEMPTS
                   </div>
                   <div className="mono" style={{ fontSize: "11px", color: "var(--text-ivory)" }}>
-                    100% (Strict Equivalence)
+                    {activeRecord.evaluation_attempts || 1} Attempt(s) committed
                   </div>
                 </div>
 
@@ -673,11 +860,33 @@ export function Workbench({
                     {activeRecord.owner ? `${activeRecord.owner.slice(0, 6)}…${activeRecord.owner.slice(-4)}` : CONTRACT_ADDRESS.slice(0, 10)}
                   </div>
                 </div>
+
+                <div>
+                  <div className="meta-label" style={{ fontSize: "9px", marginBottom: "4px" }}>
+                    INTELLIGENT CONTRACT
+                  </div>
+                  <a
+                    href={contractUrl(CONTRACT_ADDRESS)}
+                    target="_blank"
+                    rel="noreferrer"
+                    style={{
+                      fontFamily: "var(--font-mono)",
+                      fontSize: "11px",
+                      color: "var(--text-stone)",
+                      textDecoration: "underline",
+                      display: "inline-flex",
+                      alignItems: "center",
+                      gap: "4px",
+                    }}
+                  >
+                    Explorer Proof <ExternalLink size={10} />
+                  </a>
+                </div>
               </div>
             </div>
           ) : (
             <div style={{ textAlign: "center", padding: "80px", color: "var(--text-dim)" }}>
-              No target selected.
+              No ingress target selected.
             </div>
           )}
         </main>
@@ -687,8 +896,8 @@ export function Workbench({
       <AnimatePresence>
         {showCreateModal && (
           <div className="modal-overlay" onClick={() => setShowCreateModal(false)}>
-            <div className="modal-content" onClick={(e) => e.stopPropagation()} style={{ padding: "36px" }}>
-              <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", marginBottom: "24px", paddingBottom: "16px", borderBottom: "1px solid #1C1C1F" }}>
+            <div className="modal-content" onClick={(e) => e.stopPropagation()} style={{ padding: "32px" }}>
+              <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", marginBottom: "20px", paddingBottom: "14px", borderBottom: "1px solid #1C1C1F" }}>
                 <div>
                   <h3 className="serif-font" style={{ fontSize: "22px", color: "var(--text-ivory)", margin: 0, fontStyle: "italic" }}>
                     Register Ingress Target
@@ -766,7 +975,7 @@ export function Workbench({
                   </div>
                 </div>
 
-                <div style={{ display: "flex", alignItems: "center", justifyContent: "flex-end", gap: "12px", marginTop: "28px", paddingTop: "16px", borderTop: "1px solid #1C1C1F" }}>
+                <div style={{ display: "flex", alignItems: "center", justifyContent: "flex-end", gap: "12px", marginTop: "24px", paddingTop: "16px", borderTop: "1px solid #1C1C1F" }}>
                   <button
                     type="button"
                     onClick={() => setShowCreateModal(false)}
