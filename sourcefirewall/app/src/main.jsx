@@ -8,8 +8,12 @@ import {
   configurationError,
 } from "./api";
 import { EXAMPLE_RECORDS } from "./demoData";
-import { LandingPage } from "./components/LandingPage";
-import { Workbench } from "./components/Workbench";
+import { Navbar } from "./components/Navbar";
+import { InterceptorView } from "./components/InterceptorView";
+import { WorkbenchView } from "./components/WorkbenchView";
+import { SdkView } from "./components/SdkView";
+import { ArchitectureView } from "./components/ArchitectureView";
+import { Footer } from "./components/Footer";
 import "./style.css";
 
 class ErrorBoundary extends React.Component {
@@ -35,14 +39,14 @@ class ErrorBoundary extends React.Component {
             display: "flex",
             alignItems: "center",
             justifyContent: "center",
-            backgroundColor: "#08090a",
+            backgroundColor: "#050608",
             color: "#f1f5f9",
             padding: "24px",
             fontFamily: "var(--font-sans)",
           }}
         >
           <div
-            className="tactical-box"
+            className="cyber-card"
             style={{
               maxWidth: "540px",
               padding: "32px",
@@ -57,8 +61,7 @@ class ErrorBoundary extends React.Component {
             </p>
             <button
               onClick={() => window.location.reload()}
-              className="btn-primary"
-              style={{ padding: "8px 16px", fontSize: "12px" }}
+              className="btn-cyber-primary"
             >
               RELOAD SOURCEFIREWALL
             </button>
@@ -71,19 +74,24 @@ class ErrorBoundary extends React.Component {
 }
 
 function App() {
-  // Navigation State: "LANDING" vs "WORKBENCH"
   const getInitialView = () => {
     const hash = window.location.hash.toLowerCase();
-    if (hash.includes("app") || hash.includes("workbench") || hash.includes("desk")) {
+    if (hash.includes("app") || hash.includes("workbench") || hash.includes("soc")) {
       return "WORKBENCH";
     }
-    return "LANDING";
+    if (hash.includes("sdk")) {
+      return "SDK";
+    }
+    if (hash.includes("arch") || hash.includes("taxonomy")) {
+      return "ARCHITECTURE";
+    }
+    return "INTERCEPTOR";
   };
 
-  const [viewMode, setViewMode] = useState(getInitialView);
+  const [currentView, setCurrentView] = useState(getInitialView);
   const [records, setRecords] = useState(EXAMPLE_RECORDS);
   const [isRefreshing, setIsRefreshing] = useState(false);
-  const [isDemoMode, setIsDemoMode] = useState(false);
+  const [isDemoMode, setIsDemoMode] = useState(true);
 
   // Wallet State
   const [walletAccount, setWalletAccount] = useState("");
@@ -97,23 +105,26 @@ function App() {
     setToast({ message, type });
   };
 
-  // Auto-dismiss toast
   useEffect(() => {
     if (!toast) return;
     const timer = setTimeout(() => {
       setToast(null);
-    }, 5000);
+    }, 4000);
     return () => clearTimeout(timer);
   }, [toast]);
 
-  // Sync hash with viewMode
+  // Sync hash with currentView
   useEffect(() => {
     const handleHashChange = () => {
       const hash = window.location.hash.toLowerCase();
-      if (hash.includes("app") || hash.includes("workbench") || hash.includes("desk")) {
-        setViewMode("WORKBENCH");
+      if (hash.includes("app") || hash.includes("workbench") || hash.includes("soc")) {
+        setCurrentView("WORKBENCH");
+      } else if (hash.includes("sdk")) {
+        setCurrentView("SDK");
+      } else if (hash.includes("arch") || hash.includes("taxonomy")) {
+        setCurrentView("ARCHITECTURE");
       } else {
-        setViewMode("LANDING");
+        setCurrentView("INTERCEPTOR");
       }
     };
     window.addEventListener("hashchange", handleHashChange);
@@ -121,12 +132,17 @@ function App() {
   }, []);
 
   const switchView = (mode) => {
-    setViewMode(mode);
+    setCurrentView(mode);
     if (mode === "WORKBENCH") {
       window.location.hash = "workbench";
+    } else if (mode === "SDK") {
+      window.location.hash = "sdk";
+    } else if (mode === "ARCHITECTURE") {
+      window.location.hash = "architecture";
     } else {
       window.location.hash = "";
     }
+    window.scrollTo({ top: 0, behavior: "smooth" });
   };
 
   // Load Records from Smart Contract
@@ -138,7 +154,7 @@ function App() {
 
     const configErr = configurationError();
     if (configErr) {
-      console.warn("Contract not configured, running in sample mode:", configErr);
+      console.warn("Contract not configured, running in demo mode:", configErr);
       setRecords(EXAMPLE_RECORDS);
       return;
     }
@@ -149,13 +165,13 @@ function App() {
       const liveRecords = await loadRecords(readClient);
       if (liveRecords && liveRecords.length > 0) {
         setRecords(liveRecords);
+        notify("Loaded live contract records from GenLayer Studionet", "success");
       } else {
-        // Fall back to sample records if contract has zero entries
         setRecords(EXAMPLE_RECORDS);
       }
     } catch (err) {
       console.error("Failed to fetch live contract records:", err);
-      notify("Failed to query GenLayer Studionet RPC. Retaining cached telemetry.", "error");
+      notify("Failed to query Studionet RPC. Retaining cached telemetry.", "error");
       setRecords(EXAMPLE_RECORDS);
     } finally {
       setIsRefreshing(false);
@@ -169,12 +185,12 @@ function App() {
   // Handle Wallet Connection
   const handleConnectWallet = async () => {
     try {
-      notify("Connecting to browser wallet…", "info");
+      notify("Connecting to Web3 wallet…", "info");
       const connected = await connectWallet();
       setWalletAccount(connected.account);
       setWalletBalance(connected.balance);
       setWriteClient(connected.client);
-      notify(`Wallet connected: ${connected.account.slice(0, 6)}…${connected.account.slice(-4)}`, "success");
+      notify(`Connected: ${connected.account.slice(0, 6)}…${connected.account.slice(-4)}`, "success");
     } catch (err) {
       notify(errorText(err), "error");
     }
@@ -183,45 +199,61 @@ function App() {
   const handleToggleDemoMode = () => {
     setIsDemoMode((prev) => {
       const next = !prev;
-      notify(next ? "Switched to Sample Data Mode" : "Switched to Live Contract Mode", "info");
+      notify(next ? "Switched to Demo Telemetry Mode" : "Switched to Live GenLayer RPC Mode", "info");
       return next;
     });
   };
 
   return (
-    <div className="site-frame">
-      {viewMode === "LANDING" ? (
-        <LandingPage
-          onLaunchWorkbench={() => switchView("WORKBENCH")}
-          liveRecordCount={records.length}
-          isDemoMode={isDemoMode}
-        />
-      ) : (
-        <Workbench
-          records={records}
-          onRefresh={refreshRecords}
-          isRefreshing={isRefreshing}
-          walletAccount={walletAccount}
-          walletBalance={walletBalance}
-          writeClient={writeClient}
-          onConnectWallet={handleConnectWallet}
-          onReturnLanding={() => switchView("LANDING")}
-          isDemoMode={isDemoMode}
-          onToggleDemoMode={handleToggleDemoMode}
-          onNotify={notify}
-        />
-      )}
+    <div className="app-shell">
+      {/* Top Cyber Navigation */}
+      <Navbar
+        currentView={currentView}
+        onSelectView={switchView}
+        isDemoMode={isDemoMode}
+        onToggleDemoMode={handleToggleDemoMode}
+        walletAccount={walletAccount}
+        walletBalance={walletBalance}
+        onConnectWallet={handleConnectWallet}
+      />
+
+      {/* Main Active View */}
+      <main style={{ flex: 1 }}>
+        {currentView === "INTERCEPTOR" && (
+          <InterceptorView
+            onOpenWorkbench={() => switchView("WORKBENCH")}
+            onOpenSdk={() => switchView("SDK")}
+          />
+        )}
+
+        {currentView === "WORKBENCH" && (
+          <WorkbenchView
+            records={records}
+            onRefresh={refreshRecords}
+            isRefreshing={isRefreshing}
+            onNotify={notify}
+            onReturnLanding={() => switchView("INTERCEPTOR")}
+          />
+        )}
+
+        {currentView === "SDK" && <SdkView onNotify={notify} />}
+
+        {currentView === "ARCHITECTURE" && <ArchitectureView />}
+      </main>
+
+      {/* Unified Cyber Footer */}
+      <Footer onSelectView={switchView} />
 
       {/* Global Tactical Toast */}
       {toast && (
         <div className={`tactical-toast ${toast.type}`}>
-          <div className="mono" style={{ fontSize: "10px", color: "var(--dim)", textTransform: "uppercase" }}>
-            [{toast.type}]
-          </div>
-          <div style={{ flex: 1 }}>{toast.message}</div>
+          <span className="mono" style={{ fontSize: "11px", fontWeight: 700 }}>
+            [{toast.type.toUpperCase()}]
+          </span>
+          <span style={{ flex: 1 }}>{toast.message}</span>
           <button
             onClick={() => setToast(null)}
-            style={{ color: "var(--dim)", fontSize: "14px", lineHeight: 1 }}
+            style={{ color: "var(--text-muted)", fontSize: "14px" }}
           >
             ✕
           </button>
