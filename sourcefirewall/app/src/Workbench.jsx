@@ -503,55 +503,83 @@ export function Workbench({
                 {activeRecord.source_url}
               </div>
 
-              <div style={{ display: "flex", alignItems: "center", gap: "16px", flexWrap: "wrap" }}>
-                <a
-                  href={activeRecord.source_url}
-                  target="_blank"
-                  rel="noreferrer"
-                  style={{
-                    fontFamily: "var(--font-mono)",
-                    fontSize: "11px",
-                    color: "var(--text-stone)",
-                    display: "inline-flex",
-                    alignItems: "center",
-                    gap: "5px",
-                    textDecoration: "underline",
-                    textUnderlineOffset: "3px",
-                  }}
-                >
-                  Source Document <ExternalLink size={11} />
-                </a>
+              <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", flexWrap: "wrap", gap: "16px", marginTop: "16px" }}>
+                <div style={{ display: "flex", alignItems: "center", gap: "16px", flexWrap: "wrap" }}>
+                  <a
+                    href={activeRecord.source_url}
+                    target="_blank"
+                    rel="noreferrer"
+                    style={{
+                      fontFamily: "var(--font-mono)",
+                      fontSize: "11px",
+                      color: "var(--text-stone)",
+                      display: "inline-flex",
+                      alignItems: "center",
+                      gap: "5px",
+                      textDecoration: "underline",
+                      textUnderlineOffset: "3px",
+                    }}
+                  >
+                    Source Document <ExternalLink size={11} />
+                  </a>
+
+                  <button
+                    onClick={() => copyToClipboard(activeRecord.record_id, "recId")}
+                    style={{
+                      fontFamily: "var(--font-mono)",
+                      fontSize: "11px",
+                      color: copiedField === "recId" ? "var(--text-ivory)" : "var(--text-dim)",
+                      display: "inline-flex",
+                      alignItems: "center",
+                      gap: "5px",
+                    }}
+                  >
+                    {copiedField === "recId" ? <Check size={12} /> : <Copy size={12} />}
+                    Copy ID
+                  </button>
+
+                  <a
+                    href={contractUrl(CONTRACT_ADDRESS)}
+                    target="_blank"
+                    rel="noreferrer"
+                    style={{
+                      fontFamily: "var(--font-mono)",
+                      fontSize: "11px",
+                      color: "var(--text-dim)",
+                      display: "inline-flex",
+                      alignItems: "center",
+                      gap: "4px",
+                    }}
+                  >
+                    Contract <ArrowUpRight size={11} />
+                  </a>
+                </div>
 
                 <button
-                  onClick={() => copyToClipboard(activeRecord.record_id, "recId")}
+                  onClick={() => handleEvaluate(activeRecord.record_id)}
+                  disabled={isEvaluating}
+                  className="btn-ivory"
                   style={{
-                    fontFamily: "var(--font-mono)",
-                    fontSize: "11px",
-                    color: copiedField === "recId" ? "var(--text-ivory)" : "var(--text-dim)",
+                    fontSize: "12px",
+                    padding: "8px 18px",
                     display: "inline-flex",
                     alignItems: "center",
-                    gap: "5px",
+                    gap: "8px",
+                    borderRadius: "9999px",
                   }}
                 >
-                  {copiedField === "recId" ? <Check size={12} /> : <Copy size={12} />}
-                  Copy ID
+                  {isEvaluating && evaluatingRecordId === activeRecord.record_id ? (
+                    <>
+                      <RefreshCw size={12} className="animate-spin" />
+                      <span>Evaluating Consensus…</span>
+                    </>
+                  ) : (
+                    <>
+                      <Activity size={12} />
+                      <span>{activeRecord.evaluation_attempts > 0 ? "Re-evaluate with Quorum" : "Execute Consensus Evaluation"}</span>
+                    </>
+                  )}
                 </button>
-
-                <a
-                  href={contractUrl(CONTRACT_ADDRESS)}
-                  target="_blank"
-                  rel="noreferrer"
-                  style={{
-                    fontFamily: "var(--font-mono)",
-                    fontSize: "11px",
-                    color: "var(--text-dim)",
-                    display: "inline-flex",
-                    alignItems: "center",
-                    gap: "4px",
-                  }}
-                >
-                  Contract <ArrowUpRight size={11} />
-                </a>
               </div>
             </div>
 

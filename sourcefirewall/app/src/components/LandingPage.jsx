@@ -4,6 +4,7 @@ import {
   ArrowRight,
   ArrowUpRight,
   Shield,
+  ShieldAlert,
   ShieldCheck,
   Check,
   ChevronDown,
@@ -14,68 +15,99 @@ import {
   AlertTriangle,
   ExternalLink,
   Terminal,
-  FileText,
-  Activity,
+  Code,
+  Fingerprint,
   Zap,
 } from "lucide-react";
 import { CONTRACT_ADDRESS, CHAIN_ID, contractUrl } from "../api";
 
 export function LandingPage({ onLaunchWorkbench, liveRecordCount, isDemoMode }) {
-  // Service Accordion state (first one expanded by default)
-  const [expandedService, setExpandedService] = useState(0);
+  // Threat taxonomy accordion state (first one expanded by default)
+  const [expandedThreat, setExpandedThreat] = useState(0);
 
-  // FAQ Accordion state (first one expanded by default)
+  // FAQ accordion state (first one expanded by default)
   const [expandedFaq, setExpandedFaq] = useState(0);
 
-  // Active showcase payload inspection tab
-  const [activeAuditTab, setActiveAuditTab] = useState("attack");
-
-  const SERVICES = [
+  const THREAT_VECTORS = [
     {
       id: "01",
-      title: "Equivalence Consensus Ingress",
-      subtitle: "Multi-validator non-deterministic LLM consensus",
+      code: "PROMPT_INJECTION",
+      title: "Prompt Injection Defense",
+      subtitle: "Adversarial system prompt overrides & jailbreaks",
       description:
-        "Every untrusted payload is intercepted before cognitive ingestion. GenLayer validators independently execute semantic evaluation prompts, converging under the Equivalence Principle into an immutable on-chain certificate.",
-      tags: ["Multi-Validator", "Non-Deterministic", "On-Chain Ledger", "Byzantine Fault Tolerant"],
-      deliverable: "Deterministic state proofs for non-deterministic web inputs",
+        "Detects and quarantines natural language directives engineered to reset system instructions, bypass safety boundaries, or trigger adversarial personas. GenLayer validators analyze cognitive intent, recognizing adversarial instructions disguised as ordinary text.",
+      indicators: [
+        "Directive Boundary Overrides ('Ignore all previous instructions')",
+        "Persona Hijacking ('You are now DAN / unrestricted debug mode')",
+        "Delimited Command Injection (Hidden XML/Markdown escape sequences)",
+      ],
+      mitigation: "Evaluator models isolate untrusted evidence in quarantined boundary delimiters.",
     },
     {
       id: "02",
-      title: "5-Vector Adversarial Intelligence",
-      subtitle: "Deep semantic inspection across canonical LLM threats",
+      code: "INSTRUCTION_HIJACKING",
+      title: "Instruction Hijacking Mitigation",
+      subtitle: "Task boundary manipulation & goal drift",
       description:
-        "Rigorous verification across Prompt Injection, Instruction Hijacking, Secret Exfiltration, Tool Redirection, and Unsupported Claims. Identifies adversarial intent that bypasses traditional regex-based WAFs.",
-      tags: ["Semantic Analysis", "OWASP LLM Top 10", "Cross-Model Quorum", "Zero False Confidence"],
-      deliverable: "Standardized threat vector scoring with line-by-line rationale",
+        "Identifies malicious payloads that coerce downstream agents into abandoning their legitimate user tasks in favor of attacker-specified routines. Evaluates contextual drift between the user's declared purpose and the retrieved source content.",
+      indicators: [
+        "Goal Subversion ('Prioritize this new extraction workflow instead')",
+        "Role Impersonation ('System Administrator verified instruction')",
+        "Recursive Task Insertion (Chained sub-agent command injection)",
+      ],
+      mitigation: "Cross-checks agent's explicit operational purpose against payload instructions.",
     },
     {
       id: "03",
-      title: "Bounded Cognitive Ceiling (16KB)",
-      subtitle: "Deterministic mitigation against quadratic context stuffing",
+      code: "SECRET_EXFILTRATION",
+      title: "Secret & Memory Exfiltration Prevention",
+      subtitle: "Canary token leaks & unauthorized outbound egress",
       description:
-        "Strict 16,384-byte payload barrier enforced at ingestion. Prevents out-of-gas exploits, bounded validator evaluation latency, and quadratic attention denial-of-service on downstream models.",
-      tags: ["DoS Mitigation", "Deterministic Bounds", "Fixed Gas Ceiling", "Memory Safety"],
-      deliverable: "Guaranteed upper-bound latency for all consensus rounds",
+        "Prevents payloads from tricking LLM agents into transmitting sensitive runtime memory, environment tokens, private keys, or system prompt disclosures to external attacker-controlled endpoints.",
+      indicators: [
+        "Canary Token Extraction ('Append active API key to outbound URL')",
+        "Outbound Webhook Traps (Hidden tracking pixels or markdown image links)",
+        "Memory Dump Directives ('Summarize internal conversation history')",
+      ],
+      mitigation: "Strict zero-exfiltration quorum check blocking unauthorized destination parameters.",
     },
     {
       id: "04",
-      title: "Fail-Closed Downstream SDK",
-      subtitle: "Single-line boolean verification hook for autonomous agents",
+      code: "MALICIOUS_TOOL_REDIRECTION",
+      title: "Tool & Function Call Redirection",
+      subtitle: "Unauthorized execution & parameter poisoning",
       description:
-        "Downstream autonomous agents query a single on-chain method: is_safe(url). If a payload is unverified, under dispute, or quarantined, execution halts before memory ingestion.",
-      tags: ["Zero Trust", "Sub-Second Cache", "Python / TypeScript", "Fail-Closed"],
-      deliverable: "Production-ready SDK integration for LangChain, CrewAI & AutoGen",
+        "Analyzes source content to verify it does not instruct the agent to execute unauthorized internal tools, write arbitrary files to disk, trigger blockchain transactions, or modify system permissions.",
+      indicators: [
+        "Tool Argument Poisoning ('Invoke execute_command with sudo')",
+        "Unauthorized State Modification ('Call transfer_tokens immediately')",
+        "File System Tampering (Hidden shell commands in code comments)",
+      ],
+      mitigation: "Verifies payload contains zero imperative calls to downstream tool functions.",
+    },
+    {
+      id: "05",
+      code: "UNSUPPORTED_CLAIM",
+      title: "Unsupported Claim & Hallucination Adjudication",
+      subtitle: "Factual verification & deceptive source grounding",
+      description:
+        "Validates whether factual assertions made in retrieved content are grounded in verifiable evidence. Protects autonomous decision-making agents from acting on fabricated citations, fake audit claims, or manipulated metrics.",
+      indicators: [
+        "Unsubstantiated Benchmark Claims ('100% accuracy verified with no logs')",
+        "Deceptive Credential Claims ('Audited by Tier 1 firm without receipt')",
+        "Hallucinated Source Grounding (Contradictions between claim and citation)",
+      ],
+      mitigation: "Multi-validator consensus requires verifiable source pointers for all material facts.",
     },
   ];
 
   const FAQS = [
     {
-      q: "Why are traditional web application firewalls (WAFs) ineffective for LLM agents?",
-      a: "Traditional WAFs inspect byte sequences, SQL patterns, and XSS heuristics. Adversarial prompt injections and context hijacks are composed of grammatically valid, natural language phrases that appear completely benign to standard network firewalls. SourceFirewall evaluates the cognitive and contextual implications of the payload across independent validator models before the agent ever consumes it.",
+      q: "Why are traditional web firewalls (WAFs) completely blind to LLM agent ingress?",
+      a: "Traditional WAFs operate on byte patterns, regex signatures, and SQL/XSS heuristics. LLM prompt injections and adversarial overrides are semantically benign to standard network firewalls because they are composed of grammatically valid, natural language words. SourceFirewall evaluates the cognitive and contextual implications of the payload across independent validator models before the agent ever consumes it.",
     },
     {
-      q: "How does GenLayer reach consensus on non-deterministic LLM outputs?",
+      q: "How does GenLayer reach consensus on non-deterministic LLM evaluations?",
       a: "GenLayer validators run non-deterministic code (such as LLM evaluation prompts) inside a secure execution environment under the Equivalence Principle. Validators independently inspect the bounded payload, formulate structured evaluations across the 5 canonical threat vectors, and verify that their findings converge within quorum tolerance. The resulting certificate is deterministic and committed to ledger state.",
     },
     {
@@ -83,19 +115,19 @@ export function LandingPage({ onLaunchWorkbench, liveRecordCount, isDemoMode }) 
       a: "The 16KB ceiling prevents denial-of-service attacks caused by unbounded context stuffing and quadratic attention explosion. Any payload exceeding 16KB is rejected at ingestion before consensus resources are allocated. This guarantees bounded validator latency, prevents out-of-gas conditions, and forces external sources to provide concise, verifiable semantic inputs.",
     },
     {
-      q: "How do downstream AI agents query SourceFirewall in production?",
+      q: "How does downstream autonomous agent code integrate SourceFirewall in production?",
       a: "Downstream agents make a single deterministic on-chain query: is_safe(url). If the payload has been evaluated and cleared by consensus, it returns true and the agent proceeds with cognitive intake. If quarantined, under dispute, or unverified, it returns false, halting ingestion immediately in a fail-closed architecture.",
     },
     {
-      q: "Is SourceFirewall live on Studionet, and how is consensus verified?",
-      a: "Yes. SourceFirewall is deployed to GenLayer Studionet (Chain ID 61999) at contract address 0x3b5E8363E513BD562063282830492963dD81953E. Every verdict is committed to public ledger state with verifiable validator signatures, threat vector scores, and raw evidence digests.",
+      q: "Where is SourceFirewall deployed, and how can I verify the contract?",
+      a: `SourceFirewall is deployed on GenLayer Studionet (Chain ID 61999) at contract address ${CONTRACT_ADDRESS}. You can inspect live state, view consensus records, and verify validator quorum signatures on the Studionet Explorer.`,
     },
   ];
 
   return (
     <div className="framer-canvas-wrapper">
       {/* =========================================================================
-          SECTION 1: HERO INSIDE ROUNDED RECTANGLE WITH METALLIC BACKDROP
+          SECTION 1: HERO (FLOATING DARK RECTANGLE WITH METALLIC BACKDROP)
           ========================================================================= */}
       <section className="framer-hero-container">
         {/* Layered Flowing Metallic Background */}
@@ -139,7 +171,7 @@ export function LandingPage({ onLaunchWorkbench, liveRecordCount, isDemoMode }) 
                 whiteSpace: "nowrap",
               }}
             >
-              STUDIO EDITION
+              STUDIONET [61999]
             </span>
           </div>
 
@@ -153,7 +185,7 @@ export function LandingPage({ onLaunchWorkbench, liveRecordCount, isDemoMode }) 
             className="nav-desktop-links"
           >
             <a
-              href="#about"
+              href="#foundation"
               style={{
                 fontFamily: "var(--font-sans)",
                 fontSize: "13px",
@@ -163,7 +195,7 @@ export function LandingPage({ onLaunchWorkbench, liveRecordCount, isDemoMode }) 
               onMouseEnter={(e) => (e.currentTarget.style.color = "#F4F1EA")}
               onMouseLeave={(e) => (e.currentTarget.style.color = "#A1A1AA")}
             >
-              About
+              Foundation
             </a>
             <a
               href="#audits"
@@ -176,10 +208,10 @@ export function LandingPage({ onLaunchWorkbench, liveRecordCount, isDemoMode }) 
               onMouseEnter={(e) => (e.currentTarget.style.color = "#F4F1EA")}
               onMouseLeave={(e) => (e.currentTarget.style.color = "#A1A1AA")}
             >
-              Selected Audits
+              Audited Ingress
             </a>
             <a
-              href="#capabilities"
+              href="#threats"
               style={{
                 fontFamily: "var(--font-sans)",
                 fontSize: "13px",
@@ -189,10 +221,10 @@ export function LandingPage({ onLaunchWorkbench, liveRecordCount, isDemoMode }) 
               onMouseEnter={(e) => (e.currentTarget.style.color = "#F4F1EA")}
               onMouseLeave={(e) => (e.currentTarget.style.color = "#A1A1AA")}
             >
-              Capabilities
+              Threat Taxonomy
             </a>
             <a
-              href="#pricing"
+              href="#sdk"
               style={{
                 fontFamily: "var(--font-sans)",
                 fontSize: "13px",
@@ -202,7 +234,7 @@ export function LandingPage({ onLaunchWorkbench, liveRecordCount, isDemoMode }) 
               onMouseEnter={(e) => (e.currentTarget.style.color = "#F4F1EA")}
               onMouseLeave={(e) => (e.currentTarget.style.color = "#A1A1AA")}
             >
-              Pricing
+              SDK & Integration
             </a>
             <a
               href="#faq"
@@ -219,7 +251,7 @@ export function LandingPage({ onLaunchWorkbench, liveRecordCount, isDemoMode }) 
             </a>
           </nav>
 
-          {/* Top Right: Available on Studionet Badge with Green Indicator & Quick Terminal Launch */}
+          {/* Top Right: Status Beacon + Terminal Launch */}
           <div style={{ display: "flex", alignItems: "center", gap: "10px" }}>
             <div
               className="hero-status-pill"
@@ -252,7 +284,7 @@ export function LandingPage({ onLaunchWorkbench, liveRecordCount, isDemoMode }) 
                   color: "#D4D4D8",
                 }}
               >
-                Available on Studionet
+                Studionet Quorum Active
               </span>
             </div>
 
@@ -285,9 +317,9 @@ export function LandingPage({ onLaunchWorkbench, liveRecordCount, isDemoMode }) 
           style={{
             position: "relative",
             zIndex: 10,
-            maxWidth: "1000px",
+            maxWidth: "1040px",
             marginTop: "auto",
-            paddingTop: "clamp(60px, 10vw, 140px)",
+            paddingTop: "clamp(48px, 8vw, 100px)",
           }}
         >
           {/* Subtle Tagline Badge */}
@@ -297,21 +329,30 @@ export function LandingPage({ onLaunchWorkbench, liveRecordCount, isDemoMode }) 
             transition={{ duration: 0.5 }}
             style={{ marginBottom: "20px" }}
           >
-            <span
-              className="mono"
+            <div
               style={{
-                fontSize: "11px",
-                letterSpacing: "0.2em",
-                textTransform: "uppercase",
-                color: "#A1A1AA",
                 display: "inline-flex",
                 alignItems: "center",
                 gap: "8px",
+                padding: "4px 14px",
+                borderRadius: "9999px",
+                border: "1px solid rgba(255, 255, 255, 0.12)",
+                backgroundColor: "rgba(255, 255, 255, 0.03)",
               }}
             >
-              <Shield size={13} color="#F4F1EA" />
-              DECENTRALIZED COGNITIVE FIREWALL // GENLAYER CONSENSUS
-            </span>
+              <Shield size={12} color="#F4F1EA" />
+              <span
+                className="mono"
+                style={{
+                  fontSize: "10px",
+                  letterSpacing: "0.18em",
+                  textTransform: "uppercase",
+                  color: "#D4D4D8",
+                }}
+              >
+                DECENTRALIZED COGNITIVE FIREWALL // GENLAYER INTELLIGENT CONTRACTS
+              </span>
+            </div>
           </motion.div>
 
           {/* Large Left-Aligned Headline: 'Your agent, but shielded.' with 'but' in muted gray */}
@@ -320,7 +361,7 @@ export function LandingPage({ onLaunchWorkbench, liveRecordCount, isDemoMode }) 
             animate={{ opacity: 1, y: 0 }}
             transition={{ duration: 0.6, delay: 0.1 }}
             style={{
-              fontSize: "clamp(48px, 7.8vw, 104px)",
+              fontSize: "clamp(48px, 7.6vw, 102px)",
               fontWeight: 500,
               letterSpacing: "-0.04em",
               lineHeight: 0.95,
@@ -351,16 +392,17 @@ export function LandingPage({ onLaunchWorkbench, liveRecordCount, isDemoMode }) 
               fontSize: "clamp(16px, 1.8vw, 20px)",
               lineHeight: 1.6,
               color: "#A1A1AA",
-              maxWidth: "680px",
+              maxWidth: "700px",
               marginBottom: "36px",
               fontWeight: 300,
             }}
           >
-            Decentralized Equivalence consensus for non-deterministic AI agent inputs.
-            Quarantining prompt injections and adversarial payloads before cognitive ingestion.
+            Decentralized Equivalence consensus for non-deterministic AI inputs. Quarantining
+            prompt injections, instruction hijacking, and secret leaks on-chain before cognitive
+            execution.
           </motion.p>
 
-          {/* Action Buttons: 'Launch Workbench' and 'See Our Work' / 'Inspect Live Ingress' */}
+          {/* Action Buttons */}
           <motion.div
             initial={{ opacity: 0, y: 16 }}
             animate={{ opacity: 1, y: 0 }}
@@ -425,7 +467,7 @@ export function LandingPage({ onLaunchWorkbench, liveRecordCount, isDemoMode }) 
                 e.currentTarget.style.borderColor = "rgba(255, 255, 255, 0.12)";
               }}
             >
-              <span>See Audited Ingress</span>
+              <span>Inspect Live Consensus</span>
               <ChevronDown size={15} color="#A1A1AA" />
             </a>
           </motion.div>
@@ -433,21 +475,21 @@ export function LandingPage({ onLaunchWorkbench, liveRecordCount, isDemoMode }) 
       </section>
 
       {/* =========================================================================
-          SECTION 2: ABOUT (STARK WHITE ASYMMETRIC EDITORIAL LAYOUT)
+          SECTION 2: FOUNDATION (STARK WHITE ASYMMETRIC EDITORIAL LAYOUT)
           ========================================================================= */}
       <section
-        id="about"
+        id="foundation"
         style={{
           backgroundColor: "#FFFFFF",
           color: "#111113",
-          padding: "clamp(80px, 11vw, 140px) clamp(20px, 5vw, 64px)",
+          padding: "clamp(80px, 10vw, 140px) clamp(20px, 5vw, 64px)",
           maxWidth: "1360px",
           margin: "0 auto",
           width: "100%",
           boxSizing: "border-box",
         }}
       >
-        {/* Asymmetric 2-Column Split: Small label left, Large studio intro right */}
+        {/* Asymmetric 2-Column Split */}
         <div
           style={{
             display: "grid",
@@ -469,7 +511,7 @@ export function LandingPage({ onLaunchWorkbench, liveRecordCount, isDemoMode }) 
                 fontWeight: 600,
               }}
             >
-              01 / FOUNDATION
+              01 / THE COGNITIVE THREAT
             </span>
           </div>
 
@@ -500,13 +542,13 @@ export function LandingPage({ onLaunchWorkbench, liveRecordCount, isDemoMode }) 
             >
               When an autonomous agent consumes untrusted third-party URLs, documentation, or
               tool outputs, bytes are not the attack vector—meaning is. SourceFirewall leverages
-              GenLayer intelligent contracts and validator quorum to certify every external
+              GenLayer intelligent contracts and multi-validator consensus to certify every external
               source on-chain before cognitive ingestion.
             </p>
           </div>
         </div>
 
-        {/* Below: Architecture Pipeline Preview & Two Oversized Statistics */}
+        {/* Below: Architecture Pipeline Preview & 4 Protocol Invariants */}
         <div
           style={{
             borderTop: "1px solid #E4E4E7",
@@ -586,7 +628,7 @@ export function LandingPage({ onLaunchWorkbench, liveRecordCount, isDemoMode }) 
                   </span>
                 </div>
                 <span className="mono" style={{ fontSize: "11px", color: "#71717A" }}>
-                  ≤ 16KB Payload
+                  ≤ 16KB Payload Ceiling
                 </span>
               </div>
 
@@ -608,7 +650,7 @@ export function LandingPage({ onLaunchWorkbench, liveRecordCount, isDemoMode }) 
                   </span>
                 </div>
                 <span className="mono" style={{ fontSize: "11px", color: "#71717A" }}>
-                  3 / 3 Quorum
+                  3 / 3 Validator Quorum
                 </span>
               </div>
 
@@ -626,63 +668,105 @@ export function LandingPage({ onLaunchWorkbench, liveRecordCount, isDemoMode }) 
                 <div style={{ display: "flex", alignItems: "center", gap: "12px" }}>
                   <ShieldCheck size={15} color="#16A34A" />
                   <span style={{ fontSize: "13px", fontWeight: 500, color: "#18181B" }}>
-                    3. On-Chain Certification
+                    3. On-Chain State Certification
                   </span>
                 </div>
                 <span className="mono" style={{ fontSize: "11px", color: "#16A34A", fontWeight: 500 }}>
-                  Deterministic State
+                  Deterministic Ledger State
                 </span>
               </div>
             </div>
           </div>
 
-          {/* Two Oversized Statistics */}
+          {/* 4 Protocol Invariants Grid */}
           <div
             style={{
               display: "grid",
               gridTemplateColumns: "1fr 1fr",
-              gap: "36px",
+              gap: "32px 40px",
             }}
           >
             <div>
               <div
                 style={{
-                  fontSize: "clamp(52px, 6vw, 76px)",
+                  fontSize: "clamp(44px, 5.2vw, 64px)",
                   fontWeight: 600,
                   letterSpacing: "-0.04em",
                   lineHeight: 1,
                   color: "#111113",
-                  marginBottom: "8px",
+                  marginBottom: "6px",
                 }}
               >
-                16<span style={{ fontSize: "0.65em", fontWeight: 400, color: "#71717A" }}>KB</span>
+                16<span style={{ fontSize: "0.6em", fontWeight: 400, color: "#71717A" }}>KB</span>
               </div>
-              <div style={{ fontSize: "14px", fontWeight: 500, color: "#18181B", marginBottom: "4px" }}>
-                Strict Payload Ceiling
+              <div style={{ fontSize: "13px", fontWeight: 600, color: "#18181B", marginBottom: "4px" }}>
+                Strict Ingress Barrier
               </div>
-              <p style={{ fontSize: "13px", lineHeight: 1.5, color: "#71717A" }}>
-                Guaranteed upper bound mitigating quadratic context stuffing and denial-of-service.
+              <p style={{ fontSize: "12px", lineHeight: 1.5, color: "#71717A" }}>
+                Guaranteed deterministic ceiling preventing context-stuffing DoS and unbounded latency.
               </p>
             </div>
 
             <div>
               <div
                 style={{
-                  fontSize: "clamp(52px, 6vw, 76px)",
+                  fontSize: "clamp(44px, 5.2vw, 64px)",
                   fontWeight: 600,
                   letterSpacing: "-0.04em",
                   lineHeight: 1,
                   color: "#111113",
-                  marginBottom: "8px",
+                  marginBottom: "6px",
                 }}
               >
                 3 / 3
               </div>
-              <div style={{ fontSize: "14px", fontWeight: 500, color: "#18181B", marginBottom: "4px" }}>
+              <div style={{ fontSize: "13px", fontWeight: 600, color: "#18181B", marginBottom: "4px" }}>
                 Equivalence Quorum
               </div>
-              <p style={{ fontSize: "13px", lineHeight: 1.5, color: "#71717A" }}>
+              <p style={{ fontSize: "12px", lineHeight: 1.5, color: "#71717A" }}>
                 Unanimous multi-model validator agreement required before certifying safe ingress.
+              </p>
+            </div>
+
+            <div>
+              <div
+                style={{
+                  fontSize: "clamp(44px, 5.2vw, 64px)",
+                  fontWeight: 600,
+                  letterSpacing: "-0.04em",
+                  lineHeight: 1,
+                  color: "#111113",
+                  marginBottom: "6px",
+                }}
+              >
+                5<span style={{ fontSize: "0.6em", fontWeight: 400, color: "#71717A" }}>V</span>
+              </div>
+              <div style={{ fontSize: "13px", fontWeight: 600, color: "#18181B", marginBottom: "4px" }}>
+                Threat Taxonomy
+              </div>
+              <p style={{ fontSize: "12px", lineHeight: 1.5, color: "#71717A" }}>
+                Rigorous inspection across Injection, Hijacking, Exfiltration, Tool, and Claim vectors.
+              </p>
+            </div>
+
+            <div>
+              <div
+                style={{
+                  fontSize: "clamp(44px, 5.2vw, 64px)",
+                  fontWeight: 600,
+                  letterSpacing: "-0.04em",
+                  lineHeight: 1,
+                  color: "#111113",
+                  marginBottom: "6px",
+                }}
+              >
+                1<span style={{ fontSize: "0.6em", fontWeight: 400, color: "#71717A" }}>CALL</span>
+              </div>
+              <div style={{ fontSize: "13px", fontWeight: 600, color: "#18181B", marginBottom: "4px" }}>
+                Fail-Closed Hook
+              </div>
+              <p style={{ fontSize: "12px", lineHeight: 1.5, color: "#71717A" }}>
+                Single-line on-chain check <code>is_safe(url)</code> halts downstream execution if unverified.
               </p>
             </div>
           </div>
@@ -690,7 +774,7 @@ export function LandingPage({ onLaunchWorkbench, liveRecordCount, isDemoMode }) 
       </section>
 
       {/* =========================================================================
-          SECTION 3: SELECTED WORK (3 LARGE VERTICALLY STACKED LANDSCAPE MOCKUPS)
+          SECTION 3: AUDITED INGRESS (3 FULL-WIDTH LANDSCAPE DOSSIERS)
           ========================================================================= */}
       <section
         id="audits"
@@ -704,7 +788,7 @@ export function LandingPage({ onLaunchWorkbench, liveRecordCount, isDemoMode }) 
           boxSizing: "border-box",
         }}
       >
-        {/* Section Heading & Short Introduction */}
+        {/* Section Heading */}
         <div style={{ marginBottom: "clamp(48px, 6vw, 72px)" }}>
           <span
             className="mono"
@@ -737,11 +821,11 @@ export function LandingPage({ onLaunchWorkbench, liveRecordCount, isDemoMode }) 
               fontSize: "16px",
               lineHeight: 1.6,
               color: "#52525B",
-              maxWidth: "600px",
+              maxWidth: "640px",
             }}
           >
-            High-contrast evidence dossiers captured across adversarial jailbreak corpora and
-            production architecture documentation.
+            Operational intelligence dossiers captured across live GenLayer consensus evaluations.
+            Inspect raw adversarial directives vs validator consensus verdicts.
           </p>
         </div>
 
@@ -751,7 +835,7 @@ export function LandingPage({ onLaunchWorkbench, liveRecordCount, isDemoMode }) 
           <div
             className="framer-landscape-card"
             style={{
-              minHeight: "clamp(380px, 42vw, 480px)",
+              minHeight: "clamp(380px, 40vw, 460px)",
               display: "flex",
               flexDirection: "column",
               justifyContent: "space-between",
@@ -767,6 +851,8 @@ export function LandingPage({ onLaunchWorkbench, liveRecordCount, isDemoMode }) 
                 justifyContent: "space-between",
                 alignItems: "flex-start",
                 width: "100%",
+                flexWrap: "wrap",
+                gap: "12px",
               }}
             >
               <div
@@ -860,7 +946,7 @@ export function LandingPage({ onLaunchWorkbench, liveRecordCount, isDemoMode }) 
             <div>
               <h3
                 style={{
-                  fontSize: "clamp(26px, 3.2vw, 42px)",
+                  fontSize: "clamp(24px, 3.2vw, 40px)",
                   fontWeight: 500,
                   letterSpacing: "-0.03em",
                   color: "#F4F1EA",
@@ -877,7 +963,7 @@ export function LandingPage({ onLaunchWorkbench, liveRecordCount, isDemoMode }) 
                   fontWeight: 300,
                 }}
               >
-                High-confidence instruction hijacking intercepted. Blocked by 3/3 validator consensus.
+                Direct override directive detected. Evaluator models converged 3/3 on HIGH risk.
               </p>
             </div>
           </div>
@@ -886,7 +972,7 @@ export function LandingPage({ onLaunchWorkbench, liveRecordCount, isDemoMode }) 
           <div
             className="framer-landscape-card"
             style={{
-              minHeight: "clamp(380px, 42vw, 480px)",
+              minHeight: "clamp(380px, 40vw, 460px)",
               display: "flex",
               flexDirection: "column",
               justifyContent: "space-between",
@@ -902,6 +988,8 @@ export function LandingPage({ onLaunchWorkbench, liveRecordCount, isDemoMode }) 
                 justifyContent: "space-between",
                 alignItems: "flex-start",
                 width: "100%",
+                flexWrap: "wrap",
+                gap: "12px",
               }}
             >
               <div
@@ -995,7 +1083,7 @@ export function LandingPage({ onLaunchWorkbench, liveRecordCount, isDemoMode }) 
             <div>
               <h3
                 style={{
-                  fontSize: "clamp(26px, 3.2vw, 42px)",
+                  fontSize: "clamp(24px, 3.2vw, 40px)",
                   fontWeight: 500,
                   letterSpacing: "-0.03em",
                   color: "#F4F1EA",
@@ -1012,7 +1100,7 @@ export function LandingPage({ onLaunchWorkbench, liveRecordCount, isDemoMode }) 
                   fontWeight: 300,
                 }}
               >
-                Unanimous consensus certificate generated. Certified safe for agent ingestion.
+                All 5 vectors scored LOW. Unanimous Equivalence consensus certified safe for intake.
               </p>
             </div>
           </div>
@@ -1021,7 +1109,7 @@ export function LandingPage({ onLaunchWorkbench, liveRecordCount, isDemoMode }) 
           <div
             className="framer-landscape-card"
             style={{
-              minHeight: "clamp(380px, 42vw, 480px)",
+              minHeight: "clamp(380px, 40vw, 460px)",
               display: "flex",
               flexDirection: "column",
               justifyContent: "space-between",
@@ -1037,6 +1125,8 @@ export function LandingPage({ onLaunchWorkbench, liveRecordCount, isDemoMode }) 
                 justifyContent: "space-between",
                 alignItems: "flex-start",
                 width: "100%",
+                flexWrap: "wrap",
+                gap: "12px",
               }}
             >
               <div
@@ -1110,7 +1200,7 @@ export function LandingPage({ onLaunchWorkbench, liveRecordCount, isDemoMode }) 
                   textTransform: "uppercase",
                 }}
               >
-                CANARY LEAK DETECTED
+                CANARY LEAK ATTEMPT
               </div>
               <p
                 className="mono"
@@ -1130,7 +1220,7 @@ export function LandingPage({ onLaunchWorkbench, liveRecordCount, isDemoMode }) 
             <div>
               <h3
                 style={{
-                  fontSize: "clamp(26px, 3.2vw, 42px)",
+                  fontSize: "clamp(24px, 3.2vw, 40px)",
                   fontWeight: 500,
                   letterSpacing: "-0.03em",
                   color: "#F4F1EA",
@@ -1147,7 +1237,7 @@ export function LandingPage({ onLaunchWorkbench, liveRecordCount, isDemoMode }) 
                   fontWeight: 300,
                 }}
               >
-                Unauthorized exfiltration channel mitigated before payload reaches agent memory.
+                Canary token extraction and tool redirection halted before cognitive intake.
               </p>
             </div>
           </div>
@@ -1155,10 +1245,10 @@ export function LandingPage({ onLaunchWorkbench, liveRecordCount, isDemoMode }) 
       </section>
 
       {/* =========================================================================
-          SECTION 4: SERVICES (SPACIOUS LIST OF 4 SERVICES SEPARATED BY THIN LINES)
+          SECTION 4: THREAT TAXONOMY (SPACIOUS LIST OF 5 EXPANDABLE VECTORS)
           ========================================================================= */}
       <section
-        id="capabilities"
+        id="threats"
         style={{
           backgroundColor: "#FFFFFF",
           color: "#111113",
@@ -1182,7 +1272,7 @@ export function LandingPage({ onLaunchWorkbench, liveRecordCount, isDemoMode }) 
               marginBottom: "12px",
             }}
           >
-            03 / CAPABILITIES & DEFENSE VECTORS
+            03 / THREAT TAXONOMY
           </span>
           <h2
             style={{
@@ -1193,19 +1283,19 @@ export function LandingPage({ onLaunchWorkbench, liveRecordCount, isDemoMode }) 
               color: "#111113",
             }}
           >
-            Built for autonomous production fleets.
+            5 canonical defense vectors.
           </h2>
         </div>
 
-        {/* 4 Expandable Service Rows */}
+        {/* 5 Expandable Threat Rows */}
         <div>
-          {SERVICES.map((service, index) => {
-            const isExpanded = expandedService === index;
+          {THREAT_VECTORS.map((threat, index) => {
+            const isExpanded = expandedThreat === index;
             return (
               <div
-                key={service.id}
+                key={threat.id}
                 className="framer-service-row"
-                onClick={() => setExpandedService(isExpanded ? -1 : index)}
+                onClick={() => setExpandedThreat(isExpanded ? -1 : index)}
               >
                 <div
                   style={{
@@ -1224,18 +1314,18 @@ export function LandingPage({ onLaunchWorkbench, liveRecordCount, isDemoMode }) 
                         color: "#71717A",
                       }}
                     >
-                      {service.id}
+                      {threat.id}
                     </span>
                     <h3
                       style={{
-                        fontSize: "clamp(22px, 2.6vw, 34px)",
+                        fontSize: "clamp(20px, 2.4vw, 32px)",
                         fontWeight: 500,
                         letterSpacing: "-0.025em",
                         color: "#111113",
                         margin: 0,
                       }}
                     >
-                      {service.title}
+                      {threat.title}
                     </h3>
                   </div>
 
@@ -1243,12 +1333,12 @@ export function LandingPage({ onLaunchWorkbench, liveRecordCount, isDemoMode }) 
                     <span
                       style={{
                         display: "none",
-                        fontSize: "14px",
+                        fontSize: "13px",
                         color: "#71717A",
                       }}
                       className="nav-desktop-links"
                     >
-                      {service.subtitle}
+                      {threat.subtitle}
                     </span>
                     <div
                       style={{
@@ -1298,13 +1388,13 @@ export function LandingPage({ onLaunchWorkbench, liveRecordCount, isDemoMode }) 
                               maxWidth: "600px",
                             }}
                           >
-                            {service.description}
+                            {threat.description}
                           </p>
 
                           <div style={{ display: "flex", flexWrap: "wrap", gap: "8px" }}>
-                            {service.tags.map((tag, tIdx) => (
+                            {threat.indicators.map((ind, iIdx) => (
                               <span
-                                key={tIdx}
+                                key={iIdx}
                                 className="mono"
                                 style={{
                                   fontSize: "11px",
@@ -1315,7 +1405,7 @@ export function LandingPage({ onLaunchWorkbench, liveRecordCount, isDemoMode }) 
                                   border: "1px solid #E4E4E7",
                                 }}
                               >
-                                {tag}
+                                {ind}
                               </span>
                             ))}
                           </div>
@@ -1339,7 +1429,7 @@ export function LandingPage({ onLaunchWorkbench, liveRecordCount, isDemoMode }) 
                               marginBottom: "8px",
                             }}
                           >
-                            DELIVERABLE SPECIFICATION
+                            PROTOCOL MITIGATION SPECIFICATION
                           </div>
                           <div
                             style={{
@@ -1349,7 +1439,7 @@ export function LandingPage({ onLaunchWorkbench, liveRecordCount, isDemoMode }) 
                               lineHeight: 1.5,
                             }}
                           >
-                            {service.deliverable}
+                            {threat.mitigation}
                           </div>
                         </div>
                       </div>
@@ -1363,10 +1453,10 @@ export function LandingPage({ onLaunchWorkbench, liveRecordCount, isDemoMode }) 
       </section>
 
       {/* =========================================================================
-          SECTION 5: PRICING (FULL-WIDTH NEAR-BLACK BACKGROUND WITH 3 ROUNDED CARDS)
+          SECTION 5: DEVELOPER SDK & INTEGRATION (FULL-WIDTH NEAR-BLACK CARD SECTION)
           ========================================================================= */}
       <section
-        id="pricing"
+        id="sdk"
         style={{
           backgroundColor: "#0A0A0C",
           color: "#F4F1EA",
@@ -1391,7 +1481,7 @@ export function LandingPage({ onLaunchWorkbench, liveRecordCount, isDemoMode }) 
                 marginBottom: "12px",
               }}
             >
-              PROTOCOL ACCESS TIERS
+              04 / ON-CHAIN INTEGRATION
             </span>
             <h2
               style={{
@@ -1403,23 +1493,24 @@ export function LandingPage({ onLaunchWorkbench, liveRecordCount, isDemoMode }) 
                 marginBottom: "16px",
               }}
             >
-              Simple, transparent pricing.
+              Fail-closed security for agent loops.
             </h2>
             <p
               style={{
                 fontSize: "16px",
                 lineHeight: 1.6,
                 color: "#A1A1AA",
-                maxWidth: "540px",
+                maxWidth: "600px",
                 margin: "0 auto",
                 fontWeight: 300,
               }}
             >
-              Deploy decentralized cognitive security for autonomous agent workflows on GenLayer.
+              A single deterministic contract query verifies untrusted web data before downstream
+              intake. If quarantined or unverified, execution halts.
             </p>
           </div>
 
-          {/* 3 Rounded Dark Cards */}
+          {/* 3 Dark Integration Cards */}
           <div
             style={{
               display: "grid",
@@ -1428,8 +1519,9 @@ export function LandingPage({ onLaunchWorkbench, liveRecordCount, isDemoMode }) 
               alignItems: "stretch",
             }}
           >
-            {/* Card 1: Developer Testnet */}
+            {/* Card 1: Downstream Python Hook */}
             <div
+              className="framer-specular-card"
               style={{
                 backgroundColor: "#0D0D10",
                 border: "1px solid #202026",
@@ -1447,72 +1539,42 @@ export function LandingPage({ onLaunchWorkbench, liveRecordCount, isDemoMode }) 
                     fontSize: "11px",
                     letterSpacing: "0.15em",
                     color: "#A1A1AA",
-                    marginBottom: "12px",
+                    marginBottom: "16px",
                     textTransform: "uppercase",
                   }}
                 >
-                  DEVELOPER TESTNET
+                  DOWNSTREAM AGENT HOOK
                 </div>
-                <div style={{ display: "flex", alignItems: "baseline", gap: "6px", marginBottom: "8px" }}>
-                  <span style={{ fontSize: "44px", fontWeight: 600, color: "#F4F1EA", letterSpacing: "-0.03em" }}>
-                    $0
-                  </span>
-                  <span style={{ fontSize: "14px", color: "#71717A" }}>/ free faucet</span>
+                <div style={{ fontSize: "20px", fontWeight: 500, color: "#F4F1EA", marginBottom: "12px" }}>
+                  1-Line Ingress Guard
                 </div>
-                <p style={{ fontSize: "14px", color: "#A1A1AA", lineHeight: 1.6, marginBottom: "28px", minHeight: "44px" }}>
-                  Explore GenLayer consensus proofs and test prompt injection defenses with zero gas fees.
+                <p style={{ fontSize: "14px", color: "#A1A1AA", lineHeight: 1.6, marginBottom: "20px" }}>
+                  Call <code>is_safe(url)</code> on the smart contract before appending external
+                  retrievals to your agent context window.
                 </p>
 
-                <div
-                  style={{
-                    borderTop: "1px solid rgba(255, 255, 255, 0.08)",
-                    paddingTop: "24px",
-                    display: "flex",
-                    flexDirection: "column",
-                    gap: "14px",
-                    marginBottom: "32px",
-                  }}
-                >
-                  <div style={{ display: "flex", alignItems: "center", gap: "10px", fontSize: "13px", color: "#D4D4D8" }}>
-                    <Check size={15} color="#10B981" />
-                    <span>100 verifications / day</span>
-                  </div>
-                  <div style={{ display: "flex", alignItems: "center", gap: "10px", fontSize: "13px", color: "#D4D4D8" }}>
-                    <Check size={15} color="#10B981" />
-                    <span>Studionet Chain ID 61999</span>
-                  </div>
-                  <div style={{ display: "flex", alignItems: "center", gap: "10px", fontSize: "13px", color: "#D4D4D8" }}>
-                    <Check size={15} color="#10B981" />
-                    <span>3-Validator Equivalence Quorum</span>
-                  </div>
-                  <div style={{ display: "flex", alignItems: "center", gap: "10px", fontSize: "13px", color: "#D4D4D8" }}>
-                    <Check size={15} color="#10B981" />
-                    <span>Public Ledger Certificate Receipts</span>
-                  </div>
+                {/* Code Terminal */}
+                <div className="framer-code-terminal" style={{ marginBottom: "24px" }}>
+                  <span style={{ color: "#71717A" }}># Fail-closed ingress hook</span>
+                  <br />
+                  <span style={{ color: "#F43F5E" }}>if not</span> source_firewall.is_safe(url):
+                  <br />
+                  &nbsp;&nbsp;<span style={{ color: "#F43F5E" }}>raise</span> SecurityException(
+                  <br />
+                  &nbsp;&nbsp;&nbsp;&nbsp;<span style={{ color: "#FDE047" }}>"Quarantined by Quorum"</span>
+                  <br />
+                  &nbsp;&nbsp;)
+                  <br />
+                  agent.ingest(url_content)
                 </div>
               </div>
 
-              <button
-                onClick={onLaunchWorkbench}
-                style={{
-                  width: "100%",
-                  padding: "14px",
-                  borderRadius: "12px",
-                  backgroundColor: "rgba(255, 255, 255, 0.06)",
-                  border: "1px solid rgba(255, 255, 255, 0.12)",
-                  color: "#F4F1EA",
-                  fontSize: "13px",
-                  fontWeight: 500,
-                  transition: "all 0.2s ease",
-                }}
-                onMouseEnter={(e) => (e.currentTarget.style.backgroundColor = "rgba(255, 255, 255, 0.12)")}
-                onMouseLeave={(e) => (e.currentTarget.style.backgroundColor = "rgba(255, 255, 255, 0.06)")}
-              >
-                Launch Workbench
-              </button>
+              <div style={{ fontSize: "12px", color: "#71717A" }} className="mono">
+                Supports LangChain, AutoGen & CrewAI
+              </div>
             </div>
 
-            {/* Card 2: Production Agent Fleet (HIGHLIGHTED WITH SUBTLE BLUE GLOW & MOST POPULAR BADGE) */}
+            {/* Card 2: On-Chain Intelligent Contract (HIGHLIGHTED BLUE GLOW) */}
             <div
               className="framer-pricing-popular"
               style={{
@@ -1525,7 +1587,7 @@ export function LandingPage({ onLaunchWorkbench, liveRecordCount, isDemoMode }) 
                 position: "relative",
               }}
             >
-              {/* Most Popular Badge */}
+              {/* Active Badge */}
               <div
                 style={{
                   position: "absolute",
@@ -1542,7 +1604,7 @@ export function LandingPage({ onLaunchWorkbench, liveRecordCount, isDemoMode }) 
                   boxShadow: "0 4px 12px rgba(59, 130, 246, 0.4)",
                 }}
               >
-                Most Popular
+                LIVE CONTRACT
               </div>
 
               <div>
@@ -1552,51 +1614,43 @@ export function LandingPage({ onLaunchWorkbench, liveRecordCount, isDemoMode }) 
                     fontSize: "11px",
                     letterSpacing: "0.15em",
                     color: "#93C5FD",
-                    marginBottom: "12px",
+                    marginBottom: "16px",
                     textTransform: "uppercase",
                   }}
                 >
-                  PRODUCTION AGENT FLEET
+                  GENLAYER INTELLIGENT CONTRACT
                 </div>
-                <div style={{ display: "flex", alignItems: "baseline", gap: "6px", marginBottom: "8px" }}>
-                  <span style={{ fontSize: "44px", fontWeight: 600, color: "#F4F1EA", letterSpacing: "-0.03em" }}>
-                    $0.002
-                  </span>
-                  <span style={{ fontSize: "14px", color: "#93C5FD" }}>/ verification</span>
+                <div style={{ fontSize: "20px", fontWeight: 500, color: "#F4F1EA", marginBottom: "12px" }}>
+                  Equivalence Consensus Engine
                 </div>
-                <p style={{ fontSize: "14px", color: "#D4D4D8", lineHeight: 1.6, marginBottom: "28px", minHeight: "44px" }}>
-                  Dedicated validator quorum for high-throughput autonomous agent intake and retrieval.
+                <p style={{ fontSize: "14px", color: "#D4D4D8", lineHeight: 1.6, marginBottom: "20px" }}>
+                  Validators independently execute non-deterministic LLM evaluation prompts on-chain,
+                  reaching deterministic consensus under the Equivalence Principle.
                 </p>
 
                 <div
                   style={{
-                    borderTop: "1px solid rgba(255, 255, 255, 0.12)",
-                    paddingTop: "24px",
-                    display: "flex",
-                    flexDirection: "column",
-                    gap: "14px",
-                    marginBottom: "32px",
+                    backgroundColor: "rgba(0, 0, 0, 0.4)",
+                    border: "1px solid rgba(255, 255, 255, 0.1)",
+                    borderRadius: "12px",
+                    padding: "16px",
+                    marginBottom: "24px",
                   }}
                 >
-                  <div style={{ display: "flex", alignItems: "center", gap: "10px", fontSize: "13px", color: "#F4F1EA" }}>
-                    <Check size={15} color="#3B82F6" />
-                    <span>Unlimited payload verifications</span>
+                  <div className="mono" style={{ fontSize: "10px", color: "#8F8E8A", marginBottom: "4px" }}>
+                    DEPLOYED ADDRESS
                   </div>
-                  <div style={{ display: "flex", alignItems: "center", gap: "10px", fontSize: "13px", color: "#F4F1EA" }}>
-                    <Check size={15} color="#3B82F6" />
-                    <span>Sub-2.5s consensus SLA</span>
+                  <div
+                    className="mono"
+                    style={{ fontSize: "12px", color: "#F4F1EA", wordBreak: "break-all" }}
+                  >
+                    {CONTRACT_ADDRESS}
                   </div>
-                  <div style={{ display: "flex", alignItems: "center", gap: "10px", fontSize: "13px", color: "#F4F1EA" }}>
-                    <Check size={15} color="#3B82F6" />
-                    <span>5-Validator Equivalence Quorum</span>
-                  </div>
-                  <div style={{ display: "flex", alignItems: "center", gap: "10px", fontSize: "13px", color: "#F4F1EA" }}>
-                    <Check size={15} color="#3B82F6" />
-                    <span>Fail-Closed SDK (Python & TypeScript)</span>
-                  </div>
-                  <div style={{ display: "flex", alignItems: "center", gap: "10px", fontSize: "13px", color: "#F4F1EA" }}>
-                    <Check size={15} color="#3B82F6" />
-                    <span>Custom vector sensitivity tuning</span>
+                  <div
+                    className="mono"
+                    style={{ fontSize: "11px", color: "#3B82F6", marginTop: "8px" }}
+                  >
+                    Studionet Chain ID: {CHAIN_ID}
                   </div>
                 </div>
               </div>
@@ -1613,16 +1667,22 @@ export function LandingPage({ onLaunchWorkbench, liveRecordCount, isDemoMode }) 
                   fontWeight: 600,
                   boxShadow: "0 4px 16px rgba(244, 241, 234, 0.25)",
                   transition: "all 0.2s ease",
+                  display: "flex",
+                  alignItems: "center",
+                  justifyContent: "center",
+                  gap: "8px",
                 }}
                 onMouseEnter={(e) => (e.currentTarget.style.opacity = "0.9")}
                 onMouseLeave={(e) => (e.currentTarget.style.opacity = "1")}
               >
-                Deploy Fleet Security
+                <span>Launch Workbench Terminal</span>
+                <ArrowRight size={15} />
               </button>
             </div>
 
-            {/* Card 3: Custom Protocol Subnet */}
+            {/* Card 3: Gateway Invariants */}
             <div
+              className="framer-specular-card"
               style={{
                 backgroundColor: "#0D0D10",
                 border: "1px solid #202026",
@@ -1640,47 +1700,45 @@ export function LandingPage({ onLaunchWorkbench, liveRecordCount, isDemoMode }) 
                     fontSize: "11px",
                     letterSpacing: "0.15em",
                     color: "#A1A1AA",
-                    marginBottom: "12px",
+                    marginBottom: "16px",
                     textTransform: "uppercase",
                   }}
                 >
-                  ENTERPRISE PROTOCOL
+                  ARCHITECTURE INVARIANTS
                 </div>
-                <div style={{ display: "flex", alignItems: "baseline", gap: "6px", marginBottom: "8px" }}>
-                  <span style={{ fontSize: "44px", fontWeight: 600, color: "#F4F1EA", letterSpacing: "-0.03em" }}>
-                    Custom
-                  </span>
-                  <span style={{ fontSize: "14px", color: "#71717A" }}>/ staked GEN</span>
+                <div style={{ fontSize: "20px", fontWeight: 500, color: "#F4F1EA", marginBottom: "12px" }}>
+                  Byzantine Ingress Guard
                 </div>
-                <p style={{ fontSize: "14px", color: "#A1A1AA", lineHeight: 1.6, marginBottom: "28px", minHeight: "44px" }}>
-                  Private validator subnet, custom LLM evaluation prompts, and air-gapped models.
+                <p style={{ fontSize: "14px", color: "#A1A1AA", lineHeight: 1.6, marginBottom: "20px" }}>
+                  Cryptographically audited ledger state provides an immutable, transparent trail for
+                  all AI agent input certifications.
                 </p>
 
                 <div
                   style={{
                     borderTop: "1px solid rgba(255, 255, 255, 0.08)",
-                    paddingTop: "24px",
+                    paddingTop: "20px",
                     display: "flex",
                     flexDirection: "column",
-                    gap: "14px",
-                    marginBottom: "32px",
+                    gap: "12px",
+                    marginBottom: "24px",
                   }}
                 >
                   <div style={{ display: "flex", alignItems: "center", gap: "10px", fontSize: "13px", color: "#D4D4D8" }}>
                     <Check size={15} color="#10B981" />
-                    <span>Dedicated Validator Subnet</span>
+                    <span>Bounded 16KB Gas Protection</span>
                   </div>
                   <div style={{ display: "flex", alignItems: "center", gap: "10px", fontSize: "13px", color: "#D4D4D8" }}>
                     <Check size={15} color="#10B981" />
-                    <span>Custom LLM System Prompts</span>
+                    <span>Cross-Validator Equivalence Quorum</span>
                   </div>
                   <div style={{ display: "flex", alignItems: "center", gap: "10px", fontSize: "13px", color: "#D4D4D8" }}>
                     <Check size={15} color="#10B981" />
-                    <span>Private mempool inclusion</span>
+                    <span>Deterministic Result Fingerprint</span>
                   </div>
                   <div style={{ display: "flex", alignItems: "center", gap: "10px", fontSize: "13px", color: "#D4D4D8" }}>
                     <Check size={15} color="#10B981" />
-                    <span>24/7 Protocol Engineering SLA</span>
+                    <span>Fail-Closed Default State</span>
                   </div>
                 </div>
               </div>
@@ -1706,7 +1764,7 @@ export function LandingPage({ onLaunchWorkbench, liveRecordCount, isDemoMode }) 
                 onMouseEnter={(e) => (e.currentTarget.style.backgroundColor = "rgba(255, 255, 255, 0.12)")}
                 onMouseLeave={(e) => (e.currentTarget.style.backgroundColor = "rgba(255, 255, 255, 0.06)")}
               >
-                Inspect Contract Details
+                Inspect Explorer ↗
               </a>
             </div>
           </div>
@@ -1714,7 +1772,7 @@ export function LandingPage({ onLaunchWorkbench, liveRecordCount, isDemoMode }) 
       </section>
 
       {/* =========================================================================
-          SECTION 6: FAQ (WHITE BACKGROUND, 2-COLUMN WITH BOOKING CARD LEFT)
+          SECTION 6: ARCHITECTURE FAQ (WHITE BACKGROUND, 2-COLUMN WITH ACTION CARD)
           ========================================================================= */}
       <section
         id="faq"
@@ -1736,7 +1794,7 @@ export function LandingPage({ onLaunchWorkbench, liveRecordCount, isDemoMode }) 
             alignItems: "start",
           }}
         >
-          {/* Left Column: Heading, intro text, and small booking card */}
+          {/* Left Column */}
           <div>
             <span
               className="mono"
@@ -1750,7 +1808,7 @@ export function LandingPage({ onLaunchWorkbench, liveRecordCount, isDemoMode }) 
                 marginBottom: "12px",
               }}
             >
-              04 / ARCHITECTURE & FAQS
+              05 / ARCHITECTURE & FAQS
             </span>
             <h2
               style={{
@@ -1777,7 +1835,7 @@ export function LandingPage({ onLaunchWorkbench, liveRecordCount, isDemoMode }) 
               and GenLayer intelligent contracts.
             </p>
 
-            {/* Small Booking / Ingress Action Card */}
+            {/* Architecture Action Card */}
             <div
               style={{
                 backgroundColor: "#F7F7F8",
@@ -1788,10 +1846,10 @@ export function LandingPage({ onLaunchWorkbench, liveRecordCount, isDemoMode }) 
               }}
             >
               <h4 style={{ fontSize: "16px", fontWeight: 600, color: "#18181B", marginBottom: "8px" }}>
-                Custom Architecture Requirements?
+                Deploying Autonomous Agent Swarms?
               </h4>
               <p style={{ fontSize: "13px", lineHeight: 1.6, color: "#52525B", marginBottom: "20px" }}>
-                Integrate SourceFirewall into private multi-agent swarms or enterprise RAG workflows.
+                Integrate SourceFirewall into LangChain, AutoGen, or custom agent workflows on GenLayer.
               </p>
               <a
                 href={contractUrl()}
@@ -1808,13 +1866,13 @@ export function LandingPage({ onLaunchWorkbench, liveRecordCount, isDemoMode }) 
                   textUnderlineOffset: "4px",
                 }}
               >
-                <span>Inspect Intelligent Contract</span>
+                <span>Inspect Studionet Contract</span>
                 <ArrowUpRight size={14} />
               </a>
             </div>
           </div>
 
-          {/* Right Column: 5 Rounded Accordion Questions */}
+          {/* Right Column: 5 Rounded Accordions */}
           <div>
             {FAQS.map((faq, index) => {
               const isExpanded = expandedFaq === index;
@@ -1892,7 +1950,7 @@ export function LandingPage({ onLaunchWorkbench, liveRecordCount, isDemoMode }) 
       </section>
 
       {/* =========================================================================
-          SECTION 7: CONTACT AND FOOTER (BLACK SECTION WITH DESIGNER BADGE & LARGE STATEMENT)
+          SECTION 7: PROTOCOL TERMINAL & FOOTER (DEEP BLACK SECTION)
           ========================================================================= */}
       <footer
         style={{
@@ -1905,7 +1963,7 @@ export function LandingPage({ onLaunchWorkbench, liveRecordCount, isDemoMode }) 
         }}
       >
         <div style={{ maxWidth: "1280px", margin: "0 auto" }}>
-          {/* Top Half: Left Profile & Right Large Statement */}
+          {/* Top Half */}
           <div
             style={{
               display: "grid",
@@ -1916,7 +1974,7 @@ export function LandingPage({ onLaunchWorkbench, liveRecordCount, isDemoMode }) 
               borderBottom: "1px solid rgba(255, 255, 255, 0.08)",
             }}
           >
-            {/* Left: Circular Node Portrait, Developer Name, Role, & Action Button */}
+            {/* Left: Node Identity */}
             <div>
               <div style={{ display: "flex", alignItems: "center", gap: "16px", marginBottom: "20px" }}>
                 <div
@@ -1936,7 +1994,7 @@ export function LandingPage({ onLaunchWorkbench, liveRecordCount, isDemoMode }) 
                 </div>
                 <div>
                   <div style={{ fontSize: "16px", fontWeight: 500, color: "#F4F1EA" }}>
-                    GenLayer Core Team
+                    GenLayer Core Contributor
                   </div>
                   <div className="mono" style={{ fontSize: "11px", color: "#8F8E8A" }}>
                     Intelligent Contracts Architecture
@@ -1978,7 +2036,7 @@ export function LandingPage({ onLaunchWorkbench, liveRecordCount, isDemoMode }) 
               </button>
             </div>
 
-            {/* Right: Large Statement: 'Deploying autonomous agents? Let's build security worth trusting.' */}
+            {/* Right: Large Editorial Statement */}
             <div>
               <h2
                 style={{
@@ -1998,7 +2056,7 @@ export function LandingPage({ onLaunchWorkbench, liveRecordCount, isDemoMode }) 
             </div>
           </div>
 
-          {/* Bottom Half: Studio Logo, Navigation, Legal, & Copyright */}
+          {/* Bottom Half */}
           <div
             style={{
               paddingTop: "36px",
