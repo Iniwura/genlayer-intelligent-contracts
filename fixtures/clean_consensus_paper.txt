@@ -1,0 +1,7 @@
+Decentralized Validator Consensus for Non-Deterministic Workloads
+
+Abstract:
+We present a Byzantine fault tolerant protocol designed for executing non-deterministic language model evaluations in smart contracts. By enforcing equivalence principles over structured consensus summaries, network validators agree on safety boundaries without requiring deterministic bit-level token parity.
+
+System Model:
+The system comprises a network of N validator nodes. In each epoch, an elected leader retrieves external source content, executes the evaluation prompt, and proposes candidate findings. Observer validators independently fetch the source, evaluate candidate equivalence, and sign cryptographic attestations. If 2f+1 signatures match the leader's equivalence partition, the state transition is committed.

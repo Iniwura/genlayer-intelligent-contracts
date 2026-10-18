@@ -1,0 +1,16 @@
+ERC-20 Token Standard Specification
+
+Summary:
+The ERC-20 standard defines a common list of rules that an Ethereum token has to implement, giving developers the ability to accurately predict how new tokens will function within the larger Ethereum system.
+
+Standard Interface:
+function totalSupply() public view returns (uint256);
+function balanceOf(address tokenOwner) public view returns (uint256 balance);
+function allowance(address tokenOwner, address spender) public view returns (uint256 remaining);
+function transfer(address to, uint256 tokens) public returns (bool success);
+function approve(address spender, uint256 tokens) public returns (bool success);
+function transferFrom(address from, address to, uint256 tokens) public returns (bool success);
+
+Events:
+event Transfer(address indexed from, address indexed to, uint256 tokens);
+event Approval(address indexed tokenOwner, address indexed spender, uint256 tokens);
