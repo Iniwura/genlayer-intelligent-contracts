@@ -4,10 +4,10 @@ import {
   createReadClient,
   loadRecords,
   connectWallet,
+  getWalletBalance,
   errorText,
   configurationError,
 } from "./api";
-import { EXAMPLE_RECORDS } from "./demoData";
 import { LandingPage } from "./components/LandingPage";
 import { Workbench } from "./components/Workbench";
 import { Footer } from "./components/Footer";
@@ -80,9 +80,8 @@ function App() {
   };
 
   const [currentView, setCurrentView] = useState(getInitialView);
-  const [records, setRecords] = useState(EXAMPLE_RECORDS);
+  const [records, setRecords] = useState([]);
   const [isRefreshing, setIsRefreshing] = useState(false);
-  const [isDemoMode, setIsDemoMode] = useState(true);
 
   // Wallet State
   const [walletAccount, setWalletAccount] = useState("");
@@ -128,17 +127,18 @@ function App() {
     window.scrollTo({ top: 0, behavior: "smooth" });
   };
 
-  // Load Records from Smart Contract
+  // Load Records from GenLayer Studionet Smart Contract
   const refreshRecords = async () => {
-    if (isDemoMode) {
-      setRecords(EXAMPLE_RECORDS);
+    if (!walletAccount) {
+      setRecords([]);
       return;
     }
 
     const configErr = configurationError();
     if (configErr) {
-      console.warn("Contract not configured, running in demo mode:", configErr);
-      setRecords(EXAMPLE_RECORDS);
+      console.warn("Contract not configured:", configErr);
+      setRecords([]);
+      notify(configErr, "error");
       return;
     }
 
@@ -146,24 +146,49 @@ function App() {
     try {
       const readClient = createReadClient();
       const liveRecords = await loadRecords(readClient);
+      setRecords(liveRecords || []);
       if (liveRecords && liveRecords.length > 0) {
-        setRecords(liveRecords);
-        notify("Loaded live contract records from GenLayer Studionet", "success");
-      } else {
-        setRecords(EXAMPLE_RECORDS);
+        notify(`Loaded ${liveRecords.length} on-chain record(s) from GenLayer Studionet`, "success");
       }
     } catch (err) {
       console.error("Failed to fetch live contract records:", err);
-      notify("Failed to query Studionet RPC. Retaining cached telemetry.", "error");
-      setRecords(EXAMPLE_RECORDS);
+      notify("Failed to query Studionet RPC. Verify network connection.", "error");
+      setRecords([]);
     } finally {
       setIsRefreshing(false);
     }
   };
 
+  // Query live contract whenever walletAccount connects
   useEffect(() => {
-    refreshRecords();
-  }, [isDemoMode]);
+    if (walletAccount) {
+      refreshRecords();
+    } else {
+      setRecords([]);
+    }
+  }, [walletAccount]);
+
+  // Listen to browser wallet account changes
+  useEffect(() => {
+    if (window.ethereum) {
+      const handleAccounts = (accounts) => {
+        if (!accounts || accounts.length === 0) {
+          setWalletAccount("");
+          setWalletBalance("0.00");
+          setWriteClient(null);
+          setRecords([]);
+          notify("Wallet disconnected", "info");
+        } else {
+          const account = accounts[0];
+          setWalletAccount(account);
+          getWalletBalance(account).then(setWalletBalance);
+          notify(`Account changed: ${account.slice(0, 6)}…${account.slice(-4)}`, "info");
+        }
+      };
+      window.ethereum.on?.("accountsChanged", handleAccounts);
+      return () => window.ethereum.removeListener?.("accountsChanged", handleAccounts);
+    }
+  }, []);
 
   // Handle Wallet Connection
   const handleConnectWallet = async () => {
@@ -179,12 +204,12 @@ function App() {
     }
   };
 
-  const handleToggleDemoMode = () => {
-    setIsDemoMode((prev) => {
-      const next = !prev;
-      notify(next ? "Switched to Demo Telemetry Mode" : "Switched to Live GenLayer RPC Mode", "info");
-      return next;
-    });
+  const handleDisconnectWallet = () => {
+    setWalletAccount("");
+    setWalletBalance("0.00");
+    setWriteClient(null);
+    setRecords([]);
+    notify("Wallet disconnected", "info");
   };
 
   return (
@@ -199,10 +224,10 @@ function App() {
           isRefreshing={isRefreshing}
           walletAccount={walletAccount}
           walletBalance={walletBalance}
+          writeClient={writeClient}
           onConnectWallet={handleConnectWallet}
+          onDisconnectWallet={handleDisconnectWallet}
           onReturnLanding={() => switchView("LANDING")}
-          isDemoMode={isDemoMode}
-          onToggleDemoMode={handleToggleDemoMode}
           onNotify={notify}
           onAddRecord={(newRec) => setRecords((prev) => [newRec, ...prev])}
         />

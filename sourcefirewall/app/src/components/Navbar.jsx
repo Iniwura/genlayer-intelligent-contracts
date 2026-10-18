@@ -63,14 +63,6 @@ export function Navbar({
             <span>STUDIONET [{CHAIN_ID}]</span>
           </div>
 
-          <button
-            className="btn-minimal-outline"
-            onClick={onToggleDemoMode}
-            title="Toggle between cached demo telemetry and live RPC queries"
-          >
-            {isDemoMode ? "DEMO" : "LIVE RPC"}
-          </button>
-
           {walletAccount ? (
             <div className="btn-minimal-outline">
               {walletAccount.slice(0, 6)}…{walletAccount.slice(-4)} | {walletBalance} GEN
