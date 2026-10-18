@@ -126,7 +126,7 @@ class SourceFirewall:
               )
             }
           >
-            📋 Copy Code
+            [COPY CODE]
           </button>
         </div>
 

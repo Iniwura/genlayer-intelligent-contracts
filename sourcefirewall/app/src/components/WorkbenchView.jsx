@@ -376,7 +376,7 @@ export function WorkbenchView({
           {/* Cryptographic Attestation Card */}
           <div className="ledger-card">
             <div className="ledger-card-title">
-              <span>🔒</span>
+              <span className="mono" style={{ fontSize: "10px", color: "var(--color-muted)" }}>[PROOF]</span>
               <span>Cryptographic Proof Ledger</span>
             </div>
 
@@ -384,7 +384,7 @@ export function WorkbenchView({
               <div className="attestation-key">Result Fingerprint</div>
               <div className="attestation-val">
                 <span>{active.result_fingerprint || "46224ad3fe2dd13c24eb50e353505b28acd054e0"}</span>
-                <button onClick={() => handleCopy(active.result_fingerprint, "Fingerprint")}>📋</button>
+                <button onClick={() => handleCopy(active.result_fingerprint, "Fingerprint")}>[COPY]</button>
               </div>
             </div>
 
@@ -399,7 +399,7 @@ export function WorkbenchView({
                 >
                   {CONTRACT_ADDRESS.slice(0, 10)}…{CONTRACT_ADDRESS.slice(-6)} ↗
                 </a>
-                <button onClick={() => handleCopy(CONTRACT_ADDRESS, "Contract Address")}>📋</button>
+                <button onClick={() => handleCopy(CONTRACT_ADDRESS, "Contract Address")}>[COPY]</button>
               </div>
             </div>
 

@@ -204,6 +204,7 @@ function App() {
           isDemoMode={isDemoMode}
           onToggleDemoMode={handleToggleDemoMode}
           onNotify={notify}
+          onAddRecord={(newRec) => setRecords((prev) => [newRec, ...prev])}
         />
       )}
 

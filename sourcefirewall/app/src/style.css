@@ -218,8 +218,23 @@ button {
 
 /* Monumental Hero Section (John Moore Tribute) */
 .hero-monumental {
-  padding: 48px 0 64px;
+  position: relative;
+  padding: 56px 0 72px;
   border-bottom: 1px solid var(--color-hairline);
+  background:
+    radial-gradient(ellipse 70% 50% at 50% 90%, rgba(255, 255, 255, 0.04), transparent 70%),
+    linear-gradient(to bottom, #000000 0%, #050505 60%, #000000 100%);
+  overflow: hidden;
+}
+
+.hero-monumental::before {
+  content: "";
+  position: absolute;
+  inset: 0;
+  background-image: radial-gradient(circle at 50% 50%, rgba(255, 255, 255, 0.035) 1px, transparent 1px);
+  background-size: 32px 32px;
+  pointer-events: none;
+  opacity: 0.8;
 }
 
 .hero-giant-title {
@@ -549,9 +564,15 @@ button {
     grid-template-columns: repeat(2, 1fr);
   }
 }
-@media (max-width: 500px) {
+@media (max-width: 640px) {
   .invariants-spec-grid {
-    grid-template-columns: 1fr;
+    grid-template-columns: 1fr !important;
+  }
+  .terminal-nav .nav-status-pill {
+    display: none;
+  }
+  .terminal-nav .container {
+    padding: 0 16px !important;
   }
 }
 
@@ -750,4 +771,52 @@ button {
   background: rgba(0, 0, 0, 0.95);
   backdrop-filter: blur(12px);
   border-bottom: 1px solid var(--color-hairline);
+}
+
+/* Brutalist Modal & Verification Animations */
+.brutalist-modal-backdrop {
+  position: fixed;
+  inset: 0;
+  background: rgba(0, 0, 0, 0.85);
+  backdrop-filter: blur(8px);
+  -webkit-backdrop-filter: blur(8px);
+  z-index: 1000;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 24px;
+}
+
+.brutalist-modal-panel {
+  background: #0A0A0A;
+  border: 1px solid var(--color-stone-border);
+  width: 100%;
+  max-width: 640px;
+  padding: 32px;
+  box-shadow: 0 32px 64px rgba(0, 0, 0, 0.95);
+  position: relative;
+}
+
+.brutalist-modal-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding-bottom: 16px;
+  border-bottom: 1px solid var(--color-hairline);
+  margin-bottom: 24px;
+}
+
+.pulsing-validator {
+  animation: validator-pulse 1s infinite ease-in-out;
+}
+
+@keyframes validator-pulse {
+  0%, 100% {
+    opacity: 1;
+    color: var(--color-white);
+  }
+  50% {
+    opacity: 0.35;
+    color: var(--color-dim);
+  }
 }
