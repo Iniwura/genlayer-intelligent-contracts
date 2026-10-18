@@ -21,7 +21,15 @@ export function Workbench({
   onNotify,
   onAddRecord,
 }) {
+  const [workbenchView, setWorkbenchView] = useState(() =>
+    typeof window !== "undefined" &&
+    window.location.search.includes("view=detail")
+      ? "DETAIL"
+      : "DASHBOARD"
+  );
   const [selectedRecordId, setSelectedRecordId] = useState("");
+  const [ledgerSearch, setLedgerSearch] = useState("");
+  const [ledgerFilter, setLedgerFilter] = useState("ALL"); // "ALL" | "QUARANTINED" | "CLEARED"
   const [historySearch, setHistorySearch] = useState("");
   const [showPassed, setShowPassed] = useState(false);
   const [isVerifying, setIsVerifying] = useState(false);
@@ -286,6 +294,7 @@ export function Workbench({
       onAddRecord(newRecord);
     }
     setSelectedRecordId(newRecord.record_id);
+    setWorkbenchView("DETAIL");
     setIsNewTargetModalOpen(false);
     setNewLabel("");
     setNewUrl("");
@@ -309,6 +318,51 @@ export function Workbench({
   const passedFindings = (active?.findings || []).filter(
     (f) => f.severity === "LOW" || !f.severity
   );
+
+  // Top-Level KPI Metrics for Global Ledger Dashboard
+  const totalProcessed = records.length;
+  const activeQuarantines = records.filter(
+    (r) =>
+      r.state === "QUARANTINED" ||
+      r.decision === "BLOCK" ||
+      r.decision === "REVIEW"
+  ).length;
+  const clearedCount = totalProcessed - activeQuarantines;
+  const quarantineRate =
+    totalProcessed > 0
+      ? Math.round((activeQuarantines / totalProcessed) * 100)
+      : 0;
+
+  // Filter records for the Global Ledger Dashboard Table
+  const ledgerRecords = records.filter((rec) => {
+    if (ledgerFilter === "QUARANTINED") {
+      if (
+        !(
+          rec.state === "QUARANTINED" ||
+          rec.decision === "BLOCK" ||
+          rec.decision === "REVIEW"
+        )
+      ) {
+        return false;
+      }
+    } else if (ledgerFilter === "CLEARED") {
+      if (
+        rec.state === "QUARANTINED" ||
+        rec.decision === "BLOCK" ||
+        rec.decision === "REVIEW"
+      ) {
+        return false;
+      }
+    }
+    const q = ledgerSearch.toLowerCase().trim();
+    if (!q) return true;
+    return (
+      rec.record_id.toLowerCase().includes(q) ||
+      (rec.agent_purpose && rec.agent_purpose.toLowerCase().includes(q)) ||
+      (rec.source_label && rec.source_label.toLowerCase().includes(q)) ||
+      (rec.source_url && rec.source_url.toLowerCase().includes(q))
+    );
+  });
 
   // Filter archived logs based on search input
   const filteredRecords = records.filter((rec) => {
@@ -512,8 +566,633 @@ export function Workbench({
               Reading live consensus records from contract {CONTRACT_ADDRESS.slice(0, 8)}…
             </div>
           </div>
+        ) : workbenchView === "DASHBOARD" ? (
+          /* STAGE 1: Global Ledger Dashboard (Home State) */
+          <div>
+            {/* 1. Dashboard Header & Action Controls */}
+            <div
+              style={{
+                display: "flex",
+                justifyContent: "space-between",
+                alignItems: "flex-end",
+                paddingBottom: "20px",
+                borderBottom: "1px solid var(--color-hairline)",
+                marginBottom: "28px",
+                flexWrap: "wrap",
+                gap: "16px",
+              }}
+            >
+              <div>
+                <div
+                  className="mono"
+                  style={{
+                    fontSize: "10px",
+                    color: "var(--color-dim)",
+                    textTransform: "uppercase",
+                    letterSpacing: "0.12em",
+                    marginBottom: "6px",
+                  }}
+                >
+                  GENLAYER STUDIONET // CHAIN ID {CHAIN_ID}
+                </div>
+                <h1
+                  style={{
+                    fontSize: "26px",
+                    fontWeight: 700,
+                    color: "var(--color-white)",
+                    letterSpacing: "-0.02em",
+                    margin: 0,
+                  }}
+                >
+                  Global Ingress Ledger
+                </h1>
+                <p
+                  style={{
+                    fontSize: "13px",
+                    color: "var(--color-muted)",
+                    marginTop: "6px",
+                    maxWidth: "540px",
+                  }}
+                >
+                  Real-time quorum consensus verifying untrusted ingress payloads, web scrapes, and prompt boundaries before agent downstream consumption.
+                </p>
+              </div>
+
+              <div style={{ display: "flex", gap: "10px", flexWrap: "wrap" }}>
+                {onRefresh && (
+                  <button
+                    onClick={onRefresh}
+                    disabled={isRefreshing}
+                    className="btn-minimal-outline"
+                    style={{ fontSize: "11px", padding: "8px 14px" }}
+                    title="Query GenLayer RPC for updated contract state"
+                  >
+                    {isRefreshing ? "Querying RPC…" : "↻ Refresh Ledger"}
+                  </button>
+                )}
+                <button
+                  onClick={() => setIsNewTargetModalOpen(true)}
+                  className="btn-minimal-white"
+                  style={{ fontSize: "11px", padding: "8px 18px" }}
+                >
+                  + Evaluate Ingress Target
+                </button>
+              </div>
+            </div>
+
+            {/* 2. Top-Level Metrics (Horizontal Row of 3 KPI Cards) */}
+            <div
+              style={{
+                display: "grid",
+                gridTemplateColumns: "repeat(auto-fit, minmax(240px, 1fr))",
+                gap: "16px",
+                marginBottom: "36px",
+              }}
+            >
+              {/* Card 1: Total Payloads Processed */}
+              <div
+                style={{
+                  padding: "24px",
+                  background: "var(--color-carbon)",
+                  border: "1px solid var(--color-hairline)",
+                  borderRadius: "2px",
+                }}
+              >
+                <div
+                  className="mono"
+                  style={{
+                    fontSize: "10px",
+                    color: "var(--color-dim)",
+                    letterSpacing: "0.12em",
+                    textTransform: "uppercase",
+                    marginBottom: "10px",
+                  }}
+                >
+                  Total Payloads Processed
+                </div>
+                <div
+                  style={{
+                    fontSize: "36px",
+                    fontWeight: 700,
+                    color: "var(--color-white)",
+                    lineHeight: 1,
+                    marginBottom: "8px",
+                  }}
+                >
+                  {totalProcessed}
+                </div>
+                <div
+                  className="mono"
+                  style={{ fontSize: "11px", color: "var(--color-muted)" }}
+                >
+                  Recorded on intelligent contract
+                </div>
+              </div>
+
+              {/* Card 2: Active Quarantines */}
+              <div
+                style={{
+                  padding: "24px",
+                  background: "var(--color-carbon)",
+                  border: "1px solid var(--color-hairline)",
+                  borderRadius: "2px",
+                }}
+              >
+                <div
+                  className="mono"
+                  style={{
+                    fontSize: "10px",
+                    color: "var(--color-dim)",
+                    letterSpacing: "0.12em",
+                    textTransform: "uppercase",
+                    marginBottom: "10px",
+                  }}
+                >
+                  Active Quarantines
+                </div>
+                <div
+                  style={{
+                    fontSize: "36px",
+                    fontWeight: 700,
+                    color: activeQuarantines > 0 ? "var(--color-white)" : "var(--color-muted)",
+                    lineHeight: 1,
+                    marginBottom: "8px",
+                    display: "flex",
+                    alignItems: "center",
+                    gap: "12px",
+                  }}
+                >
+                  <span>{activeQuarantines}</span>
+                  {activeQuarantines > 0 && (
+                    <span
+                      style={{
+                        fontSize: "10px",
+                        padding: "2px 8px",
+                        background: "rgba(225, 29, 72, 0.15)",
+                        border: "1px solid #4C0519",
+                        color: "#E11D48",
+                        fontWeight: 600,
+                        letterSpacing: "0.08em",
+                        borderRadius: "2px",
+                      }}
+                    >
+                      {quarantineRate}% BLOCKED
+                    </span>
+                  )}
+                </div>
+                <div
+                  className="mono"
+                  style={{ fontSize: "11px", color: "var(--color-muted)" }}
+                >
+                  Zero-trust ingress isolation
+                </div>
+              </div>
+
+              {/* Card 3: Contract Status */}
+              <div
+                style={{
+                  padding: "24px",
+                  background: "var(--color-carbon)",
+                  border: "1px solid var(--color-hairline)",
+                  borderRadius: "2px",
+                }}
+              >
+                <div
+                  className="mono"
+                  style={{
+                    fontSize: "10px",
+                    color: "var(--color-dim)",
+                    letterSpacing: "0.12em",
+                    textTransform: "uppercase",
+                    marginBottom: "10px",
+                  }}
+                >
+                  Contract Status
+                </div>
+                <div
+                  style={{
+                    fontSize: "36px",
+                    fontWeight: 700,
+                    color: "var(--color-white)",
+                    lineHeight: 1,
+                    marginBottom: "8px",
+                    display: "flex",
+                    alignItems: "center",
+                    gap: "12px",
+                  }}
+                >
+                  <span
+                    style={{
+                      width: "10px",
+                      height: "10px",
+                      borderRadius: "50%",
+                      background: "var(--color-cleared)",
+                      display: "inline-block",
+                      boxShadow: "0 0 10px rgba(16, 185, 129, 0.6)",
+                    }}
+                  />
+                  Live
+                </div>
+                <div
+                  className="mono"
+                  style={{ fontSize: "11px", color: "var(--color-muted)" }}
+                >
+                  Studionet [Chain ID {CHAIN_ID}]
+                </div>
+              </div>
+            </div>
+
+            {/* 3. The Global Ledger Table */}
+            <div>
+              {/* Table Sub-Header & Search Controls */}
+              <div
+                style={{
+                  display: "flex",
+                  justifyContent: "space-between",
+                  alignItems: "center",
+                  marginBottom: "16px",
+                  gap: "16px",
+                  flexWrap: "wrap",
+                }}
+              >
+                <div style={{ display: "flex", alignItems: "center", gap: "10px" }}>
+                  <span
+                    className="mono"
+                    style={{
+                      fontSize: "11px",
+                      fontWeight: 700,
+                      color: "var(--color-white)",
+                      letterSpacing: "0.08em",
+                      textTransform: "uppercase",
+                    }}
+                  >
+                    Evaluated Ingress Records
+                  </span>
+                  <span
+                    className="mono"
+                    style={{
+                      fontSize: "10px",
+                      color: "var(--color-muted)",
+                      padding: "2px 8px",
+                      border: "1px solid var(--color-hairline)",
+                      background: "var(--color-carbon)",
+                    }}
+                  >
+                    {ledgerRecords.length} of {records.length}
+                  </span>
+                </div>
+
+                <div
+                  style={{
+                    display: "flex",
+                    alignItems: "center",
+                    gap: "10px",
+                    flexWrap: "wrap",
+                  }}
+                >
+                  {/* Search Filter */}
+                  <input
+                    type="text"
+                    placeholder="Filter records by ID, purpose, or URL…"
+                    value={ledgerSearch}
+                    onChange={(e) => setLedgerSearch(e.target.value)}
+                    style={{
+                      padding: "7px 12px",
+                      background: "var(--color-black)",
+                      border: "1px solid var(--color-hairline)",
+                      color: "var(--color-white)",
+                      fontFamily: "var(--font-mono)",
+                      fontSize: "11px",
+                      minWidth: "260px",
+                      borderRadius: "2px",
+                      outline: "none",
+                    }}
+                  />
+
+                  {/* Filter Pills */}
+                  <div
+                    style={{
+                      display: "inline-flex",
+                      border: "1px solid var(--color-hairline)",
+                    }}
+                  >
+                    {["ALL", "QUARANTINED", "CLEARED"].map((f) => (
+                      <button
+                        key={f}
+                        onClick={() => setLedgerFilter(f)}
+                        className="mono"
+                        style={{
+                          fontSize: "10px",
+                          padding: "6px 12px",
+                          background:
+                            ledgerFilter === f
+                              ? "var(--color-white)"
+                              : "var(--color-carbon)",
+                          color:
+                            ledgerFilter === f
+                              ? "var(--color-black)"
+                              : "var(--color-dim)",
+                          fontWeight: ledgerFilter === f ? 700 : 500,
+                          cursor: "pointer",
+                          border: "none",
+                          transition: "all 0.15s ease",
+                        }}
+                      >
+                        {f}
+                      </button>
+                    ))}
+                  </div>
+                </div>
+              </div>
+
+              {/* Table Container */}
+              <div
+                style={{
+                  border: "1px solid var(--color-hairline)",
+                  background: "var(--color-carbon)",
+                  borderRadius: "2px",
+                  overflow: "hidden",
+                }}
+              >
+                {ledgerRecords.length === 0 ? (
+                  <div
+                    style={{
+                      padding: "48px 24px",
+                      textAlign: "center",
+                    }}
+                  >
+                    <div
+                      className="mono"
+                      style={{
+                        fontSize: "11px",
+                        color: "var(--color-dim)",
+                        marginBottom: "8px",
+                      }}
+                    >
+                      NO RECORDS MATCH CRITERIA
+                    </div>
+                    <div
+                      style={{
+                        fontSize: "14px",
+                        color: "var(--color-stone)",
+                        marginBottom: "16px",
+                      }}
+                    >
+                      {records.length === 0
+                        ? "No ingress records committed to this contract yet."
+                        : "No records found matching your active filter query."}
+                    </div>
+                    <button
+                      onClick={() => {
+                        setLedgerSearch("");
+                        setLedgerFilter("ALL");
+                        if (records.length === 0) setIsNewTargetModalOpen(true);
+                      }}
+                      className="btn-minimal-outline"
+                      style={{ fontSize: "11px", padding: "6px 14px" }}
+                    >
+                      {records.length === 0
+                        ? "+ Evaluate Ingress Target"
+                        : "Clear Search Filters"}
+                    </button>
+                  </div>
+                ) : (
+                  <div style={{ width: "100%", overflowX: "auto" }}>
+                    <table
+                      style={{
+                        width: "100%",
+                        borderCollapse: "collapse",
+                        textAlign: "left",
+                      }}
+                    >
+                      <thead>
+                        <tr
+                          className="mono"
+                          style={{
+                            fontSize: "10px",
+                            color: "var(--color-dim)",
+                            borderBottom: "1px solid var(--color-hairline)",
+                            background: "var(--color-black)",
+                            letterSpacing: "0.1em",
+                            textTransform: "uppercase",
+                          }}
+                        >
+                          <th style={{ padding: "12px 20px" }}>Record ID</th>
+                          <th style={{ padding: "12px 20px" }}>
+                            Downstream Target Purpose
+                          </th>
+                          <th style={{ padding: "12px 20px" }}>Source Stream</th>
+                          <th style={{ padding: "12px 20px" }}>Status</th>
+                          <th
+                            style={{ padding: "12px 20px", textAlign: "right" }}
+                          >
+                            Action
+                          </th>
+                        </tr>
+                      </thead>
+                      <tbody>
+                        {ledgerRecords.map((rec) => {
+                          const isRecQuarantined =
+                            rec.state === "QUARANTINED" ||
+                            rec.decision === "BLOCK" ||
+                            rec.decision === "REVIEW";
+
+                          return (
+                            <tr
+                              key={rec.record_id}
+                              onClick={() => {
+                                setSelectedRecordId(rec.record_id);
+                                setWorkbenchView("DETAIL");
+                                window.scrollTo({ top: 0, behavior: "smooth" });
+                              }}
+                              style={{
+                                borderBottom: "1px solid var(--color-hairline)",
+                                cursor: "pointer",
+                                transition: "background 0.15s ease",
+                              }}
+                              onMouseEnter={(e) => {
+                                e.currentTarget.style.background =
+                                  "var(--color-surface)";
+                              }}
+                              onMouseLeave={(e) => {
+                                e.currentTarget.style.background = "transparent";
+                              }}
+                            >
+                              {/* Record ID */}
+                              <td style={{ padding: "16px 20px" }}>
+                                <div
+                                  className="mono"
+                                  style={{
+                                    fontSize: "12px",
+                                    fontWeight: 700,
+                                    color: "var(--color-white)",
+                                    letterSpacing: "0.05em",
+                                  }}
+                                >
+                                  {rec.record_id.toUpperCase()}
+                                </div>
+                                <div
+                                  className="mono"
+                                  style={{
+                                    fontSize: "10px",
+                                    color: "var(--color-dim)",
+                                    marginTop: "2px",
+                                  }}
+                                >
+                                  {rec.evaluation_attempts || 1} Run(s) Recorded
+                                </div>
+                              </td>
+
+                              {/* Downstream Target Purpose */}
+                              <td
+                                style={{
+                                  padding: "16px 20px",
+                                  maxWidth: "360px",
+                                }}
+                              >
+                                <div
+                                  style={{
+                                    fontSize: "13px",
+                                    color: "var(--color-stone)",
+                                    fontWeight: 500,
+                                    lineHeight: 1.4,
+                                  }}
+                                >
+                                  {rec.agent_purpose ||
+                                    "Autonomous cognitive ingress processing"}
+                                </div>
+                              </td>
+
+                              {/* Source Stream */}
+                              <td style={{ padding: "16px 20px" }}>
+                                <div
+                                  style={{
+                                    fontSize: "12px",
+                                    color: "var(--color-white)",
+                                    fontWeight: 600,
+                                    marginBottom: "2px",
+                                  }}
+                                >
+                                  {rec.source_label || "Ingress Target"}
+                                </div>
+                                <div
+                                  className="mono"
+                                  style={{
+                                    fontSize: "11px",
+                                    color: "var(--color-muted)",
+                                    maxWidth: "220px",
+                                    overflow: "hidden",
+                                    textOverflow: "ellipsis",
+                                    whiteSpace: "nowrap",
+                                  }}
+                                  title={rec.source_url}
+                                >
+                                  {rec.source_url}
+                                </div>
+                              </td>
+
+                              {/* Status */}
+                              <td style={{ padding: "16px 20px" }}>
+                                {isRecQuarantined ? (
+                                  <div
+                                    style={{
+                                      display: "inline-flex",
+                                      alignItems: "center",
+                                      gap: "6px",
+                                      padding: "4px 10px",
+                                      background: "rgba(225, 29, 72, 0.08)",
+                                      border: "1px solid #4C0519",
+                                      borderRadius: "2px",
+                                    }}
+                                  >
+                                    <span
+                                      style={{
+                                        width: "6px",
+                                        height: "6px",
+                                        borderRadius: "50%",
+                                        background: "#E11D48",
+                                      }}
+                                    />
+                                    <span
+                                      className="mono"
+                                      style={{
+                                        fontSize: "10px",
+                                        fontWeight: 700,
+                                        color: "#E11D48",
+                                        letterSpacing: "0.08em",
+                                      }}
+                                    >
+                                      THREAT INTERCEPTED
+                                    </span>
+                                  </div>
+                                ) : (
+                                  <div
+                                    style={{
+                                      display: "inline-flex",
+                                      alignItems: "center",
+                                      gap: "6px",
+                                      padding: "4px 10px",
+                                      background: "rgba(16, 185, 129, 0.08)",
+                                      border: "1px solid #064E3B",
+                                      borderRadius: "2px",
+                                    }}
+                                  >
+                                    <span
+                                      style={{
+                                        width: "6px",
+                                        height: "6px",
+                                        borderRadius: "50%",
+                                        background: "#10B981",
+                                      }}
+                                    />
+                                    <span
+                                      className="mono"
+                                      style={{
+                                        fontSize: "10px",
+                                        fontWeight: 700,
+                                        color: "#10B981",
+                                        letterSpacing: "0.08em",
+                                      }}
+                                    >
+                                      CERTIFIED SAFE
+                                    </span>
+                                  </div>
+                                )}
+                              </td>
+
+                              {/* Action */}
+                              <td
+                                style={{
+                                  padding: "16px 20px",
+                                  textAlign: "right",
+                                }}
+                              >
+                                <span
+                                  className="mono"
+                                  style={{
+                                    fontSize: "11px",
+                                    color: "var(--color-stone)",
+                                    display: "inline-flex",
+                                    alignItems: "center",
+                                    gap: "4px",
+                                  }}
+                                >
+                                  <span>Inspect</span>
+                                  <span>→</span>
+                                </span>
+                              </td>
+                            </tr>
+                          );
+                        })}
+                      </tbody>
+                    </table>
+                  </div>
+                )}
+              </div>
+            </div>
+          </div>
         ) : !active ? (
-          /* Empty Records State */
+          /* Empty Records State / Not Found in Detail View */
           <div
             style={{
               minHeight: "360px",
@@ -528,26 +1207,94 @@ export function Workbench({
               marginTop: "24px",
             }}
           >
-            <div className="mono" style={{ fontSize: "11px", color: "var(--color-dim)", marginBottom: "12px" }}>
+            <div
+              className="mono"
+              style={{
+                fontSize: "11px",
+                color: "var(--color-dim)",
+                marginBottom: "12px",
+              }}
+            >
               ZERO ON-CHAIN RECORDS COMMITTED
             </div>
-            <h3 style={{ fontSize: "20px", color: "var(--color-white)", marginBottom: "12px" }}>
+            <h3
+              style={{
+                fontSize: "20px",
+                color: "var(--color-white)",
+                marginBottom: "12px",
+              }}
+            >
               No Ingress Records Found at Contract
             </h3>
-            <p style={{ maxWidth: "460px", fontSize: "13px", color: "var(--color-stone)", marginBottom: "24px", lineHeight: 1.6 }}>
-              Submit an ingress target to execute an on-chain multi-validator consensus evaluation against GenLayer Studionet.
-            </p>
-            <button
-              onClick={() => setIsNewTargetModalOpen(true)}
-              className="btn-minimal-white"
-              style={{ padding: "10px 24px", fontSize: "12px" }}
+            <p
+              style={{
+                maxWidth: "460px",
+                fontSize: "13px",
+                color: "var(--color-stone)",
+                marginBottom: "24px",
+                lineHeight: 1.6,
+              }}
             >
-              + Evaluate Ingress Target
-            </button>
+              Submit an ingress target to execute an on-chain multi-validator
+              consensus evaluation against GenLayer Studionet.
+            </p>
+            <div style={{ display: "flex", gap: "12px" }}>
+              <button
+                onClick={() => setWorkbenchView("DASHBOARD")}
+                className="btn-minimal-outline"
+                style={{ padding: "10px 20px", fontSize: "12px" }}
+              >
+                ← Back to Ledger
+              </button>
+              <button
+                onClick={() => setIsNewTargetModalOpen(true)}
+                className="btn-minimal-white"
+                style={{ padding: "10px 24px", fontSize: "12px" }}
+              >
+                + Evaluate Ingress Target
+              </button>
+            </div>
           </div>
         ) : (
-          /* Connected & Live Record Display */
+          /* STAGE 2: Target Detail View (Current Threat Report UI) */
           <>
+            {/* Minimal Back to Ledger Navigation Button */}
+            <div style={{ marginBottom: "20px" }}>
+              <button
+                onClick={() => {
+                  setWorkbenchView("DASHBOARD");
+                  window.scrollTo({ top: 0, behavior: "smooth" });
+                }}
+                className="mono"
+                style={{
+                  fontSize: "11px",
+                  color: "var(--color-stone)",
+                  display: "inline-flex",
+                  alignItems: "center",
+                  gap: "8px",
+                  padding: "6px 14px",
+                  border: "1px solid var(--color-hairline)",
+                  background: "var(--color-carbon)",
+                  cursor: "pointer",
+                  transition: "all 0.15s ease",
+                }}
+                onMouseEnter={(e) => {
+                  e.currentTarget.style.color = "var(--color-white)";
+                  e.currentTarget.style.borderColor =
+                    "var(--color-hairline-light)";
+                  e.currentTarget.style.background = "var(--color-surface)";
+                }}
+                onMouseLeave={(e) => {
+                  e.currentTarget.style.color = "var(--color-stone)";
+                  e.currentTarget.style.borderColor = "var(--color-hairline)";
+                  e.currentTarget.style.background = "var(--color-carbon)";
+                }}
+              >
+                <span>←</span>
+                <span>Back to Ledger</span>
+              </button>
+            </div>
+
             {/* Active Target Header & Action Buttons */}
             <div
               style={{
