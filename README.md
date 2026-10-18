@@ -76,7 +76,7 @@ Every finding recorded on-chain includes:
 
 ## 3. GenLayer Intelligent Contract Integration
 
-SourceFirewall is implemented as a native GenLayer Intelligent Contract in [`sourcefirewall/contracts/source_firewall.py`](sourcefirewall/contracts/source_firewall.py).
+SourceFirewall is implemented as a native GenLayer Intelligent Contract in [`contracts/source_firewall.py`](contracts/source_firewall.py).
 
 ### Non-Deterministic Consensus (`gl.vm.run_nondet`)
 Because language models are non-deterministic, SourceFirewall leverages GenLayer's equivalence principle to achieve deterministic consensus:
@@ -118,7 +118,7 @@ When consensus is reached, the contract registers an immutable record:
 
 ## 4. UX Architecture: Master-Detail Workflow
 
-The frontend ([`sourcefirewall/app/`](sourcefirewall/app/)) follows a Swiss Brutalist aesthetic benchmarked to high-contrast monochrome design principles.
+The frontend ([`app/`](app/)) follows a Swiss Brutalist aesthetic benchmarked to high-contrast monochrome design principles.
 
 ### Master View: Global Ledger Dashboard (Home State)
 When connected to GenLayer Studionet, users land directly on the **Global Ledger Dashboard**:
@@ -186,22 +186,22 @@ python populate_ledger.py
 The contract test suite verifies bounded storage, HTTPS source sanitization, fail-closed defaults, and consensus equivalence across 31 direct test cases:
 ```bash
 # Activate Python environment
-.\.venv\Scripts\pytest sourcefirewall\tests
+.\.venv\Scripts\pytest
 ```
 ```
-31 passed in 0.52s (100%)
+31 passed in 1.24s (100%)
 ```
 
 ### Running the Frontend Locally
 ```bash
-cd sourcefirewall/app
+cd app
 npm install
 npm run dev
 ```
 
 ### Building for Production
 ```bash
-cd sourcefirewall/app
+cd app
 npm run build
 ```
 

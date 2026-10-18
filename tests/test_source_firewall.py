@@ -4,7 +4,7 @@ import json
 import pytest
 
 
-CONTRACT = "sourcefirewall/contracts/source_firewall.py"
+CONTRACT = "contracts/source_firewall.py"
 SOURCE_URL = "https://source.example/research/article"
 SOURCE_BODY = "A public report with ordinary facts and no operational instructions."
 CATEGORIES = (
