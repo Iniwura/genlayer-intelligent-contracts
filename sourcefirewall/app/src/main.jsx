@@ -8,11 +8,8 @@ import {
   configurationError,
 } from "./api";
 import { EXAMPLE_RECORDS } from "./demoData";
-import { Navbar } from "./components/Navbar";
-import { InterceptorView } from "./components/InterceptorView";
-import { WorkbenchView } from "./components/WorkbenchView";
-import { SdkView } from "./components/SdkView";
-import { ArchitectureView } from "./components/ArchitectureView";
+import { LandingPage } from "./components/LandingPage";
+import { Workbench } from "./components/Workbench";
 import { Footer } from "./components/Footer";
 import "./style.css";
 
@@ -39,31 +36,31 @@ class ErrorBoundary extends React.Component {
             display: "flex",
             alignItems: "center",
             justifyContent: "center",
-            backgroundColor: "#050608",
-            color: "#f1f5f9",
+            backgroundColor: "#000000",
+            color: "#FFFFFF",
             padding: "24px",
-            fontFamily: "var(--font-sans)",
+            fontFamily: "var(--font-mono)",
           }}
         >
           <div
-            className="cyber-card"
             style={{
               maxWidth: "540px",
               padding: "32px",
-              border: "1px solid #ef4444",
+              border: "1px solid #E11D48",
+              background: "#0A0A0A",
             }}
           >
-            <h2 style={{ margin: "0 0 12px", color: "#ef4444", fontSize: "20px" }}>
-              CRITICAL INTERFACE EXCEPTION
+            <h2 style={{ margin: "0 0 12px", color: "#E11D48", fontSize: "16px" }}>
+              CRITICAL SYSTEM EXCEPTION
             </h2>
-            <p style={{ margin: "0 0 20px", color: "#94a3b8", fontSize: "13px", lineHeight: 1.5 }}>
-              {this.state.error?.message || "An unexpected error occurred while rendering the tactical terminal."}
+            <p style={{ margin: "0 0 20px", color: "#888888", fontSize: "12px", lineHeight: 1.6 }}>
+              {this.state.error?.message || "An unexpected error occurred while rendering the interface."}
             </p>
             <button
               onClick={() => window.location.reload()}
-              className="btn-cyber-primary"
+              className="btn-minimal-white"
             >
-              RELOAD SOURCEFIREWALL
+              RELOAD PROTOCOL
             </button>
           </div>
         </div>
@@ -76,16 +73,10 @@ class ErrorBoundary extends React.Component {
 function App() {
   const getInitialView = () => {
     const hash = window.location.hash.toLowerCase();
-    if (hash.includes("app") || hash.includes("workbench") || hash.includes("soc")) {
+    if (hash.includes("app") || hash.includes("workbench") || hash.includes("terminal")) {
       return "WORKBENCH";
     }
-    if (hash.includes("sdk")) {
-      return "SDK";
-    }
-    if (hash.includes("arch") || hash.includes("taxonomy")) {
-      return "ARCHITECTURE";
-    }
-    return "INTERCEPTOR";
+    return "LANDING";
   };
 
   const [currentView, setCurrentView] = useState(getInitialView);
@@ -117,14 +108,10 @@ function App() {
   useEffect(() => {
     const handleHashChange = () => {
       const hash = window.location.hash.toLowerCase();
-      if (hash.includes("app") || hash.includes("workbench") || hash.includes("soc")) {
+      if (hash.includes("app") || hash.includes("workbench") || hash.includes("terminal")) {
         setCurrentView("WORKBENCH");
-      } else if (hash.includes("sdk")) {
-        setCurrentView("SDK");
-      } else if (hash.includes("arch") || hash.includes("taxonomy")) {
-        setCurrentView("ARCHITECTURE");
       } else {
-        setCurrentView("INTERCEPTOR");
+        setCurrentView("LANDING");
       }
     };
     window.addEventListener("hashchange", handleHashChange);
@@ -134,11 +121,7 @@ function App() {
   const switchView = (mode) => {
     setCurrentView(mode);
     if (mode === "WORKBENCH") {
-      window.location.hash = "workbench";
-    } else if (mode === "SDK") {
-      window.location.hash = "sdk";
-    } else if (mode === "ARCHITECTURE") {
-      window.location.hash = "architecture";
+      window.location.hash = "app";
     } else {
       window.location.hash = "";
     }
@@ -206,55 +189,51 @@ function App() {
 
   return (
     <div className="app-shell">
-      {/* Top Cyber Navigation */}
-      <Navbar
-        currentView={currentView}
-        onSelectView={switchView}
-        isDemoMode={isDemoMode}
-        onToggleDemoMode={handleToggleDemoMode}
-        walletAccount={walletAccount}
-        walletBalance={walletBalance}
-        onConnectWallet={handleConnectWallet}
-      />
+      {/* View Switch: Landing Page vs Main Operational Terminal */}
+      {currentView === "LANDING" ? (
+        <LandingPage onLaunchApp={() => switchView("WORKBENCH")} />
+      ) : (
+        <Workbench
+          records={records}
+          onRefresh={refreshRecords}
+          isRefreshing={isRefreshing}
+          walletAccount={walletAccount}
+          walletBalance={walletBalance}
+          onConnectWallet={handleConnectWallet}
+          onReturnLanding={() => switchView("LANDING")}
+          isDemoMode={isDemoMode}
+          onToggleDemoMode={handleToggleDemoMode}
+          onNotify={notify}
+        />
+      )}
 
-      {/* Main Active View */}
-      <main style={{ flex: 1 }}>
-        {currentView === "INTERCEPTOR" && (
-          <InterceptorView
-            onOpenWorkbench={() => switchView("WORKBENCH")}
-            onOpenSdk={() => switchView("SDK")}
-          />
-        )}
+      {/* Minimal Footer */}
+      <Footer onSelectView={(view) => (view === "WORKBENCH" ? switchView("WORKBENCH") : switchView("LANDING"))} />
 
-        {currentView === "WORKBENCH" && (
-          <WorkbenchView
-            records={records}
-            onRefresh={refreshRecords}
-            isRefreshing={isRefreshing}
-            onNotify={notify}
-            onReturnLanding={() => switchView("INTERCEPTOR")}
-          />
-        )}
-
-        {currentView === "SDK" && <SdkView onNotify={notify} />}
-
-        {currentView === "ARCHITECTURE" && <ArchitectureView />}
-      </main>
-
-      {/* Unified Cyber Footer */}
-      <Footer onSelectView={switchView} />
-
-      {/* Global Tactical Toast */}
+      {/* Global Toast */}
       {toast && (
-        <div className={`tactical-toast ${toast.type}`}>
-          <span className="mono" style={{ fontSize: "11px", fontWeight: 700 }}>
-            [{toast.type.toUpperCase()}]
-          </span>
-          <span style={{ flex: 1 }}>{toast.message}</span>
-          <button
-            onClick={() => setToast(null)}
-            style={{ color: "var(--text-muted)", fontSize: "14px" }}
-          >
+        <div
+          style={{
+            position: "fixed",
+            bottom: "24px",
+            right: "24px",
+            zIndex: 9999,
+            padding: "12px 18px",
+            background: "#111111",
+            border: "1px solid #2A2A2A",
+            borderLeft: `3px solid ${toast.type === "error" ? "#E11D48" : "#10B981"}`,
+            fontSize: "12px",
+            color: "#FFFFFF",
+            fontFamily: "var(--font-mono)",
+            display: "flex",
+            alignItems: "center",
+            gap: "12px",
+            boxShadow: "0 8px 24px rgba(0,0,0,0.8)",
+          }}
+        >
+          <span>[{toast.type.toUpperCase()}]</span>
+          <span>{toast.message}</span>
+          <button onClick={() => setToast(null)} style={{ color: "#888888", marginLeft: "8px" }}>
             ✕
           </button>
         </div>
