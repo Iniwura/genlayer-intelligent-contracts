@@ -17,6 +17,7 @@ export function Workbench({
   const [selectedRecordId, setSelectedRecordId] = useState(
     records[0]?.record_id || "rec-live-001"
   );
+  const [historySearch, setHistorySearch] = useState("");
   const [showPassed, setShowPassed] = useState(false);
   const [isVerifying, setIsVerifying] = useState(false);
   const [verifyStage, setVerifyStage] = useState(0);
@@ -47,18 +48,18 @@ export function Workbench({
 
     setTimeout(() => {
       setVerifyStage(2);
-    }, 400);
+    }, 350);
 
     setTimeout(() => {
       setVerifyStage(3);
-    }, 800);
+    }, 700);
 
     setTimeout(() => {
       setVerifyStage(4);
       setIsVerifying(false);
-      setVerifyLatency(Math.floor(260 + Math.random() * 80));
-      onNotify?.("Consensus verified: 3/3 validator agreement confirmed on Studionet.", "success");
-    }, 1200);
+      setVerifyLatency(Math.floor(250 + Math.random() * 70));
+      onNotify?.("Consensus verified: 3/3 validator agreement confirmed.", "success");
+    }, 1050);
   };
 
   const handleExportJson = () => {
@@ -67,11 +68,11 @@ export function Workbench({
       encodeURIComponent(JSON.stringify(active, null, 2));
     const dl = document.createElement("a");
     dl.setAttribute("href", dataStr);
-    dl.setAttribute("download", `${active.record_id}_attestation.json`);
+    dl.setAttribute("download", `${active.record_id}_audit.json`);
     document.body.appendChild(dl);
     dl.click();
     dl.remove();
-    onNotify?.("Exported attestation JSON", "info");
+    onNotify?.("Exported audit JSON", "info");
   };
 
   const applyPreset = (type) => {
@@ -119,7 +120,7 @@ export function Workbench({
       payloadLower.includes("password") ||
       payloadLower.includes("leak");
 
-    const recordId = `rec-custom-${Math.floor(1000 + Math.random() * 9000)}`;
+    const recordId = `rec-live-${Math.floor(100 + Math.random() * 900)}`;
     const randomHash = Array.from({ length: 64 }, () =>
       Math.floor(Math.random() * 16).toString(16)
     ).join("");
@@ -128,7 +129,7 @@ export function Workbench({
     if (hasInjection) {
       newRecord = {
         record_id: recordId,
-        source_label: newLabel.trim() || "Custom Adversarial Ingress",
+        source_label: newLabel.trim() || "Custom Ingress Stream",
         source_url: newUrl.trim(),
         agent_purpose: newPurpose.trim() || "Autonomous analysis agent",
         source_digest: randomHash,
@@ -149,14 +150,14 @@ export function Workbench({
             evidence_quote:
               newPayload.slice(0, 120) + (newPayload.length > 120 ? "…" : ""),
             explanation:
-              "Deterministic evaluation detected adversarial instruction hijacking attempting to breach system guardrails.",
+              "The input document attempts to hijack the agent's instructions by commanding it to override security boundaries and leak internal keys.",
           },
         ],
       };
     } else {
       newRecord = {
         record_id: recordId,
-        source_label: newLabel.trim() || "Custom Verified Ingress",
+        source_label: newLabel.trim() || "Custom Ingress Stream",
         source_url: newUrl.trim(),
         agent_purpose: newPurpose.trim() || "Autonomous analysis agent",
         source_digest: randomHash,
@@ -205,7 +206,7 @@ export function Workbench({
     setNewPurpose("");
     setNewPayload("");
     onNotify?.(
-      `Target ${recordId.toUpperCase()} committed to consensus quorum: ${newRecord.decision}`,
+      `Target ${recordId.toUpperCase()} evaluated: ${newRecord.decision === "BLOCK" ? "THREAT INTERCEPTED" : "CERTIFIED SAFE"}`,
       "success"
     );
   };
@@ -221,6 +222,17 @@ export function Workbench({
   const passedFindings = (active.findings || []).filter(
     (f) => f.severity === "LOW" || !f.severity
   );
+
+  // Filter archived logs based on search input
+  const filteredRecords = records.filter((rec) => {
+    const q = historySearch.toLowerCase().trim();
+    if (!q) return true;
+    return (
+      rec.record_id.toLowerCase().includes(q) ||
+      (rec.source_label && rec.source_label.toLowerCase().includes(q)) ||
+      (rec.source_url && rec.source_url.toLowerCase().includes(q))
+    );
+  });
 
   return (
     <div className="terminal-app-shell">
@@ -259,7 +271,7 @@ export function Workbench({
                 letterSpacing: "0.1em",
               }}
             >
-              SOURCEFIREWALL // TERMINAL
+              SOURCEFIREWALL // WORKBENCH
             </div>
           </div>
 
@@ -300,7 +312,7 @@ export function Workbench({
 
       {/* 2. Main Terminal Body */}
       <main className="container" style={{ padding: "32px 32px 80px" }}>
-        {/* Terminal Header & Target Strip */}
+        {/* Active Target Header & Action Buttons */}
         <div
           style={{
             display: "flex",
@@ -324,7 +336,7 @@ export function Workbench({
                 marginBottom: "4px",
               }}
             >
-              ACTIVE INGRESS TARGET
+              ACTIVE TARGET
             </div>
             <h2
               style={{
@@ -353,7 +365,7 @@ export function Workbench({
               onClick={handleExportJson}
               style={{ fontSize: "11px" }}
             >
-              Export Attestation (JSON)
+              Export Audit (JSON)
             </button>
             <button
               className="btn-minimal-white"
@@ -361,66 +373,135 @@ export function Workbench({
               disabled={isVerifying}
               style={{ fontSize: "11px" }}
             >
-              {isVerifying ? "Verifying Quorum…" : "Consensus Verification"}
+              {isVerifying ? "Verifying Quorum…" : "Re-Verify Threat"}
             </button>
           </div>
         </div>
 
-        {/* Record Selector Tabs with New Target Action */}
+        {/* STAGE 1: Single Live Tab Bar + History Search & Archived Logs */}
         <div
-          className="scenario-strip"
           style={{
-            marginBottom: "28px",
             display: "flex",
             alignItems: "center",
-            overflowX: "auto",
+            justifyContent: "space-between",
+            borderBottom: "1px solid var(--color-hairline)",
+            paddingBottom: "12px",
+            marginBottom: "28px",
+            gap: "16px",
+            flexWrap: "wrap",
           }}
         >
-          {records.map((rec) => {
-            const recQuarantined =
-              rec.state === "QUARANTINED" ||
-              rec.decision === "BLOCK" ||
-              rec.decision === "REVIEW";
-            const isSelected = rec.record_id === active.record_id;
-            return (
-              <button
-                key={rec.record_id}
-                className={`scenario-tab ${isSelected ? "active" : ""}`}
-                onClick={() => setSelectedRecordId(rec.record_id)}
+          {/* Left: Single Active Record Tab + Test New Target Trigger */}
+          <div style={{ display: "flex", alignItems: "center", gap: "12px", flexWrap: "wrap" }}>
+            <div
+              style={{
+                display: "inline-flex",
+                alignItems: "center",
+                gap: "10px",
+                padding: "8px 16px",
+                background: "var(--color-carbon)",
+                border: "1px solid var(--color-hairline)",
+                borderBottom: "2px solid var(--color-white)",
+              }}
+            >
+              <span
+                className={`status-indicator-box ${
+                  isQuarantined ? "quarantined" : "cleared"
+                }`}
               >
+                {isQuarantined ? "QUARANTINED" : "CLEARED"}
+              </span>
+              <span
+                className="mono"
+                style={{
+                  fontSize: "12px",
+                  fontWeight: 700,
+                  color: "var(--color-white)",
+                  letterSpacing: "0.05em",
+                }}
+              >
+                {active.record_id.toUpperCase()}
+              </span>
+              {active.source_label && (
                 <span
-                  className={`status-indicator-box ${
-                    recQuarantined ? "quarantined" : "cleared"
-                  }`}
+                  className="mono"
+                  style={{ fontSize: "11px", color: "var(--color-muted)" }}
                 >
-                  {recQuarantined ? "QUARANTINED" : "CLEARED"}
+                  — {active.source_label}
                 </span>
-                <span>{rec.record_id.toUpperCase()}</span>
-              </button>
-            );
-          })}
+              )}
+            </div>
 
-          <button
-            className="scenario-tab"
-            onClick={() => setIsNewTargetModalOpen(true)}
-            style={{
-              borderStyle: "dashed",
-              borderColor: "var(--color-hairline)",
-              marginLeft: "8px",
-            }}
-          >
-            <span className="mono" style={{ color: "var(--color-white)", fontWeight: 700 }}>
-              +
-            </span>
-            <span>NEW TARGET</span>
-          </button>
+            <button
+              onClick={() => setIsNewTargetModalOpen(true)}
+              className="btn-minimal-outline"
+              style={{
+                fontSize: "11px",
+                padding: "7px 12px",
+                display: "flex",
+                alignItems: "center",
+                gap: "6px",
+              }}
+            >
+              <span style={{ fontWeight: 700 }}>+</span>
+              <span>Test New Target</span>
+            </button>
+          </div>
+
+          {/* Right: History Search & Archived Logs Dropdown */}
+          <div style={{ display: "flex", alignItems: "center", gap: "10px", flexWrap: "wrap" }}>
+            <input
+              type="text"
+              placeholder="Search History..."
+              value={historySearch}
+              onChange={(e) => setHistorySearch(e.target.value)}
+              style={{
+                width: "150px",
+                padding: "6px 10px",
+                background: "var(--color-black)",
+                border: "1px solid var(--color-hairline)",
+                color: "var(--color-white)",
+                fontFamily: "var(--font-mono)",
+                fontSize: "11px",
+                borderRadius: "2px",
+                outline: "none",
+              }}
+            />
+
+            <select
+              value={active.record_id}
+              onChange={(e) => {
+                setSelectedRecordId(e.target.value);
+                onNotify?.(`Loaded log: ${e.target.value.toUpperCase()}`, "info");
+              }}
+              style={{
+                padding: "6px 10px",
+                background: "var(--color-carbon)",
+                border: "1px solid var(--color-hairline)",
+                color: "var(--color-stone)",
+                fontFamily: "var(--font-mono)",
+                fontSize: "11px",
+                borderRadius: "2px",
+                outline: "none",
+                cursor: "pointer",
+              }}
+            >
+              <option value="" disabled>Archived Logs ({filteredRecords.length})</option>
+              {filteredRecords.map((r) => (
+                <option key={r.record_id} value={r.record_id}>
+                  {r.record_id.toUpperCase()} [{r.state === "QUARANTINED" || r.decision === "BLOCK" ? "QUARANTINED" : "CLEARED"}] — {r.source_label || r.source_url.slice(0, 24)}
+                </option>
+              ))}
+            </select>
+          </div>
         </div>
 
-        {/* 4-Tile Telemetry Ribbon */}
+        {/* STAGE 2 & 3: 4-Tile Telemetry Ribbon (Plain English & Dimmed Secondary Metadata) */}
         <div
           className="invariants-spec-grid"
           style={{ marginBottom: "32px", marginTop: 0 }}
         >
+          {/* Tile 1: Status Alert (Focal Red / Green) */}
           <div className="invariant-spec-cell" style={{ padding: "20px" }}>
             <div
               className="mono"
@@ -428,10 +509,11 @@ export function Workbench({
                 fontSize: "10px",
                 color: "var(--color-dim)",
                 textTransform: "uppercase",
+                letterSpacing: "0.08em",
                 marginBottom: "8px",
               }}
             >
-              CONSENSUS GATE
+              FIREWALL STATUS
             </div>
             <div
               style={{
@@ -442,7 +524,7 @@ export function Workbench({
                   : "var(--color-cleared)",
               }}
             >
-              {isQuarantined ? "is_safe() = FALSE" : "is_safe() = TRUE"}
+              {isQuarantined ? "THREAT INTERCEPTED" : "CERTIFIED SAFE"}
             </div>
             <div
               style={{
@@ -452,11 +534,12 @@ export function Workbench({
               }}
             >
               {isQuarantined
-                ? "Fail-closed quarantine active"
+                ? "Blocked before reaching AI agent"
                 : "Certified safe for intake"}
             </div>
           </div>
 
+          {/* Tile 2: Threats Detected */}
           <div className="invariant-spec-cell" style={{ padding: "20px" }}>
             <div
               className="mono"
@@ -464,10 +547,11 @@ export function Workbench({
                 fontSize: "10px",
                 color: "var(--color-dim)",
                 textTransform: "uppercase",
+                letterSpacing: "0.08em",
                 marginBottom: "8px",
               }}
             >
-              THREAT PROFILE
+              THREATS DETECTED
             </div>
             <div
               style={{
@@ -487,10 +571,11 @@ export function Workbench({
                 marginTop: "4px",
               }}
             >
-              5 canonical defense checks
+              5 canonical safety checks
             </div>
           </div>
 
+          {/* Tile 3: Content Hash (Dimmed to Muted Gray) */}
           <div className="invariant-spec-cell" style={{ padding: "20px" }}>
             <div
               className="mono"
@@ -498,20 +583,20 @@ export function Workbench({
                 fontSize: "10px",
                 color: "var(--color-dim)",
                 textTransform: "uppercase",
+                letterSpacing: "0.08em",
                 marginBottom: "8px",
               }}
             >
-              PAYLOAD SHA-256
+              CONTENT HASH
             </div>
             <div
               className="mono"
               style={{
                 fontSize: "13px",
-                color: "var(--color-white)",
+                color: "#A3A3A3",
                 cursor: "pointer",
-                textDecoration: "underline",
               }}
-              onClick={() => handleCopy(active.source_digest, "SHA-256")}
+              onClick={() => handleCopy(active.source_digest, "Content Hash")}
               title="Click to copy hash"
             >
               {active.source_digest
@@ -521,7 +606,7 @@ export function Workbench({
             <div
               style={{
                 fontSize: "11px",
-                color: "var(--color-muted)",
+                color: "var(--color-dim)",
                 marginTop: "4px",
               }}
             >
@@ -529,6 +614,7 @@ export function Workbench({
             </div>
           </div>
 
+          {/* Tile 4: Validator Consensus */}
           <div className="invariant-spec-cell" style={{ padding: "20px" }}>
             <div
               className="mono"
@@ -536,10 +622,11 @@ export function Workbench({
                 fontSize: "10px",
                 color: "var(--color-dim)",
                 textTransform: "uppercase",
+                letterSpacing: "0.08em",
                 marginBottom: "8px",
               }}
             >
-              CONSENSUS MODEL
+              VALIDATOR CONSENSUS
             </div>
             <div
               style={{
@@ -548,7 +635,7 @@ export function Workbench({
                 color: "var(--color-white)",
               }}
             >
-              Strict Equivalence
+              3 of 3 Unanimous
             </div>
             <div
               style={{
@@ -557,24 +644,26 @@ export function Workbench({
                 marginTop: "4px",
               }}
             >
-              3 / 3 Validator Quorum
+              Independent AI validators agree
             </div>
           </div>
         </div>
 
         {/* 2-Column Inspection Workstation */}
         <div className="console-grid">
-          {/* Left Column: Evidence & Stream */}
+          {/* Left Column: Evidence & Visually Elevated Threat Rationale Box */}
           <div>
             <div className="field-group">
-              <div className="field-label">Permitted Downstream Purpose</div>
+              <div className="field-label" style={{ color: "var(--color-dim)" }}>
+                Target Agent Purpose
+              </div>
               <div
                 style={{
                   padding: "12px 14px",
                   background: "var(--color-carbon)",
                   border: "1px solid var(--color-hairline)",
                   fontStyle: "italic",
-                  color: "var(--color-white)",
+                  color: "#D4D4D4",
                   fontSize: "13px",
                 }}
               >
@@ -582,16 +671,18 @@ export function Workbench({
               </div>
             </div>
 
-            {/* Triggered Threat Findings */}
+            {/* STAGE 3: Elevated Threat Rationale Box (Undeniable Focal Point) */}
             {triggeredFindings.length > 0 ? (
               triggeredFindings.map((finding, idx) => (
                 <div
                   key={idx}
                   style={{
-                    padding: "20px",
-                    border: "1px solid var(--color-quarantined-border)",
-                    background: "var(--color-quarantined-bg)",
+                    padding: "24px 28px",
+                    background: "#161616",
+                    border: "1px solid #2B2B2B",
+                    borderLeft: "3px solid #E11D48",
                     marginBottom: "20px",
+                    boxShadow: "0 8px 24px rgba(0, 0, 0, 0.4)",
                   }}
                 >
                   <div
@@ -599,58 +690,103 @@ export function Workbench({
                       display: "flex",
                       justifyContent: "space-between",
                       alignItems: "center",
-                      marginBottom: "12px",
+                      marginBottom: "16px",
+                      paddingBottom: "12px",
+                      borderBottom: "1px solid #242424",
                     }}
                   >
                     <div
                       className="mono"
                       style={{
-                        fontSize: "11px",
+                        fontSize: "12px",
                         color: "var(--color-quarantined)",
                         fontWeight: 700,
+                        letterSpacing: "0.06em",
                       }}
                     >
-                      TRIGGERED: {finding.category}
+                      TRIGGERED: {finding.category.replace(/_/g, " ")}
                     </div>
-                    <span className="status-indicator-box quarantined">
-                      {finding.severity} SEVERITY
+                    <span
+                      className="mono"
+                      style={{
+                        fontSize: "10px",
+                        padding: "2px 8px",
+                        border: "1px solid #3F1922",
+                        background: "#240E14",
+                        color: "#FDA4AF",
+                        fontWeight: 600,
+                        borderRadius: "2px",
+                      }}
+                    >
+                      {finding.severity || "HIGH"} RISK
                     </span>
                   </div>
 
-                  <div className="field-label">Flagged Adversarial Evidence Quote</div>
-                  <div
-                    className="mono"
-                    style={{
-                      padding: "12px",
-                      background: "var(--color-black)",
-                      border: "1px solid var(--color-hairline)",
-                      color: "#FDA4AF",
-                      fontSize: "12px",
-                      lineHeight: "1.6",
-                      marginBottom: "14px",
-                    }}
-                  >
-                    "{finding.evidence_quote}"
+                  {/* Flagged Content Inset */}
+                  <div style={{ marginBottom: "20px" }}>
+                    <div
+                      className="mono"
+                      style={{
+                        fontSize: "10px",
+                        color: "#888888",
+                        textTransform: "uppercase",
+                        letterSpacing: "0.08em",
+                        marginBottom: "6px",
+                      }}
+                    >
+                      Flagged Content Quote
+                    </div>
+                    <div
+                      className="mono"
+                      style={{
+                        padding: "12px 14px",
+                        background: "#0A0A0A",
+                        border: "1px solid #222222",
+                        color: "#E5E5E5",
+                        fontSize: "12px",
+                        lineHeight: "1.6",
+                      }}
+                    >
+                      "{finding.evidence_quote}"
+                    </div>
                   </div>
 
-                  <div className="field-label">Validator Consensus Rationale</div>
-                  <p
-                    style={{
-                      color: "var(--color-stone)",
-                      fontSize: "13px",
-                      lineHeight: "1.6",
-                    }}
-                  >
-                    {finding.explanation}
-                  </p>
+                  {/* Threat Rationale - The Primary Focal Point */}
+                  <div>
+                    <div
+                      className="mono"
+                      style={{
+                        fontSize: "11px",
+                        color: "#FFFFFF",
+                        fontWeight: 700,
+                        textTransform: "uppercase",
+                        letterSpacing: "0.08em",
+                        marginBottom: "8px",
+                      }}
+                    >
+                      Threat Rationale
+                    </div>
+                    <p
+                      style={{
+                        color: "#F5F5F5",
+                        fontSize: "14px",
+                        lineHeight: "1.7",
+                        margin: 0,
+                        fontWeight: 400,
+                      }}
+                    >
+                      {finding.explanation}
+                    </p>
+                  </div>
                 </div>
               ))
             ) : (
               <div
                 style={{
-                  padding: "28px",
-                  border: "1px solid var(--color-cleared-border)",
-                  background: "var(--color-cleared-bg)",
+                  padding: "24px 28px",
+                  border: "1px solid #1E3A2F",
+                  background: "#0D1E16",
+                  borderLeft: "3px solid #10B981",
                   marginBottom: "20px",
                 }}
               >
@@ -659,16 +795,14 @@ export function Workbench({
                   style={{
                     color: "var(--color-cleared)",
                     fontWeight: 700,
-                    fontSize: "13px",
+                    fontSize: "12px",
                     marginBottom: "6px",
                   }}
                 >
                   STATUS: ZERO ADVERSARIAL THREATS DETECTED
                 </div>
-                <p style={{ color: "var(--color-stone)", fontSize: "13px" }}>
-                  All 5 canonical defense checks passed with unanimous 3/3
-                  validator agreement. Payload is certified safe for cognitive
-                  intake.
+                <p style={{ color: "#E5E5E5", fontSize: "14px", lineHeight: "1.6", margin: 0 }}>
+                  All 5 safety checks passed with unanimous validator agreement. Document is certified safe for cognitive intake.
                 </p>
               </div>
             )}
@@ -694,7 +828,7 @@ export function Workbench({
                 }}
               >
                 <span className="mono">
-                  {passedFindings.length} Security Vectors Cleared
+                  {passedFindings.length} Safety Checks Passed
                 </span>
                 <span className="mono" style={{ color: "var(--color-dim)" }}>
                   {showPassed ? "[- COLLAPSE]" : "[+ EXPAND]"}
@@ -732,7 +866,7 @@ export function Workbench({
                             color: "var(--color-white)",
                           }}
                         >
-                          {p.category}
+                          {p.category.replace(/_/g, " ")}
                         </div>
                         <div
                           style={{
@@ -741,8 +875,7 @@ export function Workbench({
                             marginTop: "2px",
                           }}
                         >
-                          {p.explanation ||
-                            "No policy violation or adversarial drift."}
+                          {p.explanation || "No policy violation or adversarial drift."}
                         </div>
                       </div>
                       <span className="status-indicator-box cleared">PASSED</span>
@@ -753,96 +886,98 @@ export function Workbench({
             </div>
           </div>
 
-          {/* Right Column: Quorum Table & Cryptographic Attestation */}
+          {/* Right Column: Validator Votes & On-Chain Verification (Dimmed Metadata) */}
           <div>
-            <div className="field-label">Byzantine Validator Quorum Consensus</div>
+            <div className="field-label" style={{ color: "var(--color-dim)" }}>
+              Validator Votes
+            </div>
             <table className="quorum-ledger-table">
               <thead>
                 <tr>
-                  <th>Node ID</th>
-                  <th>Engine</th>
-                  <th>Vote</th>
-                  <th>Confidence</th>
+                  <th style={{ color: "#666666" }}>Node ID</th>
+                  <th style={{ color: "#666666" }}>Engine</th>
+                  <th style={{ color: "#666666" }}>Vote</th>
+                  <th style={{ color: "#666666" }}>Confidence</th>
                 </tr>
               </thead>
               <tbody>
                 <tr>
-                  <td className="mono" style={{ color: "var(--color-white)" }}>
+                  <td className="mono" style={{ color: "#737373" }}>
                     0x7a82...99f
                   </td>
-                  <td>Gemini Pro</td>
+                  <td style={{ color: "#A3A3A3" }}>Gemini Pro</td>
                   <td
                     style={{
                       color:
                         isVerifying && verifyStage === 1
                           ? "var(--color-white)"
                           : isQuarantined
-                          ? "var(--color-quarantined)"
-                          : "var(--color-cleared)",
-                      fontWeight: 700,
+                          ? "#FDA4AF"
+                          : "#6EE7B7",
+                      fontWeight: 600,
                     }}
                   >
                     {isVerifying && verifyStage === 1 ? (
                       <span className="pulsing-validator">POLLING...</span>
                     ) : isQuarantined ? (
-                      "QUARANTINE"
+                      "BLOCK"
                     ) : (
                       "CLEAR"
                     )}
                   </td>
-                  <td>99.4%</td>
+                  <td style={{ color: "#737373" }}>99.4%</td>
                 </tr>
                 <tr>
-                  <td className="mono" style={{ color: "var(--color-white)" }}>
+                  <td className="mono" style={{ color: "#737373" }}>
                     0x3f19...4b2
                   </td>
-                  <td>Claude 3.5</td>
+                  <td style={{ color: "#A3A3A3" }}>Claude 3.5</td>
                   <td
                     style={{
                       color:
                         isVerifying && verifyStage === 2
                           ? "var(--color-white)"
                           : isQuarantined
-                          ? "var(--color-quarantined)"
-                          : "var(--color-cleared)",
-                      fontWeight: 700,
+                          ? "#FDA4AF"
+                          : "#6EE7B7",
+                      fontWeight: 600,
                     }}
                   >
                     {isVerifying && verifyStage === 2 ? (
                       <span className="pulsing-validator">POLLING...</span>
                     ) : isQuarantined ? (
-                      "QUARANTINE"
+                      "BLOCK"
                     ) : (
                       "CLEAR"
                     )}
                   </td>
-                  <td>98.9%</td>
+                  <td style={{ color: "#737373" }}>98.9%</td>
                 </tr>
                 <tr>
-                  <td className="mono" style={{ color: "var(--color-white)" }}>
+                  <td className="mono" style={{ color: "#737373" }}>
                     0x9c41...10e
                   </td>
-                  <td>Llama 3 70B</td>
+                  <td style={{ color: "#A3A3A3" }}>Llama 3 70B</td>
                   <td
                     style={{
                       color:
                         isVerifying && verifyStage === 3
                           ? "var(--color-white)"
                           : isQuarantined
-                          ? "var(--color-quarantined)"
-                          : "var(--color-cleared)",
-                      fontWeight: 700,
+                          ? "#FDA4AF"
+                          : "#6EE7B7",
+                      fontWeight: 600,
                     }}
                   >
                     {isVerifying && verifyStage === 3 ? (
                       <span className="pulsing-validator">POLLING...</span>
                     ) : isQuarantined ? (
-                      "QUARANTINE"
+                      "BLOCK"
                     ) : (
                       "CLEAR"
                     )}
                   </td>
-                  <td>99.1%</td>
+                  <td style={{ color: "#737373" }}>99.1%</td>
                 </tr>
               </tbody>
             </table>
@@ -852,7 +987,7 @@ export function Workbench({
                 className="mono"
                 style={{
                   fontSize: "11px",
-                  color: "var(--color-cleared)",
+                  color: "#6EE7B7",
                   marginTop: "12px",
                   display: "flex",
                   justifyContent: "space-between",
@@ -861,12 +996,12 @@ export function Workbench({
                   border: "1px solid var(--color-hairline)",
                 }}
               >
-                <span>QUORUM LATENCY: {verifyLatency}ms</span>
-                <span>3/3 STRICT EQUIVALENCE VERIFIED</span>
+                <span>LATENCY: {verifyLatency}ms</span>
+                <span>UNANIMOUS AGREEMENT</span>
               </div>
             )}
 
-            {/* Cryptographic Attestation Ledger */}
+            {/* On-Chain Verification Card (Dimmed Technical Metadata) */}
             <div
               style={{
                 border: "1px solid var(--color-hairline)",
@@ -885,7 +1020,7 @@ export function Workbench({
                   marginBottom: "16px",
                 }}
               >
-                CRYPTOGRAPHIC PROOF LEDGER
+                ON-CHAIN VERIFICATION
               </div>
 
               <div style={{ marginBottom: "14px" }}>
@@ -893,17 +1028,17 @@ export function Workbench({
                   className="mono"
                   style={{
                     fontSize: "10px",
-                    color: "var(--color-dim)",
+                    color: "#666666",
                     marginBottom: "4px",
                   }}
                 >
-                  RESULT FINGERPRINT
+                  AUDIT FINGERPRINT
                 </div>
                 <div
                   className="mono"
                   style={{
                     fontSize: "12px",
-                    color: "var(--color-white)",
+                    color: "#888888",
                     display: "flex",
                     justifyContent: "space-between",
                     alignItems: "center",
@@ -921,7 +1056,7 @@ export function Workbench({
                     className="mono"
                     style={{
                       fontSize: "10px",
-                      color: "var(--color-stone)",
+                      color: "#737373",
                       padding: "2px 8px",
                       border: "1px solid var(--color-hairline)",
                       background: "var(--color-black)",
@@ -938,11 +1073,11 @@ export function Workbench({
                   className="mono"
                   style={{
                     fontSize: "10px",
-                    color: "var(--color-dim)",
+                    color: "#666666",
                     marginBottom: "4px",
                   }}
                 >
-                  INTELLIGENT CONTRACT
+                  SMART CONTRACT
                 </div>
                 <div className="mono" style={{ fontSize: "12px" }}>
                   <a
@@ -950,7 +1085,7 @@ export function Workbench({
                     target="_blank"
                     rel="noreferrer"
                     style={{
-                      color: "var(--color-white)",
+                      color: "#888888",
                       textDecoration: "underline",
                     }}
                   >
@@ -964,15 +1099,15 @@ export function Workbench({
                   className="mono"
                   style={{
                     fontSize: "10px",
-                    color: "var(--color-dim)",
+                    color: "#666666",
                     marginBottom: "4px",
                   }}
                 >
-                  RECORD OWNER
+                  OPERATOR ADDRESS
                 </div>
                 <div
                   className="mono"
-                  style={{ fontSize: "12px", color: "var(--color-stone)" }}
+                  style={{ fontSize: "12px", color: "#737373" }}
                 >
                   {active.owner || "0x3b5E8363...dD81953E"}
                 </div>
@@ -983,17 +1118,17 @@ export function Workbench({
                   className="mono"
                   style={{
                     fontSize: "10px",
-                    color: "var(--color-dim)",
+                    color: "#666666",
                     marginBottom: "4px",
                   }}
                 >
-                  EVALUATION ATTEMPTS
+                  VERIFICATION RUNS
                 </div>
                 <div
                   className="mono"
-                  style={{ fontSize: "12px", color: "var(--color-stone)" }}
+                  style={{ fontSize: "12px", color: "#737373" }}
                 >
-                  {active.evaluation_attempts || 1} Attempt(s) Committed
+                  {active.evaluation_attempts || 1} Run(s) Recorded
                 </div>
               </div>
             </div>
@@ -1022,7 +1157,7 @@ export function Workbench({
                     marginBottom: "4px",
                   }}
                 >
-                  INGRESS INTAKE // NEW TARGET
+                  TARGET EVALUATION // TESTBENCH
                 </div>
                 <div
                   style={{
@@ -1031,7 +1166,7 @@ export function Workbench({
                     color: "var(--color-white)",
                   }}
                 >
-                  Simulate Cognitive Consensus
+                  Evaluate Untrusted Ingress
                 </div>
               </div>
               <button
@@ -1051,7 +1186,9 @@ export function Workbench({
 
             {/* Quick Test Presets */}
             <div style={{ marginBottom: "20px" }}>
-              <div className="field-label">Quick Preset Scenarios</div>
+              <div className="field-label" style={{ color: "var(--color-dim)" }}>
+                Quick Test Scenarios
+              </div>
               <div style={{ display: "flex", gap: "8px", flexWrap: "wrap" }}>
                 <button
                   type="button"
@@ -1082,7 +1219,9 @@ export function Workbench({
 
             <form onSubmit={handleCreateTarget}>
               <div style={{ marginBottom: "16px" }}>
-                <div className="field-label">Target Source Label</div>
+                <div className="field-label" style={{ color: "var(--color-dim)" }}>
+                  Target Source Label
+                </div>
                 <input
                   type="text"
                   className="swiss-input"
@@ -1093,7 +1232,9 @@ export function Workbench({
               </div>
 
               <div style={{ marginBottom: "16px" }}>
-                <div className="field-label">Target Source URL *</div>
+                <div className="field-label" style={{ color: "var(--color-dim)" }}>
+                  Target Source URL *
+                </div>
                 <input
                   type="text"
                   className="swiss-input"
@@ -1105,7 +1246,9 @@ export function Workbench({
               </div>
 
               <div style={{ marginBottom: "16px" }}>
-                <div className="field-label">Permitted Agent Purpose</div>
+                <div className="field-label" style={{ color: "var(--color-dim)" }}>
+                  Permitted Agent Purpose
+                </div>
                 <input
                   type="text"
                   className="swiss-input"
@@ -1116,7 +1259,9 @@ export function Workbench({
               </div>
 
               <div style={{ marginBottom: "24px" }}>
-                <div className="field-label">Ingress Payload / Document Text *</div>
+                <div className="field-label" style={{ color: "var(--color-dim)" }}>
+                  Ingress Payload / Document Text *
+                </div>
                 <textarea
                   className="swiss-input"
                   rows={4}
@@ -1150,7 +1295,7 @@ export function Workbench({
                   className="btn-minimal-white"
                   style={{ fontSize: "12px", padding: "10px 20px" }}
                 >
-                  Execute Consensus Evaluation →
+                  Run Threat Evaluation →
                 </button>
               </div>
             </form>
