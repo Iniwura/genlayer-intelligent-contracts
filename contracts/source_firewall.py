@@ -11,17 +11,8 @@ from dataclasses import dataclass
 from typing import Any
 from urllib.parse import parse_qsl, urlsplit, urlunsplit
 
-try:
-    import genlayer as gl
-    from genlayer.types import Address, u256
-    _allow_storage = gl.storage.allow
-    _TreeMap = gl.storage.TreeMap
-    _Contract = gl.contract.Contract
-except (ImportError, ModuleNotFoundError, AttributeError):
-    from genlayer import *
-    from genlayer import Address, u256, allow_storage as _allow_storage, TreeMap as _TreeMap
-    import genlayer.gl as gl
-    _Contract = gl.Contract
+import genlayer.gl as gl
+from genlayer import Address, TreeMap, u256, allow_storage
 
 
 SCHEMA_VERSION = "sourcefirewall.v1"
@@ -109,7 +100,7 @@ SECRET_PATTERN = re.compile(
 )
 
 
-@_allow_storage
+@allow_storage
 @dataclass
 class SourceRecord:
     record_id: str
@@ -431,11 +422,11 @@ def _consensus_equivalent(candidate: dict[str, Any], observed: dict[str, Any]) -
     return candidate_shape == observed_shape
 
 
-class SourceFirewall(_Contract):
+class SourceFirewall(gl.Contract):
     """Fail-closed source inspection records for downstream AI agents."""
 
-    records: _TreeMap[str, SourceRecord]
-    record_order: _TreeMap[u256, str]
+    records: TreeMap[str, SourceRecord]
+    record_order: TreeMap[u256, str]
     record_count: u256
 
     def __init__(self):
