@@ -11,7 +11,9 @@ class DownstreamAgent(gl.Contract):
     consumed_count: u256
     consumed_digests: TreeMap[str, bool]
 
-    def __init__(self, firewall_address: Address):
+    def __init__(self, firewall_address: str | Address):
+        if not isinstance(firewall_address, Address):
+            firewall_address = Address(firewall_address)
         self.firewall_address = firewall_address
         self.consumed_count = u256(0)
 
